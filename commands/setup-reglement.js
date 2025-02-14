@@ -3,6 +3,8 @@ const {
   PermissionsBitField,
   EmbedBuilder,
 } = require("discord.js");
+const { QuickDB } = require("quick.db");
+const db = new QuickDB();
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -103,6 +105,7 @@ module.exports = {
       });
       if (embed === embeds[embeds.length - 1]) {
         await reglementMessage.react("✅");
+        await db.set("reglementMessageId", reglementMessage.id);
       }
     }
 
