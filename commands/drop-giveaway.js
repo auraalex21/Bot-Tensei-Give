@@ -27,6 +27,8 @@ module.exports = {
     ),
 
   async execute(interaction) {
+    const client = interaction.client;
+
     // Si le membre n'a pas les permissions nécessaires
     if (
       !interaction.member.permissions.has("MANAGE_MESSAGES") &&
