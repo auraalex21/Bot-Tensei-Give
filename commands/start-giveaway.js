@@ -3,7 +3,12 @@ const ms = require("ms");
 const messages = require("../utils/messages");
 const { QuickDB } = require("quick.db");
 const db = new QuickDB();
-const { SlashCommandBuilder } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -78,7 +83,19 @@ module.exports = {
         : `Organisé par ${interaction.user.username}`;
 
     // Démarrer le giveaway
-    client.giveawaysManager.start(giveawayChannel, {
+    const giveawayMessage = await giveawayChannel.send({
+      content: `🎉 **GIVEAWAY** 🎉\n\n**Prix:** ${giveawayPrize}\n**Durée:** ${giveawayDuration}\n**Nombre de gagnants:** ${giveawayWinnerCount}\n\nCliquez sur le bouton ci-dessous pour participer !`,
+      components: [
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("participer-giveaway")
+            .setLabel("Participer")
+            .setStyle(ButtonStyle.Primary)
+        ),
+      ],
+    });
+
+    client.giveawaysManager.start(giveawayMessage, {
       duration: ms(giveawayDuration),
       prize: giveawayPrize,
       winnerCount: giveawayWinnerCount,
@@ -104,6 +121,9 @@ module.exports = {
       ],
     });
 
-    interaction.reply(`🎉 Giveaway démarré dans ${giveawayChannel}!`);
+    interaction.reply({
+      content: `🎉 Giveaway démarré dans ${giveawayChannel}!`,
+      ephemeral: true,
+    });
   },
 };
