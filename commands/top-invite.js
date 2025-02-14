@@ -6,33 +6,44 @@ const { SlashCommandBuilder } = require("discord.js");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("top-invite")
-    .setDescription(
-      "Afficher les 5 premiers utilisateurs ayant le plus d'invitations"
-    ),
+    .setDescription("Afficher le top des invitations"),
 
-  async execute(client, interaction) {
-    const allInvites = await db.all();
-    const inviteData = allInvites
-      .filter((entry) => entry.id.startsWith("invites_"))
-      .map((entry) => ({
-        userId: entry.id.split("_")[1],
-        invites: entry.value,
-      }))
-      .sort((a, b) => b.invites - a.invites)
-      .slice(0, 5);
+  async execute(interaction) {
+    const guild = interaction.guild;
+    const invites = await guild.invites.fetch();
+
+    const inviteCounts = {};
+
+    invites.forEach((invite) => {
+      const inviter = invite.inviter;
+      if (inviter) {
+        if (!inviteCounts[inviter.id]) {
+          inviteCounts[inviter.id] = 0;
+        }
+        inviteCounts[inviter.id] += invite.uses;
+      }
+    });
+
+    const sortedInvites = Object.entries(inviteCounts).sort(
+      (a, b) => b[1] - a[1]
+    );
+
+    const topInvites = sortedInvites.slice(0, 10);
 
     const embed = new Discord.EmbedBuilder()
-      .setTitle("Top 5 des utilisateurs ayant le plus d'invitations")
+      .setTitle("Top 10 des invitations")
       .setColor("#0099ff");
 
-    for (const [index, data] of inviteData.entries()) {
-      const user = await client.users.fetch(data.userId);
-      embed.addFields({
-        name: `${index + 1}. ${user.tag}`,
-        value: `${data.invites} invitations`,
-        inline: false,
-      });
-    }
+    topInvites.forEach(([userId, count], index) => {
+      const user = guild.members.cache.get(userId);
+      if (user) {
+        embed.addFields({
+          name: `${index + 1}. ${user.user.tag}`,
+          value: `${count} invitations`,
+          inline: false,
+        });
+      }
+    });
 
     interaction.reply({
       embeds: [embed],
