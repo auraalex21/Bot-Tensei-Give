@@ -62,26 +62,29 @@ module.exports = {
     const giveawayWinnerCount = interaction.options.getInteger("gagnants");
     const giveawayPrize = interaction.options.getString("prix");
 
-    if (giveawayChannel.type !== Discord.ChannelType.GuildText) {
+    // 🔍 Vérification du type de salon (correction)
+    console.log("Type de salon:", giveawayChannel.type);
+    if (!giveawayChannel.isTextBased()) {
       return interaction.reply({
-        content: ":x: Le canal sélectionné n'est pas un salon textuel.",
+        content: ":x: Le canal sélectionné n'est pas un canal textuel valide.",
         ephemeral: true,
       });
     }
 
-    // Correction du footer et du hostedBy
+    // 🔍 Correction du hostedBy pour éviter l'erreur "not a snowflake"
+    const hostedByText =
+      process.env.HOSTED_BY && process.env.HOSTED_BY.trim() !== ""
+        ? `<@${interaction.user.id}>`
+        : `Organisé par ${interaction.user.username}`;
+
+    // Correction du footer pour éviter les erreurs de validation
     messages.footer = {
       text: `Giveaway organisé par ${
         interaction.user.username || "le serveur"
       }`,
     };
 
-    const hostedByText =
-      process.env.HOSTED_BY && process.env.HOSTED_BY.trim() !== ""
-        ? process.env.HOSTED_BY
-        : `Organisé par ${interaction.user.username}`;
-
-    // Envoyer le message initial avec un bouton
+    // Envoi du message initial avec un bouton pour participer
     const giveawayMessage = await giveawayChannel.send({
       content: `🎉 **GIVEAWAY** 🎉\n\n**Prix:** ${giveawayPrize}\n**Durée:** ${giveawayDuration}\n**Nombre de gagnants:** ${giveawayWinnerCount}\n\nCliquez sur le bouton ci-dessous pour participer !`,
       components: [
@@ -94,7 +97,7 @@ module.exports = {
       ],
     });
 
-    // Mettre à jour le temps restant
+    // Gestion du temps restant du giveaway
     const endTime = Date.now() + ms(giveawayDuration);
     const updateInterval = setInterval(async () => {
       const remainingTime = endTime - Date.now();
@@ -130,7 +133,7 @@ module.exports = {
       });
     });
 
-    // Correction : Passer le salon et non le message au giveawaysManager
+    // Démarrer le giveaway
     client.giveawaysManager
       .start(giveawayChannel, {
         duration: ms(giveawayDuration),
