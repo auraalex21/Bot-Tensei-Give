@@ -39,9 +39,11 @@ module.exports = {
   async execute(interaction) {
     const client = interaction.client;
 
-    // Si le membre n'a pas les permissions nécessaires
+    // Vérification des permissions de l'utilisateur
     if (
-      !interaction.member.permissions.has("MANAGE_MESSAGES") &&
+      !interaction.member.permissions.has(
+        Discord.PermissionsBitField.Flags.ManageMessages
+      ) &&
       !interaction.member.roles.cache.some((r) => r.name === "Giveaways")
     ) {
       return interaction.reply({
@@ -58,24 +60,30 @@ module.exports = {
 
     if (giveawayChannel.type !== Discord.ChannelType.GuildText) {
       return interaction.reply({
-        content: ":x: Le canal sélectionné n'est pas basé sur du texte.",
+        content: ":x: Le canal sélectionné n'est pas un canal textuel.",
         ephemeral: true,
       });
     }
 
+    // Correction de l'erreur avec setFooter() et hostedBy
+    messages.footer = {
+      text: `Giveaway organisé par ${
+        interaction.user.username || "le serveur"
+      }`,
+    };
+
+    const hostedByText =
+      process.env.HOSTED_BY && process.env.HOSTED_BY.trim() !== ""
+        ? process.env.HOSTED_BY
+        : `Organisé par ${interaction.user.username}`;
+
     // Démarrer le giveaway
     client.giveawaysManager.start(giveawayChannel, {
-      // La durée du giveaway
       duration: ms(giveawayDuration),
-      // Le prix du giveaway
       prize: giveawayPrize,
-      // Le nombre de gagnants du giveaway
       winnerCount: giveawayWinnerCount,
-      // Qui organise ce giveaway
-      hostedBy: process.env.HOSTED_BY ? interaction.user : null,
-      // Messages
+      hostedBy: hostedByText,
       messages,
-      // Attribuer des taux de chance supplémentaires en fonction des rôles
       bonusEntries: [
         {
           role: "1339902720546439189", // Bronze
@@ -96,6 +104,6 @@ module.exports = {
       ],
     });
 
-    interaction.reply(`Giveaway démarré dans ${giveawayChannel}!`);
+    interaction.reply(`🎉 Giveaway démarré dans ${giveawayChannel}!`);
   },
 };
