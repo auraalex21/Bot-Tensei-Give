@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/Androz2091/giveaways-bot#readme",
   "dependencies": {
+    "better-sqlite3": "^11.8.1",
     "canvas": "^3.1.0",
     "discord-giveaways": "^6.0.0",
     "discord-sync-commands": "^0.3.0",
