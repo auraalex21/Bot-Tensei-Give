@@ -1,10 +1,4 @@
-const {
-  SlashCommandBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  PermissionsBitField,
-} = require("discord.js");
+const { SlashCommandBuilder, PermissionsBitField } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -27,14 +21,6 @@ module.exports = {
 
     const reglementMessage = await interaction.channel.send({
       content: "Veuillez lire le règlement et réagir avec ✅ pour accepter.",
-      components: [
-        new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId("participer-giveaway")
-            .setLabel("Participer au giveaway")
-            .setStyle(ButtonStyle.Primary)
-        ),
-      ],
     });
 
     await reglementMessage.react("✅");
