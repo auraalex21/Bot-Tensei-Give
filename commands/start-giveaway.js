@@ -95,6 +95,28 @@ module.exports = {
       ],
     });
 
+    const filter = (i) => i.customId === "participer-giveaway";
+    const collector = giveawayMessage.createMessageComponentCollector({
+      filter,
+      time: ms(giveawayDuration),
+    });
+
+    collector.on("collect", async (i) => {
+      if (!i.member.roles.cache.has("1340087668616204471")) {
+        return i.reply({
+          content:
+            ":x: Vous n'avez pas le rôle requis pour participer à ce giveaway.",
+          ephemeral: true,
+        });
+      }
+
+      // Logique pour ajouter l'utilisateur au giveaway
+      await i.reply({
+        content: "🎉 Vous avez été ajouté au giveaway !",
+        ephemeral: true,
+      });
+    });
+
     client.giveawaysManager.start(giveawayMessage, {
       duration: ms(giveawayDuration),
       prize: giveawayPrize,
