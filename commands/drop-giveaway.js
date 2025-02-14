@@ -57,7 +57,7 @@ module.exports = {
       // Le prix du giveaway
       prize: giveawayPrize,
       // Qui organise ce giveaway
-      hostedBy: client.config.hostedBy ? interaction.user : null,
+      hostedBy: process.env.HOSTED_BY ? interaction.user : null,
       // spécifier drop
       isDrop: true,
       // Messages

@@ -70,7 +70,7 @@ module.exports = {
       // Le nombre de gagnants du giveaway
       winnerCount: giveawayWinnerCount,
       // Qui organise ce giveaway
-      hostedBy: client.config.hostedBy ? interaction.user : null,
+      hostedBy: process.env.HOSTED_BY ? interaction.user : null,
       // Messages
       messages,
       // Attribuer des taux de chance supplémentaires en fonction des rôles
