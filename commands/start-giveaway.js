@@ -54,7 +54,7 @@ module.exports = {
       return interaction.reply({
         content:
           ":x: Vous devez avoir les permissions de gérer les messages pour démarrer des giveaways.",
-        ephemeral: true,
+        flags: Discord.MessageFlags.Ephemeral,
       });
     }
 
@@ -66,7 +66,7 @@ module.exports = {
     if (giveawayChannel.type !== Discord.ChannelType.GuildText) {
       return interaction.reply({
         content: ":x: Le canal sélectionné n'est pas un canal textuel.",
-        ephemeral: true,
+        flags: Discord.MessageFlags.Ephemeral,
       });
     }
 
@@ -123,7 +123,7 @@ module.exports = {
 
     interaction.reply({
       content: `🎉 Giveaway démarré dans ${giveawayChannel}!`,
-      ephemeral: true,
+      flags: Discord.MessageFlags.Ephemeral,
     });
   },
 };
