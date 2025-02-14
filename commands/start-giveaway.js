@@ -117,31 +117,40 @@ module.exports = {
       });
     });
 
-    client.giveawaysManager.start(giveawayMessage, {
-      duration: ms(giveawayDuration),
-      prize: giveawayPrize,
-      winnerCount: giveawayWinnerCount,
-      hostedBy: hostedByText,
-      messages,
-      bonusEntries: [
-        {
-          role: "1339902720546439189", // Bronze
-          bonus: 5,
-        },
-        {
-          role: "1339902718088577074", // Argent
-          bonus: 10,
-        },
-        {
-          role: "1339902715165147166", // Or
-          bonus: 15,
-        },
-        {
-          role: "1339902712724066406", // Diamant
-          bonus: 25,
-        },
-      ],
-    });
+    client.giveawaysManager
+      .start(giveawayMessage, {
+        duration: ms(giveawayDuration),
+        prize: giveawayPrize,
+        winnerCount: giveawayWinnerCount,
+        hostedBy: hostedByText,
+        messages,
+        bonusEntries: [
+          {
+            role: "1339902720546439189", // Bronze
+            bonus: 5,
+          },
+          {
+            role: "1339902718088577074", // Argent
+            bonus: 10,
+          },
+          {
+            role: "1339902715165147166", // Or
+            bonus: 15,
+          },
+          {
+            role: "1339902712724066406", // Diamant
+            bonus: 25,
+          },
+        ],
+      })
+      .catch((error) => {
+        console.error("Failed to start giveaway:", error);
+        interaction.followUp({
+          content:
+            ":x: Une erreur s'est produite lors du démarrage du giveaway.",
+          ephemeral: true,
+        });
+      });
 
     interaction.reply({
       content: `🎉 Giveaway démarré dans ${giveawayChannel}!`,
