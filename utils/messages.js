@@ -1,18 +1,17 @@
 require("dotenv").config();
 
 module.exports = {
-  giveaway: (client) => `🎉 **GIVEAWAY** 🎉`,
-  giveawayEnded: (client) => `🎉 **GIVEAWAY TERMINÉ** 🎉`,
-  inviteToParticipate: (client) => `Réagissez avec 🎉 pour participer!`,
-  dropMessage: (client) => `Soyez le premier à réagir avec 🎉 !`,
-  drawing: (client) => `Tirage au sort: {timestamp}`,
-  winMessage: (client) =>
-    `Félicitations, {winners}! Vous avez gagné **{prize}**!`,
-  embedFooter: (client) => `Giveaways`,
-  noWinner: (client) => `Giveaway annulé, aucune participation valide.`,
-  hostedBy: (client) => `Organisé par: {user}`,
-  winners: (client) => `Gagnant(s)`,
-  endedAt: (client) => `Terminé à`,
+  giveaway: "🎉 **GIVEAWAY** 🎉",
+  giveawayEnded: "🎉 **GIVEAWAY TERMINÉ** 🎉",
+  inviteToParticipate: "Réagissez avec 🎉 pour participer!",
+  dropMessage: "Soyez le premier à réagir avec 🎉 !",
+  drawing: "Tirage au sort: {timestamp}",
+  winMessage: "Félicitations, {winners}! Vous avez gagné **{prize}**!",
+  embedFooter: "Giveaways",
+  noWinner: "Giveaway annulé, aucune participation valide.",
+  hostedBy: "Organisé par: {user}",
+  winners: "Gagnant(s)",
+  endedAt: "Terminé à",
   units: {
     seconds: "secondes",
     minutes: "minutes",
