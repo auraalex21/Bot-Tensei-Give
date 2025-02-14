@@ -80,7 +80,7 @@ module.exports = {
     const hostedByText =
       process.env.HOSTED_BY && process.env.HOSTED_BY.trim() !== ""
         ? process.env.HOSTED_BY
-        : `Organisé par ${interaction.user.username}`;
+        : interaction.user.toString();
 
     // Démarrer le giveaway
     const giveawayMessage = await giveawayChannel.send({
@@ -154,7 +154,7 @@ module.exports = {
         interaction.reply({
           content:
             ":x: Une erreur s'est produite lors du démarrage du giveaway.",
-          ephemeral: true,
+          flags: Discord.MessageFlags.Ephemeral,
         });
       });
   },
