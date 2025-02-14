@@ -209,6 +209,11 @@ discord.js@discordjs/discord.js#refs/pull/6414/head:
   resolved "git+ssh://git@github.com/discordjs/discord.js.git"
   integrity sha512-Ik95/1y+QRU2J4iMLyZDxjsgPkBgdORuRrkwcARElam7zz+dpCxktDr1jT8mPga2p6WcdbXwIgHwpZw5hXhySQ==
 
+dotenv@^16.4.7:
+  version "16.4.7"
+  resolved "https://registry.npmjs.org/dotenv/-/dotenv-16.4.7.tgz"
+  integrity sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==
+
 end-of-stream@^1.1.0, end-of-stream@^1.4.1:
   version "1.4.4"
   resolved "https://registry.npmjs.org/end-of-stream/-/end-of-stream-1.4.4.tgz"
