@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const { QuickDB } = require("quick.db");
 const db = new QuickDB();
+const { MessageFlags, EmbedBuilder } = require("discord.js");
 
 module.exports = async (client, interaction) => {
   if (interaction.isChatInputCommand()) {
@@ -108,6 +109,23 @@ module.exports = async (client, interaction) => {
         )
         .setColor("#ff0000");
       await interaction.update({ embeds: [banEmbed], components: [] });
+    } else if (interaction.customId === "participer-giveaway") {
+      const member = interaction.guild.members.cache.get(interaction.user.id);
+      const role = interaction.guild.roles.cache.get("1340087668616204471");
+
+      if (!member.roles.cache.has(role.id)) {
+        return interaction.reply({
+          content:
+            "Vous devez lire le règlement et accepter les conditions en réagissant avec ✅ pour participer au giveaway.",
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+
+      // Logique pour participer au giveaway
+      interaction.reply({
+        content: "Vous êtes maintenant inscrit au giveaway!",
+        flags: MessageFlags.Ephemeral,
+      });
     }
   } else if (interaction.isModalSubmit()) {
     if (interaction.customId === "candidatureModal") {
