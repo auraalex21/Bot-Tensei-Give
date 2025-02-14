@@ -1,21 +1,22 @@
 const Discord = require("discord.js");
 const { QuickDB } = require("quick.db");
 const db = new QuickDB();
+const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
-  description: "Mettre en pause un giveaway",
+  data: new SlashCommandBuilder()
+    .setName("pause-giveaway")
+    .setDescription("Mettre en pause un giveaway")
+    .addStringOption((option) =>
+      option
+        .setName("giveaway")
+        .setDescription(
+          "Le giveaway à mettre en pause (ID du message ou prix du giveaway)"
+        )
+        .setRequired(true)
+    ),
 
-  options: [
-    {
-      name: "giveaway",
-      description:
-        "Le giveaway à mettre en pause (ID du message ou prix du giveaway)",
-      type: Discord.ApplicationCommandOptionType.String,
-      required: true,
-    },
-  ],
-
-  run: async (client, interaction) => {
+  async execute(interaction) {
     // Si le membre n'a pas les permissions nécessaires
     if (
       !interaction.member.permissions.has("MANAGE_MESSAGES") &&

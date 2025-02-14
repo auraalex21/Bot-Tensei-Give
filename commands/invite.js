@@ -2,29 +2,20 @@ const Discord = require("discord.js");
 const { QuickDB } = require("quick.db");
 const db = new QuickDB();
 const { createCanvas, loadImage } = require("canvas");
+const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
-  description: "Afficher le nombre de personnes que vous avez invitées",
+  data: new SlashCommandBuilder()
+    .setName("invite")
+    .setDescription("Afficher le nombre de personnes que vous avez invitées")
+    .addUserOption((option) =>
+      option
+        .setName("utilisateur")
+        .setDescription("L'utilisateur dont vous voulez voir les invitations")
+        .setRequired(false)
+    ),
 
-  options: [
-    {
-      name: "utilisateur",
-      description: "L'utilisateur dont vous voulez voir les invitations",
-      type: Discord.ApplicationCommandOptionType.User,
-      required: false,
-    },
-  ],
-
-  run: async (client, interaction) => {
-    const roleId = "1339298936099442759";
-
-    if (!interaction.member.roles.cache.has(roleId)) {
-      return interaction.reply({
-        content: ":x: Vous n'avez pas la permission d'utiliser cette commande.",
-        ephemeral: true,
-      });
-    }
-
+  async execute(interaction) {
     const user = interaction.options.getUser("utilisateur") || interaction.user;
     const invites = (await db.get(`invites_${user.id}`)) || 0;
 
@@ -45,7 +36,7 @@ module.exports = {
     } catch (err) {
       console.error("Failed to load avatar image:", err);
       avatar = await loadImage(
-        "https://cdn.discordapp.com/attachments/1335159756645470220/1339684816232386641/10465987-icone-d-erreur.jpg?ex=67af9e36&is=67ae4cb6&hm=6f12b10e56d2e956426742b66b07833f7c6671a4b6e453bb524b8cf1c308d310&"
+        "https://cdn.discordapp.com/embed/avatars/0.png"
       );
     }
 
@@ -142,6 +133,9 @@ module.exports = {
     });
 
     // Envoyer l'image en réponse
-    interaction.reply({ files: [attachment], ephemeral: true });
+    interaction.reply({
+      files: [attachment],
+      flags: Discord.MessageFlags.Ephemeral,
+    });
   },
 };

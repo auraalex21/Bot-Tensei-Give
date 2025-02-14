@@ -1,27 +1,25 @@
-const Discord = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 const { QuickDB } = require("quick.db");
 const db = new QuickDB();
 
 module.exports = {
-  description:
-    "Ajouter une invitation à un utilisateur (réservé à un utilisateur spécifique)",
+  data: new SlashCommandBuilder()
+    .setName("add-invite")
+    .setDescription("Ajouter une invitation à un utilisateur")
+    .addUserOption((option) =>
+      option
+        .setName("utilisateur")
+        .setDescription("L'utilisateur à qui ajouter une invitation")
+        .setRequired(true)
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName("nombre")
+        .setDescription("Le nombre d'invitations à ajouter")
+        .setRequired(true)
+    ),
 
-  options: [
-    {
-      name: "utilisateur",
-      description: "L'utilisateur à qui ajouter une invitation",
-      type: Discord.ApplicationCommandOptionType.User,
-      required: true,
-    },
-    {
-      name: "nombre",
-      description: "Le nombre d'invitations à ajouter",
-      type: Discord.ApplicationCommandOptionType.Integer,
-      required: true,
-    },
-  ],
-
-  run: async (client, interaction) => {
+  async execute(interaction) {
     const authorizedUserId = "378998346712481812";
 
     if (interaction.user.id !== authorizedUserId) {

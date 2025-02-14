@@ -3,39 +3,40 @@ const ms = require("ms");
 const messages = require("../utils/messages");
 const { QuickDB } = require("quick.db");
 const db = new QuickDB();
+const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
-  description: "Démarrer un giveaway",
+  data: new SlashCommandBuilder()
+    .setName("start-giveaway")
+    .setDescription("Démarrer un giveaway")
+    .addStringOption((option) =>
+      option
+        .setName("durée")
+        .setDescription(
+          "Combien de temps le giveaway doit durer. Exemples: 1m, 1h, 1d"
+        )
+        .setRequired(true)
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName("gagnants")
+        .setDescription("Combien de gagnants le giveaway doit avoir")
+        .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("prix")
+        .setDescription("Quel est le prix du giveaway")
+        .setRequired(true)
+    )
+    .addChannelOption((option) =>
+      option
+        .setName("canal")
+        .setDescription("Le canal pour démarrer le giveaway")
+        .setRequired(true)
+    ),
 
-  options: [
-    {
-      name: "durée",
-      description:
-        "Combien de temps le giveaway doit durer. Exemples: 1m, 1h, 1d",
-      type: Discord.ApplicationCommandOptionType.String,
-      required: true,
-    },
-    {
-      name: "gagnants",
-      description: "Combien de gagnants le giveaway doit avoir",
-      type: Discord.ApplicationCommandOptionType.Integer,
-      required: true,
-    },
-    {
-      name: "prix",
-      description: "Quel est le prix du giveaway",
-      type: Discord.ApplicationCommandOptionType.String,
-      required: true,
-    },
-    {
-      name: "canal",
-      description: "Le canal pour démarrer le giveaway",
-      type: Discord.ApplicationCommandOptionType.Channel,
-      required: true,
-    },
-  ],
-
-  run: async (client, interaction) => {
+  async execute(interaction) {
     // Si le membre n'a pas les permissions nécessaires
     if (
       !interaction.member.permissions.has("MANAGE_MESSAGES") &&
@@ -53,7 +54,7 @@ module.exports = {
     const giveawayWinnerCount = interaction.options.getInteger("gagnants");
     const giveawayPrize = interaction.options.getString("prix");
 
-    if (!giveawayChannel.isTextBased()) {
+    if (giveawayChannel.type !== Discord.ChannelType.GuildText) {
       return interaction.reply({
         content: ":x: Le canal sélectionné n'est pas basé sur du texte.",
         ephemeral: true,
@@ -72,14 +73,25 @@ module.exports = {
       hostedBy: client.config.hostedBy ? interaction.user : null,
       // Messages
       messages,
-    });
-
-    // Stocker les données du giveaway dans quick.db
-    await db.set(`giveaway_${giveawayChannel.id}`, {
-      duration: giveawayDuration,
-      prize: giveawayPrize,
-      winnerCount: giveawayWinnerCount,
-      hostedBy: interaction.user.id,
+      // Attribuer des taux de chance supplémentaires en fonction des rôles
+      bonusEntries: [
+        {
+          role: "1339902720546439189", // Bronze
+          bonus: 5,
+        },
+        {
+          role: "1339902718088577074", // Argent
+          bonus: 10,
+        },
+        {
+          role: "1339902715165147166", // Or
+          bonus: 15,
+        },
+        {
+          role: "1339902712724066406", // Diamant
+          bonus: 25,
+        },
+      ],
     });
 
     interaction.reply(`Giveaway démarré dans ${giveawayChannel}!`);

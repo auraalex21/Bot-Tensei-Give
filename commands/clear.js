@@ -1,18 +1,17 @@
-const Discord = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
-  description: "Supprimer un nombre spécifié de messages",
+  data: new SlashCommandBuilder()
+    .setName("clear")
+    .setDescription("Effacer un certain nombre de messages")
+    .addIntegerOption((option) =>
+      option
+        .setName("nombre")
+        .setDescription("Le nombre de messages à effacer")
+        .setRequired(true)
+    ),
 
-  options: [
-    {
-      name: "nombre",
-      description: "Le nombre de messages à supprimer",
-      type: Discord.ApplicationCommandOptionType.Integer,
-      required: true,
-    },
-  ],
-
-  run: async (client, interaction) => {
+  async execute(interaction) {
     const roleId = "1339230333953904751";
     const number = interaction.options.getInteger("nombre");
 
@@ -23,7 +22,7 @@ module.exports = {
       });
     }
 
-    if (number < 1 || number > 1000000) {
+    if (number < 1 || number > 100) {
       return interaction.reply({
         content: ":x: Vous devez spécifier un nombre entre 1 et 100.",
         ephemeral: true,

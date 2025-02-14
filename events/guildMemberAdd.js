@@ -13,6 +13,7 @@ module.exports = async (client, member) => {
     const inviter = invite.inviter;
     const currentInvites = (await db.get(`invites_${inviter.id}`)) || 0;
     await db.set(`invites_${inviter.id}`, currentInvites + 1);
+    await db.set(`invitedBy_${member.id}`, inviter.id); // Enregistrer qui a invité le membre
   }
 
   await db.set(
