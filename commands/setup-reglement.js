@@ -19,9 +19,15 @@ module.exports = {
       return interaction.reply({
         content:
           ":x: Vous devez avoir les permissions de gérer les messages pour utiliser cette commande.",
-        ephemeral: true,
+        flags: 64,
       });
     }
+
+    // Répondre à l'interaction immédiatement
+    await interaction.reply({
+      content: "Configuration du message de règlement...",
+      flags: 64,
+    });
 
     const embeds = [
       new EmbedBuilder()
@@ -100,9 +106,9 @@ module.exports = {
       }
     }
 
-    interaction.reply({
+    interaction.followUp({
       content: "Message de règlement configuré.",
-      ephemeral: true,
+      flags: 64,
     });
   },
 };
