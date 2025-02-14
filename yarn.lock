@@ -186,10 +186,10 @@ discord-api-types@^0.37.114, discord-api-types@^0.37.119:
   resolved "https://registry.npmjs.org/discord-api-types/-/discord-api-types-0.37.119.tgz"
   integrity sha512-WasbGFXEB+VQWXlo6IpW3oUv73Yuau1Ig4AZF/m13tXcTKnMpc/mHjpztIlz4+BM9FG9BHQkEXiPto3bKduQUg==
 
-discord-giveaways@^6.0.0:
-  version "6.0.0"
-  resolved "https://registry.npmjs.org/discord-giveaways/-/discord-giveaways-6.0.0.tgz"
-  integrity sha512-Ii6LAy0XooFjlffNabpyzN1CxWz3W2nmQ+6cLUxRUTXBMdq2gsk9d15lXBTvyG01kxF6Ko6f7EZEb9D83Rrrvw==
+discord-giveaways@^6.0.1:
+  version "6.0.1"
+  resolved "https://registry.npmjs.org/discord-giveaways/-/discord-giveaways-6.0.1.tgz"
+  integrity sha512-hs6Vtb62VdlV7NfB93Phaxc8FW0cH4N1Nkb0bXVZ2npgn73yGOFVmdp8bBP5gsC2ady9OAXXI8Gb66t1IddkFw==
   dependencies:
     deepmerge-ts "^4.2.1"
     serialize-javascript "^6.0.0"
