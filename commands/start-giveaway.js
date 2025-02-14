@@ -80,7 +80,7 @@ module.exports = {
     const hostedByText =
       process.env.HOSTED_BY && process.env.HOSTED_BY.trim() !== ""
         ? process.env.HOSTED_BY
-        : interaction.user.id;
+        : interaction.user.toString();
 
     // Démarrer le giveaway
     const giveawayMessage = await giveawayChannel.send({
