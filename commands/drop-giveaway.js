@@ -52,6 +52,18 @@ module.exports = {
       });
     }
 
+    // Correction de l'erreur avec setFooter() et hostedBy
+    messages.embedFooter = {
+      text: `Giveaway organisé par ${
+        interaction.user.username || "le serveur"
+      }`,
+    };
+
+    const hostedByText =
+      process.env.HOSTED_BY && process.env.HOSTED_BY.trim() !== ""
+        ? process.env.HOSTED_BY
+        : `Organisé par ${interaction.user.username}`;
+
     // Démarrer le giveaway
     client.giveawaysManager.start(giveawayChannel, {
       // Le nombre de gagnants pour ce drop
@@ -59,7 +71,7 @@ module.exports = {
       // Le prix du giveaway
       prize: giveawayPrize,
       // Qui organise ce giveaway
-      hostedBy: process.env.HOSTED_BY ? interaction.user : null,
+      hostedBy: hostedByText,
       // spécifier drop
       isDrop: true,
       // Messages

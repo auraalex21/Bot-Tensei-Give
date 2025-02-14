@@ -66,7 +66,7 @@ module.exports = {
     }
 
     // Correction de l'erreur avec setFooter() et hostedBy
-    messages.footer = {
+    messages.embedFooter = {
       text: `Giveaway organisé par ${
         interaction.user.username || "le serveur"
       }`,
