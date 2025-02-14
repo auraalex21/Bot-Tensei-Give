@@ -143,18 +143,19 @@ module.exports = {
           },
         ],
       })
+      .then(() => {
+        interaction.reply({
+          content: `🎉 Giveaway démarré dans ${giveawayChannel}!`,
+          flags: Discord.MessageFlags.Ephemeral,
+        });
+      })
       .catch((error) => {
         console.error("Failed to start giveaway:", error);
-        interaction.followUp({
+        interaction.reply({
           content:
             ":x: Une erreur s'est produite lors du démarrage du giveaway.",
           ephemeral: true,
         });
       });
-
-    interaction.reply({
-      content: `🎉 Giveaway démarré dans ${giveawayChannel}!`,
-      flags: Discord.MessageFlags.Ephemeral,
-    });
   },
 };
