@@ -18,43 +18,42 @@ module.exports = {
       option
         .setName("durée")
         .setDescription(
-          "Combien de temps le giveaway doit durer. Exemples: 1m, 1h, 1d"
+          "Combien de temps le giveaway doit durer (ex: 1m, 1h, 1d)"
         )
         .setRequired(true)
     )
     .addIntegerOption((option) =>
       option
         .setName("gagnants")
-        .setDescription("Combien de gagnants le giveaway doit avoir")
+        .setDescription("Nombre de gagnants")
         .setRequired(true)
     )
     .addStringOption((option) =>
       option
         .setName("prix")
-        .setDescription("Quel est le prix du giveaway")
+        .setDescription("Prix du giveaway")
         .setRequired(true)
     )
     .addChannelOption((option) =>
       option
         .setName("canal")
-        .setDescription("Le canal pour démarrer le giveaway")
+        .setDescription("Salon pour le giveaway")
         .setRequired(true)
     ),
 
   async execute(interaction) {
     const client = interaction.client;
 
-    // Vérification des permissions de l'utilisateur
+    // Vérification des permissions
     if (
       !interaction.member.permissions.has(
         Discord.PermissionsBitField.Flags.ManageMessages
-      ) &&
-      !interaction.member.roles.cache.some((r) => r.name === "Giveaways")
+      )
     ) {
       return interaction.reply({
         content:
-          ":x: Vous devez avoir les permissions de gérer les messages pour démarrer des giveaways.",
-        flags: Discord.MessageFlags.Ephemeral,
+          ":x: Vous devez avoir la permission `Gérer les messages` pour lancer un giveaway.",
+        ephemeral: true,
       });
     }
 
@@ -65,13 +64,13 @@ module.exports = {
 
     if (giveawayChannel.type !== Discord.ChannelType.GuildText) {
       return interaction.reply({
-        content: ":x: Le canal sélectionné n'est pas un canal textuel.",
-        flags: Discord.MessageFlags.Ephemeral,
+        content: ":x: Le canal sélectionné n'est pas un salon textuel.",
+        ephemeral: true,
       });
     }
 
-    // Correction de l'erreur avec setFooter() et hostedBy
-    messages.embedFooter = {
+    // Correction du footer et du hostedBy
+    messages.footer = {
       text: `Giveaway organisé par ${
         interaction.user.username || "le serveur"
       }`,
@@ -80,9 +79,9 @@ module.exports = {
     const hostedByText =
       process.env.HOSTED_BY && process.env.HOSTED_BY.trim() !== ""
         ? process.env.HOSTED_BY
-        : interaction.user.toString();
+        : `Organisé par ${interaction.user.username}`;
 
-    // Démarrer le giveaway
+    // Envoyer le message initial avec un bouton
     const giveawayMessage = await giveawayChannel.send({
       content: `🎉 **GIVEAWAY** 🎉\n\n**Prix:** ${giveawayPrize}\n**Durée:** ${giveawayDuration}\n**Nombre de gagnants:** ${giveawayWinnerCount}\n\nCliquez sur le bouton ci-dessous pour participer !`,
       components: [
@@ -95,6 +94,7 @@ module.exports = {
       ],
     });
 
+    // Mettre à jour le temps restant
     const endTime = Date.now() + ms(giveawayDuration);
     const updateInterval = setInterval(async () => {
       const remainingTime = endTime - Date.now();
@@ -109,6 +109,7 @@ module.exports = {
       });
     }, 1000);
 
+    // Gestion des participations
     const filter = (i) => i.customId === "participer-giveaway";
     const collector = giveawayMessage.createMessageComponentCollector({
       filter,
@@ -123,44 +124,31 @@ module.exports = {
           ephemeral: true,
         });
       }
-
-      // Logique pour ajouter l'utilisateur au giveaway
       await i.reply({
         content: "🎉 Vous avez été ajouté au giveaway !",
         ephemeral: true,
       });
     });
 
+    // Correction : Passer le salon et non le message au giveawaysManager
     client.giveawaysManager
-      .start(giveawayMessage, {
+      .start(giveawayChannel, {
         duration: ms(giveawayDuration),
         prize: giveawayPrize,
         winnerCount: giveawayWinnerCount,
         hostedBy: hostedByText,
         messages,
         bonusEntries: [
-          {
-            role: "1339902720546439189", // Bronze
-            bonus: 5,
-          },
-          {
-            role: "1339902718088577074", // Argent
-            bonus: 10,
-          },
-          {
-            role: "1339902715165147166", // Or
-            bonus: 15,
-          },
-          {
-            role: "1339902712724066406", // Diamant
-            bonus: 25,
-          },
+          { role: "1339902720546439189", bonus: 5 }, // Bronze
+          { role: "1339902718088577074", bonus: 10 }, // Argent
+          { role: "1339902715165147166", bonus: 15 }, // Or
+          { role: "1339902712724066406", bonus: 25 }, // Diamant
         ],
       })
       .then(() => {
         interaction.reply({
           content: `🎉 Giveaway démarré dans ${giveawayChannel}!`,
-          flags: Discord.MessageFlags.Ephemeral,
+          ephemeral: true,
         });
       })
       .catch((error) => {
@@ -168,7 +156,7 @@ module.exports = {
         interaction.reply({
           content:
             ":x: Une erreur s'est produite lors du démarrage du giveaway.",
-          flags: Discord.MessageFlags.Ephemeral,
+          ephemeral: true,
         });
       });
   },
