@@ -95,6 +95,20 @@ module.exports = {
       ],
     });
 
+    const endTime = Date.now() + ms(giveawayDuration);
+    const updateInterval = setInterval(async () => {
+      const remainingTime = endTime - Date.now();
+      if (remainingTime <= 0) {
+        clearInterval(updateInterval);
+        return;
+      }
+      const formattedTime = new Date(remainingTime).toISOString().substr(11, 8);
+      await giveawayMessage.edit({
+        content: `🎉 **GIVEAWAY** 🎉\n\n**Prix:** ${giveawayPrize}\n**Durée:** ${formattedTime}\n**Nombre de gagnants:** ${giveawayWinnerCount}\n\nCliquez sur le bouton ci-dessous pour participer !`,
+        components: giveawayMessage.components,
+      });
+    }, 1000);
+
     const filter = (i) => i.customId === "participer-giveaway";
     const collector = giveawayMessage.createMessageComponentCollector({
       filter,
