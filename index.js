@@ -143,6 +143,14 @@ client.once("ready", async () => {
   } else {
     console.log("✅ Le bot a les permissions administratives nécessaires.");
   }
+
+  // Forcer l'enregistrement des commandes si aucune n'est trouvée
+  if (client.commands.size === 0) {
+    console.log(
+      "⚠️ Aucune commande trouvée, enregistrement forcé des commandes."
+    );
+    await client.application.commands.set([]);
+  }
 });
 
 client.on("interactionCreate", async (interaction) => {
