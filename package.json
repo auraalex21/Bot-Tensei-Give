@@ -2,6 +2,7 @@
   "name": "giveaways-bot",
   "version": "1.0.0",
   "description": "Giveways Bot using the discord-giveaways package",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "node index.js"

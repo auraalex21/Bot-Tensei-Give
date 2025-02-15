@@ -1,10 +1,14 @@
-const Discord = require("discord.js");
-const { QuickDB } = require("quick.db");
-const db = new QuickDB();
-const { createCanvas, loadImage } = require("canvas");
-const { SlashCommandBuilder } = require("discord.js");
+import {
+  AttachmentBuilder,
+  MessageFlags,
+  SlashCommandBuilder,
+} from "discord.js";
+import { QuickDB } from "quick.db";
+import { createCanvas, loadImage } from "canvas";
 
-module.exports = {
+const db = new QuickDB();
+
+export default {
   data: new SlashCommandBuilder()
     .setName("invite")
     .setDescription("Afficher le nombre de personnes que vous avez invitées")
@@ -128,14 +132,14 @@ module.exports = {
     const buffer = canvas.toBuffer();
 
     // Créer la pièce jointe
-    const attachment = new Discord.AttachmentBuilder(buffer, {
+    const attachment = new AttachmentBuilder(buffer, {
       name: "invite-count.png",
     });
 
     // Envoyer l'image en réponse
     interaction.reply({
       files: [attachment],
-      flags: Discord.MessageFlags.Ephemeral,
+      flags: MessageFlags.Ephemeral,
     });
   },
 };

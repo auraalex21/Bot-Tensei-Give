@@ -1,7 +1,7 @@
-const { QuickDB } = require("quick.db");
+import { QuickDB } from "quick.db";
 const db = new QuickDB();
 
-module.exports = async (client, member) => {
+export default async (client, member) => {
   const inviterId = await db.get(`invitedBy_${member.id}`);
   if (inviterId) {
     const currentInvites = (await db.get(`invites_${inviterId}`)) || 0;

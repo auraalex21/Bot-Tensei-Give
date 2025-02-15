@@ -1,7 +1,15 @@
-const fs = require("fs");
-const path = require("path");
-const { Client, GatewayIntentBits, Collection } = require("discord.js");
-require("dotenv").config();
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { Client, GatewayIntentBits, Collection } from "discord.js";
+import dotenv from "dotenv";
+import synchronizeSlashCommands from "discord-sync-commands";
+import { GiveawaysManager } from "discord-giveaways";
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const client = new Client({
   intents: [
@@ -13,12 +21,8 @@ const client = new Client({
   ],
 });
 
-const synchronizeSlashCommands = require("discord-sync-commands");
-
-// Init discord giveaways
-const { GiveawaysManager } = require("discord-giveaways");
 client.giveawaysManager = new GiveawaysManager(client, {
-  storage: "./giveaways.json",
+  storage: path.resolve(__dirname, "./giveaways.json"),
   default: {
     botsCanWin: false,
     embedColor: "#FF0000",
@@ -31,7 +35,6 @@ client.giveawaysManager = new GiveawaysManager(client, {
     },
   },
 });
-// We now have a client.giveawaysManager property to manage our giveaways!
 
 client.giveawaysManager.on(
   "giveawayReactionAdded",
@@ -59,7 +62,6 @@ client.giveawaysManager.on("giveawayEnded", (giveaway, winners) => {
   );
 });
 
-/* Load all commands */
 client.commands = new Collection();
 
 const loadCommands = (dir) => {
@@ -69,18 +71,21 @@ const loadCommands = (dir) => {
     if (fs.statSync(filePath).isDirectory()) {
       loadCommands(filePath);
     } else if (file.endsWith(".js")) {
-      const command = require(path.resolve(filePath));
-      if (command.data) {
-        client.commands.set(command.data.name, command);
-        console.log(`👌 Commande chargée : ${command.data.name}`);
-      } else {
-        console.error(`❌ La commande dans ${filePath} n'a pas de nom défini.`);
-      }
+      import(path.resolve(filePath)).then((command) => {
+        if (command.data) {
+          client.commands.set(command.data.name, command);
+          console.log(`👌 Commande chargée : ${command.data.name}`);
+        } else {
+          console.error(
+            `❌ La commande dans ${filePath} n'a pas de nom défini.`
+          );
+        }
+      });
     }
   }
 };
 
-loadCommands(path.resolve("./commands"));
+loadCommands(path.resolve(__dirname, "./commands"));
 
 synchronizeSlashCommands(
   client,
@@ -91,19 +96,17 @@ synchronizeSlashCommands(
   }
 );
 
-/* Load all events */
-fs.readdir("./events/", (_err, files) => {
+fs.readdir(path.resolve(__dirname, "./events/"), (_err, files) => {
   files.forEach((file) => {
     if (!file.endsWith(".js")) return;
-    const event = require(path.resolve(`./events/${file}`));
-    let eventName = file.split(".")[0];
-    console.log(`👌 Événement chargé : ${eventName}`);
-    client.on(eventName, event.bind(null, client));
-    delete require.cache[require.resolve(path.resolve(`./events/${file}`))];
+    import(path.resolve(__dirname, `./events/${file}`)).then((event) => {
+      let eventName = file.split(".")[0];
+      console.log(`👌 Événement chargé : ${eventName}`);
+      client.on(eventName, event.default.bind(null, client));
+    });
   });
 });
 
-// Login
 client.once("ready", () => {
   console.log(`Prêt en tant que ${client.user.tag}`);
 });

@@ -1,9 +1,9 @@
-const { SlashCommandBuilder } = require("discord.js");
-const levels = require("../config/levels");
-const { QuickDB } = require("quick.db");
+import { SlashCommandBuilder } from "discord.js";
+import levels from "../config/levels";
+import { QuickDB } from "quick.db";
 const db = new QuickDB();
 
-module.exports = {
+export default {
   data: new SlashCommandBuilder()
     .setName("refresh-exp")
     .setDescription(

@@ -1,8 +1,8 @@
-const levels = require("../config/levels");
-const { createCanvas, loadImage } = require("canvas");
-const Discord = require("discord.js");
+import levels from "../config/levels";
+import { createCanvas, loadImage } from "canvas";
+import { AttachmentBuilder } from "discord.js";
 
-module.exports = async (client, oldState, newState) => {
+export default async (client, oldState, newState) => {
   if (newState.member.user.bot) return;
 
   const excludedChannels = [
@@ -141,7 +141,7 @@ module.exports = async (client, oldState, newState) => {
 
           // Convertir le canvas en buffer
           const buffer = canvas.toBuffer();
-          const attachment = new Discord.AttachmentBuilder(buffer, {
+          const attachment = new AttachmentBuilder(buffer, {
             name: "level-up.png",
           });
 

@@ -1,9 +1,9 @@
-const { SlashCommandBuilder } = require("discord.js");
-const levels = require("../config/levels");
-const { createCanvas, loadImage } = require("canvas");
-const Discord = require("discord.js");
+import { SlashCommandBuilder } from "discord.js";
+import levels from "../config/levels";
+import { createCanvas, loadImage } from "canvas";
+import Discord from "discord.js";
 
-module.exports = {
+export default {
   data: new SlashCommandBuilder()
     .setName("level")
     .setDescription("Afficher le niveau et l'expérience d'un utilisateur")

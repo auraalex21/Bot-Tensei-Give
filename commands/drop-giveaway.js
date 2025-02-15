@@ -1,9 +1,9 @@
-const { SlashCommandBuilder } = require("discord.js");
-const messages = require("../utils/messages");
-const { QuickDB } = require("quick.db");
+import { SlashCommandBuilder } from "discord.js";
+import messages from "../utils/messages";
+import { QuickDB } from "quick.db";
 const db = new QuickDB();
 
-module.exports = {
+export default {
   data: new SlashCommandBuilder()
     .setName("drop-giveaway")
     .setDescription("Créer un drop giveaway")
@@ -45,7 +45,7 @@ module.exports = {
     const giveawayWinnerCount = interaction.options.getInteger("gagnants");
     const giveawayPrize = interaction.options.getString("prix");
 
-    if (giveawayChannel.type !== Discord.ChannelType.GuildText) {
+    if (giveawayChannel.type !== "GUILD_TEXT") {
       return interaction.reply({
         content: ":x: Le canal sélectionné n'est pas basé sur du texte.",
         ephemeral: true,

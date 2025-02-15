@@ -1,6 +1,8 @@
-require("dotenv").config();
+import dotenv from "dotenv";
 
-module.exports = {
+dotenv.config();
+
+export const messages = {
   giveaway: "🎉 **GIVEAWAY** 🎉",
   giveawayEnded: "🎉 **GIVEAWAY TERMINÉ** 🎉",
   inviteToParticipate: "Réagissez avec 🎉 pour participer!",

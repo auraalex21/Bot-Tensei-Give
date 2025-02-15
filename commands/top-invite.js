@@ -1,9 +1,10 @@
-const Discord = require("discord.js");
-const { QuickDB } = require("quick.db");
-const db = new QuickDB();
-const { SlashCommandBuilder } = require("discord.js");
+import { SlashCommandBuilder } from "discord.js";
+import { QuickDB } from "quick.db";
+import { EmbedBuilder, MessageFlags } from "discord.js";
 
-module.exports = {
+const db = new QuickDB();
+
+export default {
   data: new SlashCommandBuilder()
     .setName("top-invite")
     .setDescription("Afficher le top des invitations"),
@@ -30,7 +31,7 @@ module.exports = {
 
     const topInvites = sortedInvites.slice(0, 10);
 
-    const embed = new Discord.EmbedBuilder()
+    const embed = new EmbedBuilder()
       .setTitle("Top 10 des invitations")
       .setColor("#0099ff");
 
@@ -47,7 +48,7 @@ module.exports = {
 
     interaction.reply({
       embeds: [embed],
-      flags: Discord.MessageFlags.Ephemeral,
+      flags: MessageFlags.Ephemeral,
     });
   },
 };

@@ -1,8 +1,8 @@
-const { SlashCommandBuilder } = require("discord.js");
-const { QuickDB } = require("quick.db");
+import { SlashCommandBuilder } from "discord.js";
+import { QuickDB } from "quick.db";
 const db = new QuickDB();
 
-module.exports = {
+export default {
   data: new SlashCommandBuilder()
     .setName("delete-sanctions")
     .setDescription("Supprimer toutes les sanctions d'un utilisateur")

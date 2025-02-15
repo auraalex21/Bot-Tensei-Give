@@ -1,9 +1,10 @@
-const Discord = require("discord.js");
-const { QuickDB } = require("quick.db");
-const db = new QuickDB();
-const { SlashCommandBuilder } = require("discord.js");
+import { SlashCommandBuilder } from "discord.js";
+import { QuickDB } from "quick.db";
+import Discord from "discord.js";
 
-module.exports = {
+const db = new QuickDB();
+
+export default {
   data: new SlashCommandBuilder()
     .setName("end-giveaway")
     .setDescription("Terminer un giveaway")

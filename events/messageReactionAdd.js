@@ -1,4 +1,4 @@
-module.exports = async (client, reaction, user) => {
+export default async (client, reaction, user) => {
   if (reaction.message.partial) await reaction.message.fetch();
   if (reaction.partial) await reaction.fetch();
   if (user.bot) return;

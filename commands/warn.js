@@ -1,9 +1,9 @@
-const Discord = require("discord.js");
-const { QuickDB } = require("quick.db");
-const db = new QuickDB();
-const { SlashCommandBuilder } = require("discord.js");
+import { SlashCommandBuilder } from "discord.js";
+import { QuickDB } from "quick.db";
 
-module.exports = {
+const db = new QuickDB();
+
+export default {
   data: new SlashCommandBuilder()
     .setName("warn")
     .setDescription("Avertir un utilisateur")
@@ -27,7 +27,7 @@ module.exports = {
     if (!interaction.member.permissions.has("MANAGE_MESSAGES")) {
       return interaction.reply({
         content: ":x: Vous n'avez pas la permission d'avertir des membres.",
-        flags: Discord.MessageFlags.Ephemeral,
+        ephemeral: true,
       });
     }
 
@@ -35,7 +35,7 @@ module.exports = {
     if (!member) {
       return interaction.reply({
         content: ":x: Utilisateur non trouvé.",
-        flags: Discord.MessageFlags.Ephemeral,
+        ephemeral: true,
       });
     }
 

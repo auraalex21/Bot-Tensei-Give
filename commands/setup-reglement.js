@@ -1,12 +1,12 @@
-const {
+import {
   SlashCommandBuilder,
   PermissionsBitField,
   EmbedBuilder,
-} = require("discord.js");
-const { QuickDB } = require("quick.db");
+} from "discord.js";
+import { QuickDB } from "quick.db";
 const db = new QuickDB();
 
-module.exports = {
+export default {
   data: new SlashCommandBuilder()
     .setName("setup-reglement")
     .setDescription("Configurer le message de règlement"),

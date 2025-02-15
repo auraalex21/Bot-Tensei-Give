@@ -1,9 +1,15 @@
-const Discord = require("discord.js");
-const { QuickDB } = require("quick.db");
-const db = new QuickDB();
-const { MessageFlags, EmbedBuilder } = require("discord.js");
+import { QuickDB } from "quick.db";
+import {
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  MessageFlags,
+} from "discord.js";
 
-module.exports = async (client, interaction) => {
+const db = new QuickDB();
+
+export default async (client, interaction) => {
   if (interaction.isChatInputCommand()) {
     const command = client.commands.get(interaction.commandName);
     if (!command) {
@@ -35,7 +41,7 @@ module.exports = async (client, interaction) => {
       if (!warnings.length) {
         return interaction.update({
           embeds: [
-            new Discord.EmbedBuilder()
+            new EmbedBuilder()
               .setTitle(`Avertissements de ${user.tag}`)
               .setDescription("Aucun avertissement.")
               .setColor("#ffcc00"),
@@ -49,7 +55,7 @@ module.exports = async (client, interaction) => {
 
       const warning = warnings[page];
 
-      const warnEmbed = new Discord.EmbedBuilder()
+      const warnEmbed = new EmbedBuilder()
         .setTitle(
           `Avertissement ${page + 1}/${warnings.length} pour ${user.tag}`
         )
@@ -72,37 +78,37 @@ module.exports = async (client, interaction) => {
         )
         .setColor("#ffcc00");
 
-      const row = new Discord.ActionRowBuilder().addComponents(
-        new Discord.ButtonBuilder()
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
           .setCustomId(`warn-info-${user.id}-${page - 1}`)
           .setLabel("⬅ Précédent")
-          .setStyle(Discord.ButtonStyle.Secondary)
+          .setStyle(ButtonStyle.Secondary)
           .setDisabled(page === 0),
-        new Discord.ButtonBuilder()
+        new ButtonBuilder()
           .setCustomId(`warn-info-${user.id}-${page + 1}`)
           .setLabel("Suivant ➡")
-          .setStyle(Discord.ButtonStyle.Secondary)
+          .setStyle(ButtonStyle.Secondary)
           .setDisabled(page >= warnings.length - 1)
       );
 
       await interaction.update({ embeds: [warnEmbed], components: [row] });
     } else if (action === "kick-info") {
       const kicks = (await db.get(`kicks_${user.id}`)) || 0;
-      const kickEmbed = new Discord.EmbedBuilder()
+      const kickEmbed = new EmbedBuilder()
         .setTitle(`Expulsions de ${user.tag}`)
         .setDescription(kicks ? `${kicks} expulsion(s).` : "Aucune expulsion.")
         .setColor("#ff6600");
       await interaction.update({ embeds: [kickEmbed], components: [] });
     } else if (action === "timeout-info") {
       const timeouts = (await db.get(`timeouts_${user.id}`)) || 0;
-      const timeoutEmbed = new Discord.EmbedBuilder()
+      const timeoutEmbed = new EmbedBuilder()
         .setTitle(`Timeouts de ${user.tag}`)
         .setDescription(timeouts ? `${timeouts} timeout(s).` : "Aucun timeout.")
         .setColor("#ff3300");
       await interaction.update({ embeds: [timeoutEmbed], components: [] });
     } else if (action === "ban-info") {
       const bans = (await db.get(`bans_${user.id}`)) || 0;
-      const banEmbed = new Discord.EmbedBuilder()
+      const banEmbed = new EmbedBuilder()
         .setTitle(`Bannissements de ${user.tag}`)
         .setDescription(
           bans ? `${bans} bannissement(s).` : "Aucun bannissement."
@@ -135,7 +141,7 @@ module.exports = async (client, interaction) => {
       const motivation =
         interaction.fields.getTextInputValue("motivationInput");
 
-      const embed = new Discord.EmbedBuilder()
+      const embed = new EmbedBuilder()
         .setTitle("Nouvelle Candidature")
         .addFields(
           { name: "Pseudo discord", value: name, inline: true },
@@ -153,7 +159,7 @@ module.exports = async (client, interaction) => {
 
       await interaction.reply({
         content: "Votre candidature a été soumise avec succès!",
-        flags: Discord.MessageFlags.Ephemeral,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }
