@@ -18,6 +18,7 @@ export default async (client, interaction) => {
 
   try {
     console.log(`Commande reçue : ${interaction.commandName}`);
+    console.log(`Interaction ID: ${interaction.id}`);
     await command.execute(interaction);
   } catch (error) {
     console.error(error);
