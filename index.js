@@ -20,7 +20,54 @@ const client = new Client({
   ],
 });
 
-(async () => {
+client.commands = new Collection();
+
+const loadCommands = (dir) => {
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    const filePath = path.join(dir, file);
+    if (fs.statSync(filePath).isDirectory()) {
+      loadCommands(filePath);
+    } else if (file.endsWith(".js")) {
+      import(path.resolve(filePath)).then((command) => {
+        if (command.data) {
+          client.commands.set(command.data.name, command);
+          console.log(`👌 Commande chargée : ${command.data.name}`);
+        } else {
+          console.error(
+            `❌ La commande dans ${filePath} n'a pas de nom défini.`
+          );
+        }
+      });
+    }
+  }
+};
+
+loadCommands(path.resolve(__dirname, "./commands"));
+
+synchronizeSlashCommands(
+  client,
+  client.commands.map((c) => c.data.toJSON()),
+  {
+    debug: true,
+    guildId: process.env.GUILD_ID,
+  }
+);
+
+fs.readdir(path.resolve(__dirname, "./events/"), (_err, files) => {
+  files.forEach((file) => {
+    if (!file.endsWith(".js")) return;
+    import(path.resolve(__dirname, `./events/${file}`)).then((event) => {
+      let eventName = file.split(".")[0];
+      console.log(`👌 Événement chargé : ${eventName}`);
+      client.on(eventName, event.default.bind(null, client));
+    });
+  });
+});
+
+client.once("ready", async () => {
+  console.log(`Prêt en tant que ${client.user.tag}`);
+
   const { GiveawaysManager } = await import("discord-giveaways");
 
   client.giveawaysManager = new GiveawaysManager(client, {
@@ -65,55 +112,6 @@ const client = new Client({
         .join(", ")}`
     );
   });
+});
 
-  client.commands = new Collection();
-
-  const loadCommands = (dir) => {
-    const files = fs.readdirSync(dir);
-    for (const file of files) {
-      const filePath = path.join(dir, file);
-      if (fs.statSync(filePath).isDirectory()) {
-        loadCommands(filePath);
-      } else if (file.endsWith(".js")) {
-        import(path.resolve(filePath)).then((command) => {
-          if (command.data) {
-            client.commands.set(command.data.name, command);
-            console.log(`👌 Commande chargée : ${command.data.name}`);
-          } else {
-            console.error(
-              `❌ La commande dans ${filePath} n'a pas de nom défini.`
-            );
-          }
-        });
-      }
-    }
-  };
-
-  loadCommands(path.resolve(__dirname, "./commands"));
-
-  synchronizeSlashCommands(
-    client,
-    client.commands.map((c) => c.data.toJSON()),
-    {
-      debug: true,
-      guildId: process.env.GUILD_ID,
-    }
-  );
-
-  fs.readdir(path.resolve(__dirname, "./events/"), (_err, files) => {
-    files.forEach((file) => {
-      if (!file.endsWith(".js")) return;
-      import(path.resolve(__dirname, `./events/${file}`)).then((event) => {
-        let eventName = file.split(".")[0];
-        console.log(`👌 Événement chargé : ${eventName}`);
-        client.on(eventName, event.default.bind(null, client));
-      });
-    });
-  });
-
-  client.once("ready", () => {
-    console.log(`Prêt en tant que ${client.user.tag}`);
-  });
-
-  client.login(process.env.DISCORD_TOKEN);
-})();
+client.login(process.env.DISCORD_TOKEN);
