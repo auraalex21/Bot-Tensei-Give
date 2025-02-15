@@ -136,11 +136,13 @@ async function handleModalSubmit(interaction) {
     }
   } catch (error) {
     console.error("❌ Erreur lors de la soumission de la candidature :", error);
-    await interaction.reply({
-      content:
-        "Une erreur s'est produite lors de la soumission de votre candidature.",
-      ephemeral: true,
-    });
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content:
+          "Une erreur s'est produite lors de la soumission de votre candidature.",
+        ephemeral: true,
+      });
+    }
   }
 }
 
@@ -150,10 +152,13 @@ export async function handleInteraction(interaction) {
   if (interaction.customId === "participate") {
     const giveawayData = await db.get(`giveaway_${interaction.channel.id}`);
     if (!giveawayData) {
-      return interaction.reply({
-        content: "❌ Giveaway non trouvé.",
-        ephemeral: true,
-      });
+      if (!interaction.replied && !interaction.deferred) {
+        return interaction.reply({
+          content: "❌ Giveaway non trouvé.",
+          ephemeral: true,
+        });
+      }
+      return;
     }
 
     if (!interaction.member.roles.cache.has(giveawayData.roleId)) {
