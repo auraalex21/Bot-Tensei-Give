@@ -161,6 +161,11 @@ export async function handleInteraction(interaction) {
       return;
     }
 
+    // Ensure participants is always an array
+    if (!Array.isArray(giveawayData.participants)) {
+      giveawayData.participants = [];
+    }
+
     if (giveawayData.participants.includes(interaction.user.id)) {
       if (!interaction.replied && !interaction.deferred) {
         try {
