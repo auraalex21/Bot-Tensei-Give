@@ -29,16 +29,23 @@ const loadCommands = (dir) => {
     if (fs.statSync(filePath).isDirectory()) {
       loadCommands(filePath);
     } else if (file.endsWith(".js")) {
-      import(pathToFileURL(filePath).href).then((command) => {
-        if (command.data) {
-          client.commands.set(command.data.name, command);
-          console.log(`👌 Commande chargée : ${command.data.name}`);
-        } else {
+      import(pathToFileURL(filePath).href)
+        .then((command) => {
+          if (command.data) {
+            client.commands.set(command.data.name, command);
+            console.log(`👌 Commande chargée : ${command.data.name}`);
+          } else {
+            console.error(
+              `❌ La commande dans ${filePath} n'a pas de nom défini.`
+            );
+          }
+        })
+        .catch((error) => {
           console.error(
-            `❌ La commande dans ${filePath} n'a pas de nom défini.`
+            `❌ Erreur lors du chargement de la commande ${filePath} :`,
+            error
           );
-        }
-      });
+        });
     }
   }
 };
