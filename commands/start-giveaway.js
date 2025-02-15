@@ -98,7 +98,7 @@ module.exports = {
     });
 
     // ID du message de règlement et de l'emoji de validation
-    const rulesMessageId = "ID_DU_MESSAGE_DE_REGLEMENT";
+    const rulesMessageId = "1339253344853692416";
     const rulesEmoji = "✅";
 
     // Vérification de l'ID du message de règlement
