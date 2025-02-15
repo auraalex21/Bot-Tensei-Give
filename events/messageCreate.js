@@ -2,6 +2,7 @@ import {
   addExperience,
   setLastMessageTime,
   getLastMessageTime,
+  getUserLevel,
 } from "../config/levels.js";
 import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder } from "discord.js";
@@ -27,10 +28,7 @@ export default async (client, message) => {
   const leveledUp = await addExperience(userId, guildId, exp, client);
 
   if (leveledUp) {
-    const userLevel = await levels.getUserLevel(
-      message.author.id,
-      message.guild.id
-    );
+    const userLevel = await getUserLevel(userId, guildId);
     const levelUpChannelId = "1340011943733366805";
     const levelUpChannel = client.channels.cache.get(levelUpChannelId);
 
