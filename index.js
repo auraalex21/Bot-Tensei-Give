@@ -123,6 +123,16 @@ client.once("ready", async () => {
         .join(", ")}`
     );
   });
+
+  // Vérifiez si le bot est présent dans la guilde
+  const guild = client.guilds.cache.get(process.env.GUILD_ID);
+  if (!guild) {
+    console.error(
+      `❌ Le bot n'est pas présent dans la guilde avec l'ID ${process.env.GUILD_ID}`
+    );
+  } else {
+    console.log(`✅ Le bot est présent dans la guilde : ${guild.name}`);
+  }
 });
 
 client.on("interactionCreate", async (interaction) => {
