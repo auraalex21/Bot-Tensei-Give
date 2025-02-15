@@ -59,3 +59,5 @@ export const setLastMessageTime = async (userId, guildId, time) => {
   const key = `lastMessage_${guildId}_${userId}`;
   await db.set(key, time);
 };
+
+export const levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
