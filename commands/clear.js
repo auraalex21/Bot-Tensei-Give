@@ -1,9 +1,11 @@
 import { SlashCommandBuilder } from "discord.js";
 
+const commandName = "clear";
+
 export default {
-  name: "clear",
+  name: commandName,
   data: new SlashCommandBuilder()
-    .setName("clear")
+    .setName(commandName)
     .setDescription("Effacer un certain nombre de messages")
     .addIntegerOption((option) =>
       option
