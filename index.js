@@ -105,7 +105,7 @@ const reloadGiveaways = async () => {
           const message = await giveawayChannel.messages.fetch(
             giveawayData.messageId
           );
-          new ActionRowBuilder().addComponents(
+          const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
               .setCustomId("participate")
               .setLabel("Participer")
