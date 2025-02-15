@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { Client, GatewayIntentBits, Collection } from "discord.js";
 import dotenv from "dotenv";
 // @ts-ignore
@@ -30,7 +30,7 @@ const loadCommands = (dir) => {
     if (fs.statSync(filePath).isDirectory()) {
       loadCommands(filePath);
     } else if (file.endsWith(".js")) {
-      import(path.resolve(filePath)).then((command) => {
+      import(pathToFileURL(filePath).href).then((command) => {
         if (command.data) {
           client.commands.set(command.data.name, command);
           console.log(`👌 Commande chargée : ${command.data.name}`);
@@ -58,7 +58,9 @@ synchronizeSlashCommands(
 fs.readdir(path.resolve(__dirname, "./events/"), (_err, files) => {
   files.forEach((file) => {
     if (!file.endsWith(".js")) return;
-    import(path.resolve(__dirname, `./events/${file}`)).then((event) => {
+    import(
+      pathToFileURL(path.resolve(__dirname, `./events/${file}`)).href
+    ).then((event) => {
       let eventName = file.split(".")[0];
       console.log(`👌 Événement chargé : ${eventName}`);
       client.on(eventName, event.default.bind(null, client));
