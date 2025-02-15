@@ -2,7 +2,7 @@ import {
   addExperience,
   setLastMessageTime,
   getLastMessageTime,
-} from "../config/levels.js"; // Ensure this path is correct
+} from "../config/levels.js";
 import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder } from "discord.js";
 
