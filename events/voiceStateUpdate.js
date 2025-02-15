@@ -1,4 +1,4 @@
-import levels from "../config/levels";
+import { addExperience } from "../config/levels.js"; // Ensure this path is correct
 import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder } from "discord.js";
 
@@ -12,6 +12,9 @@ export default async (client, oldState, newState) => {
   ];
   if (excludedChannels.includes(newState.channelId)) return;
 
+  const guildId = newState.guild.id;
+  const userId = newState.member.user.id;
+
   if (!oldState.channelId && newState.channelId) {
     // L'utilisateur a rejoint un canal vocal
     const interval = setInterval(async () => {
@@ -24,12 +27,7 @@ export default async (client, oldState, newState) => {
       }
 
       const expGained = 30;
-      const leveledUp = await levels.addExperience(
-        newState.member.user.id,
-        newState.guild.id,
-        expGained,
-        client
-      );
+      const leveledUp = await addExperience(userId, guildId, expGained, client);
 
       if (leveledUp) {
         const userLevel = await levels.getUserLevel(
