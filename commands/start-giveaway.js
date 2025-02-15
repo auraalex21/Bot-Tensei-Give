@@ -7,7 +7,7 @@ import {
   MessageFlags,
 } from "discord.js";
 import ms from "ms";
-import messages from "../utils/messages.js";
+import { messages } from "../utils/messages.js"; // Ensure this path is correct
 import { QuickDB } from "quick.db";
 
 const db = new QuickDB();
@@ -185,4 +185,11 @@ export async function execute(interaction) {
         flags: MessageFlags.Ephemeral,
       });
     });
+
+  db.set(`giveaway_${giveawayChannel.id}`, {
+    prize: giveawayPrize,
+    winnerCount: giveawayWinnerCount,
+    hostedBy: interaction.user.id,
+    duration: ms(giveawayDuration),
+  });
 }
