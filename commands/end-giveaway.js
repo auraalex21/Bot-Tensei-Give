@@ -1,6 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
 import { QuickDB } from "quick.db";
-import Discord from "discord.js";
 
 const db = new QuickDB();
 
@@ -10,68 +9,28 @@ export default {
     .setDescription("Terminer un giveaway")
     .addStringOption((option) =>
       option
-        .setName("giveaway")
-        .setDescription(
-          "Le giveaway à terminer (ID du message ou prix du giveaway)"
-        )
+        .setName("giveaway_id")
+        .setDescription("L'ID du giveaway à terminer")
         .setRequired(true)
     ),
 
   async execute(interaction) {
-    // Si le membre n'a pas les permissions nécessaires
-    if (
-      !interaction.member.permissions.has("MANAGE_MESSAGES") &&
-      !interaction.member.roles.cache.some((r) => r.name === "Giveaways")
-    ) {
-      return interaction.reply({
-        content:
-          ":x: Vous devez avoir les permissions de gérer les messages pour terminer des giveaways.",
-        ephemeral: true,
-      });
-    }
+    const giveawayId = interaction.options.getString("giveaway_id");
+    const giveaway = await db.get(`giveaways.${giveawayId}`);
 
-    const query = interaction.options.getString("giveaway");
-
-    // essayer de trouver le giveaway avec le prix puis avec l'ID
-    const giveaway =
-      // Rechercher avec le prix du giveaway
-      client.giveawaysManager.giveaways.find(
-        (g) => g.prize === query && g.guildId === interaction.guild.id
-      ) ||
-      // Rechercher avec l'ID du giveaway
-      client.giveawaysManager.giveaways.find(
-        (g) => g.messageId === query && g.guildId === interaction.guild.id
-      );
-
-    // Si aucun giveaway n'a été trouvé
     if (!giveaway) {
       return interaction.reply({
-        content: "Impossible de trouver un giveaway pour `" + query + "`.",
+        content: ":x: Giveaway non trouvé.",
         ephemeral: true,
       });
     }
 
-    if (giveaway.ended) {
-      return interaction.reply({
-        content: "Ce giveaway est déjà terminé.",
-        ephemeral: true,
-      });
-    }
+    // Terminer le giveaway
+    interaction.client.giveawaysManager.end(giveawayId);
 
-    // Modifier le giveaway
-    client.giveawaysManager
-      .end(giveaway.messageId)
-      // Message de succès
-      .then(() => {
-        // Message de succès
-        interaction.reply("Giveaway terminé!");
-        db.set(`giveaway_${giveaway.messageId}.ended`, true);
-      })
-      .catch((e) => {
-        interaction.reply({
-          content: e,
-          ephemeral: true,
-        });
-      });
+    interaction.reply({
+      content: `✅ Le giveaway avec l'ID ${giveawayId} a été terminé.`,
+      ephemeral: true,
+    });
   },
 };

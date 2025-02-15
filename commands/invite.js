@@ -11,135 +11,29 @@ const db = new QuickDB();
 export default {
   data: new SlashCommandBuilder()
     .setName("invite")
-    .setDescription("Afficher le nombre de personnes que vous avez invitées")
-    .addUserOption((option) =>
+    .setDescription("Créer une invitation")
+    .addStringOption((option) =>
       option
-        .setName("utilisateur")
-        .setDescription("L'utilisateur dont vous voulez voir les invitations")
-        .setRequired(false)
+        .setName("code")
+        .setDescription("Le code de l'invitation")
+        .setRequired(true)
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName("utilisations")
+        .setDescription("Le nombre d'utilisations de l'invitation")
+        .setRequired(true)
     ),
 
   async execute(interaction) {
-    const user = interaction.options.getUser("utilisateur") || interaction.user;
-    const invites = (await db.get(`invites_${user.id}`)) || 0;
+    const code = interaction.options.getString("code");
+    const uses = interaction.options.getInteger("utilisations");
 
-    const width = 700;
-    const height = 250;
-    const borderRadius = 20;
-    const padding = 30;
-    const avatarSize = 100;
+    await db.set(`invite_${code}`, { uses });
 
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext("2d");
-
-    // Charger l'image de profil de l'utilisateur
-    const avatarURL = user.displayAvatarURL({ format: "png", size: 128 });
-    let avatar;
-    try {
-      avatar = await loadImage(avatarURL);
-    } catch (err) {
-      console.error("Failed to load avatar image:", err);
-      avatar = await loadImage(
-        "https://cdn.discordapp.com/embed/avatars/0.png"
-      );
-    }
-
-    // Fonction pour dessiner un rectangle avec des coins arrondis
-    function drawRoundedRect(ctx, x, y, width, height, radius) {
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + width - radius, y);
-      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-      ctx.lineTo(x + width, y + height - radius);
-      ctx.quadraticCurveTo(
-        x + width,
-        y + height,
-        x + width - radius,
-        y + height
-      );
-      ctx.lineTo(x + radius, y + height);
-      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
-      ctx.closePath();
-    }
-
-    // Dessiner le fond noir avec coins arrondis
-    ctx.fillStyle = "#000000";
-    drawRoundedRect(ctx, 0, 0, width, height, borderRadius);
-    ctx.fill();
-
-    // Dessiner la barre bleue sur le côté gauche
-    ctx.fillStyle = "#0099ff";
-    ctx.fillRect(0, 0, 6, height);
-
-    // Dessiner l'avatar de l'utilisateur (cercle)
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(
-      padding + avatarSize / 2,
-      height / 2,
-      avatarSize / 2,
-      0,
-      Math.PI * 2
-    );
-    ctx.closePath();
-    ctx.clip();
-    ctx.drawImage(
-      avatar,
-      padding,
-      height / 2 - avatarSize / 2,
-      avatarSize,
-      avatarSize
-    );
-    ctx.restore();
-
-    // Dessiner les lignes séparatrices
-    ctx.strokeStyle = "#ffffff33"; // Blanc légèrement transparent
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(padding * 2 + avatarSize, height / 3);
-    ctx.lineTo(width - padding, height / 3);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(padding * 2 + avatarSize, (height / 3) * 2);
-    ctx.lineTo(width - padding, (height / 3) * 2);
-    ctx.stroke();
-
-    // Texte principal
-    ctx.font = "bold 30px Arial";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(user.tag, padding * 2 + avatarSize, height / 4);
-
-    ctx.font = "24px Arial";
-    ctx.fillStyle = "#aaaaaa";
-    ctx.fillText(
-      "Nombre d'invitations :",
-      padding * 2 + avatarSize,
-      (height / 3) * 2 - 10
-    );
-
-    // Affichage du nombre d'invitations
-    ctx.font = "bold 28px Arial";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(
-      `${invites} personne(s)`,
-      padding * 2 + avatarSize,
-      height - padding
-    );
-
-    // Convertir le canvas en buffer
-    const buffer = canvas.toBuffer();
-
-    // Créer la pièce jointe
-    const attachment = new AttachmentBuilder(buffer, {
-      name: "invite-count.png",
-    });
-
-    // Envoyer l'image en réponse
     interaction.reply({
-      files: [attachment],
-      flags: MessageFlags.Ephemeral,
+      content: `✅ Invitation créée avec le code ${code} et ${uses} utilisations.`,
+      ephemeral: true,
     });
   },
 };

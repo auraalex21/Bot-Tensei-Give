@@ -1,42 +1,33 @@
 import { SlashCommandBuilder } from "discord.js";
 import { QuickDB } from "quick.db";
+
 const db = new QuickDB();
 
 export default {
   data: new SlashCommandBuilder()
     .setName("add-invite")
-    .setDescription("Ajouter une invitation à un utilisateur")
-    .addUserOption((option) =>
+    .setDescription("Ajouter une invitation")
+    .addStringOption((option) =>
       option
-        .setName("utilisateur")
-        .setDescription("L'utilisateur à qui ajouter une invitation")
+        .setName("code")
+        .setDescription("Le code de l'invitation")
         .setRequired(true)
     )
     .addIntegerOption((option) =>
       option
-        .setName("nombre")
-        .setDescription("Le nombre d'invitations à ajouter")
+        .setName("utilisations")
+        .setDescription("Le nombre d'utilisations de l'invitation")
         .setRequired(true)
     ),
 
   async execute(interaction) {
-    const authorizedUserId = "378998346712481812";
+    const code = interaction.options.getString("code");
+    const uses = interaction.options.getInteger("utilisations");
 
-    if (interaction.user.id !== authorizedUserId) {
-      return interaction.reply({
-        content: ":x: Vous n'êtes pas autorisé à utiliser cette commande.",
-        ephemeral: true,
-      });
-    }
-
-    const user = interaction.options.getUser("utilisateur");
-    const number = interaction.options.getInteger("nombre");
-    const currentInvites = (await db.get(`invites_${user.id}`)) || 0;
-
-    await db.set(`invites_${user.id}`, currentInvites + number);
+    await db.set(`invite_${code}`, { uses });
 
     interaction.reply({
-      content: `Ajouté ${number} invitation(s) à ${user.tag}.`,
+      content: `✅ Invitation ajoutée avec le code ${code} et ${uses} utilisations.`,
       ephemeral: true,
     });
   },

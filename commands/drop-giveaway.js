@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
 import { QuickDB } from "quick.db";
-import { sendMessage, messages } from "../utils/messages.js"; // Ensure this path is correct
+import { sendMessage } from "../utils/messages.js"; // Ensure this path is correct
 
 const db = new QuickDB();
 

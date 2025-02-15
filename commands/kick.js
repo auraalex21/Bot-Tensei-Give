@@ -1,6 +1,4 @@
 import { SlashCommandBuilder } from "discord.js";
-import { QuickDB } from "quick.db";
-const db = new QuickDB();
 
 export default {
   data: new SlashCommandBuilder()
@@ -26,8 +24,8 @@ export default {
 
     if (!interaction.member.permissions.has("KICK_MEMBERS")) {
       return interaction.reply({
-        content: ":x: Vous n'avez pas la permission d'expulser des membres.",
-        flags: Discord.MessageFlags.Ephemeral,
+        content: ":x: Vous n'avez pas la permission d'utiliser cette commande.",
+        ephemeral: true,
       });
     }
 
@@ -35,21 +33,15 @@ export default {
     if (!member) {
       return interaction.reply({
         content: ":x: Utilisateur non trouvé.",
-        flags: Discord.MessageFlags.Ephemeral,
+        ephemeral: true,
       });
     }
 
     await member.kick(reason);
-    const kicks = (await db.get(`kicks_${user.id}`)) || [];
-    kicks.push({
-      reason,
-      date: new Date().toISOString(),
-      moderatorId: interaction.user.id,
-    });
-    await db.set(`kicks_${user.id}`, kicks);
 
-    interaction.reply(
-      `✅ ${user.tag} a été expulsé pour la raison suivante : ${reason}`
-    );
+    interaction.reply({
+      content: `✅ ${user.tag} a été expulsé. Raison: ${reason}`,
+      ephemeral: true,
+    });
   },
 };

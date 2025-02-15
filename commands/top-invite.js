@@ -1,54 +1,33 @@
 import { SlashCommandBuilder } from "discord.js";
 import { QuickDB } from "quick.db";
-import { EmbedBuilder, MessageFlags } from "discord.js";
 
 const db = new QuickDB();
 
 export default {
   data: new SlashCommandBuilder()
     .setName("top-invite")
-    .setDescription("Afficher le top des invitations"),
+    .setDescription("Afficher le classement des invitations"),
 
   async execute(interaction) {
-    const guild = interaction.guild;
-    const invites = await guild.invites.fetch();
+    const invites = await db.all();
+    const sortedInvites = invites
+      .filter((invite) => invite.id.startsWith("invite_"))
+      .sort((a, b) => b.value.uses - a.value.uses)
+      .slice(0, 10);
 
-    const inviteCounts = {};
+    const embed = {
+      title: "Classement des invitations",
+      description: sortedInvites
+        .map(
+          (invite, index) =>
+            `${index + 1}. ${invite.id.split("_")[1]} - ${
+              invite.value.uses
+            } utilisations`
+        )
+        .join("\n"),
+      color: 0x00ff00,
+    };
 
-    invites.forEach((invite) => {
-      const inviter = invite.inviter;
-      if (inviter) {
-        if (!inviteCounts[inviter.id]) {
-          inviteCounts[inviter.id] = 0;
-        }
-        inviteCounts[inviter.id] += invite.uses;
-      }
-    });
-
-    const sortedInvites = Object.entries(inviteCounts).sort(
-      (a, b) => b[1] - a[1]
-    );
-
-    const topInvites = sortedInvites.slice(0, 10);
-
-    const embed = new EmbedBuilder()
-      .setTitle("Top 10 des invitations")
-      .setColor("#0099ff");
-
-    topInvites.forEach(([userId, count], index) => {
-      const user = guild.members.cache.get(userId);
-      if (user) {
-        embed.addFields({
-          name: `${index + 1}. ${user.user.tag}`,
-          value: `${count} invitations`,
-          inline: false,
-        });
-      }
-    });
-
-    interaction.reply({
-      embeds: [embed],
-      flags: MessageFlags.Ephemeral,
-    });
+    interaction.reply({ embeds: [embed], ephemeral: true });
   },
 };
