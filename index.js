@@ -30,52 +30,28 @@ const loadCommands = (dir) => {
     if (fs.statSync(filePath).isDirectory()) {
       loadCommands(filePath);
     } else if (file.endsWith(".js")) {
-      import(pathToFileURL(filePath).href).then((command) => {
-        if (command.data) {
-          client.commands.set(command.data.name, command);
-          console.log(`👌 Commande chargée : ${command.data.name}`);
-        } else {
+      import(pathToFileURL(filePath).href)
+        .then((command) => {
+          if (command.data) {
+            client.commands.set(command.data.name, command);
+            console.log(`👌 Commande chargée : ${command.data.name}`);
+          } else {
+            console.error(
+              `❌ La commande dans ${filePath} n'a pas de nom défini.`
+            );
+          }
+        })
+        .catch((error) => {
           console.error(
-            `❌ La commande dans ${filePath} n'a pas de nom défini.`
+            `❌ Erreur lors du chargement de la commande ${filePath} :`,
+            error
           );
-        }
-      });
+        });
     }
   }
 };
 
 loadCommands(path.resolve(__dirname, "./commands"));
-
-synchronizeSlashCommands(
-  client,
-  client.commands.map((c) => c.data.toJSON()),
-  {
-    debug: true,
-    guildId: process.env.GUILD_ID,
-  }
-)
-  .then(() => {
-    console.log("✅ Commandes synchronisées avec succès.");
-  })
-  .catch((error) => {
-    console.error(
-      "❌ Erreur lors de la synchronisation des commandes :",
-      error
-    );
-  });
-
-fs.readdir(path.resolve(__dirname, "./events/"), (_err, files) => {
-  files.forEach((file) => {
-    if (!file.endsWith(".js")) return;
-    import(
-      pathToFileURL(path.resolve(__dirname, `./events/${file}`)).href
-    ).then((event) => {
-      let eventName = file.split(".")[0];
-      console.log(`👌 Événement chargé : ${eventName}`);
-      client.on(eventName, event.default.bind(null, client));
-    });
-  });
-});
 
 client.once("ready", async () => {
   console.log(`Prêt en tant que ${client.user.tag}`);
@@ -144,13 +120,36 @@ client.once("ready", async () => {
     console.log("✅ Le bot a les permissions administratives nécessaires.");
   }
 
-  // Forcer l'enregistrement des commandes si aucune n'est trouvée
-  if (client.commands.size === 0) {
-    console.log(
-      "⚠️ Aucune commande trouvée, enregistrement forcé des commandes."
+  // Synchroniser les commandes
+  try {
+    await synchronizeSlashCommands(
+      client,
+      client.commands.map((c) => c.data.toJSON()),
+      {
+        debug: true,
+        guildId: process.env.GUILD_ID,
+      }
     );
-    await client.application.commands.set([]);
+    console.log("✅ Commandes synchronisées avec succès.");
+  } catch (error) {
+    console.error(
+      "❌ Erreur lors de la synchronisation des commandes :",
+      error
+    );
   }
+});
+
+fs.readdir(path.resolve(__dirname, "./events/"), (_err, files) => {
+  files.forEach((file) => {
+    if (!file.endsWith(".js")) return;
+    import(
+      pathToFileURL(path.resolve(__dirname, `./events/${file}`)).href
+    ).then((event) => {
+      let eventName = file.split(".")[0];
+      console.log(`👌 Événement chargé : ${eventName}`);
+      client.on(eventName, event.default.bind(null, client));
+    });
+  });
 });
 
 client.on("interactionCreate", async (interaction) => {
