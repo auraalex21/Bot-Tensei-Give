@@ -50,14 +50,4 @@ export const getUserLevel = async (userId, guildId) => {
   return (await db.get(key)) || { exp: 0, level: 1, lastExpTime: 0 };
 };
 
-export const getLastMessageTime = async (userId, guildId) => {
-  const key = `lastMessage_${guildId}_${userId}`;
-  return await db.get(key);
-};
-
-export const setLastMessageTime = async (userId, guildId, time) => {
-  const key = `lastMessage_${guildId}_${userId}`;
-  await db.set(key, time);
-};
-
 export const levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
