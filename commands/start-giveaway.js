@@ -74,8 +74,8 @@ module.exports = {
     // 🔍 Correction du hostedBy pour éviter l'erreur "not a snowflake"
     const hostedByText =
       process.env.HOSTED_BY && process.env.HOSTED_BY.trim() !== ""
-        ? `<@${interaction.user.id}>`
-        : `Organisé par ${interaction.user.username}`;
+        ? process.env.HOSTED_BY
+        : interaction.user.toString();
 
     // Correction du footer pour éviter les erreurs de validation
     messages.footer = {
@@ -135,7 +135,7 @@ module.exports = {
         return i.reply({
           content:
             ":x: Vous devez accepter le règlement pour participer à ce giveaway.",
-          ephemeral: true,
+          flags: Discord.MessageFlags.Ephemeral,
         });
       }
 
@@ -143,13 +143,13 @@ module.exports = {
         return i.reply({
           content:
             ":x: Vous n'avez pas le rôle requis pour participer à ce giveaway.",
-          ephemeral: true,
+          flags: Discord.MessageFlags.Ephemeral,
         });
       }
 
       await i.reply({
         content: "🎉 Vous avez été ajouté au giveaway !",
-        ephemeral: true,
+        flags: Discord.MessageFlags.Ephemeral,
       });
     });
 
@@ -171,7 +171,7 @@ module.exports = {
       .then(() => {
         interaction.reply({
           content: `🎉 Giveaway démarré dans ${giveawayChannel}!`,
-          ephemeral: true,
+          flags: Discord.MessageFlags.Ephemeral,
         });
       })
       .catch((error) => {
@@ -179,7 +179,7 @@ module.exports = {
         interaction.reply({
           content:
             ":x: Une erreur s'est produite lors du démarrage du giveaway.",
-          ephemeral: true,
+          flags: Discord.MessageFlags.Ephemeral,
         });
       });
   },
