@@ -4,6 +4,9 @@ import { fileURLToPath, pathToFileURL } from "url";
 import { Client, GatewayIntentBits, Collection } from "discord.js";
 import dotenv from "dotenv";
 import synchronizeSlashCommands from "discord-sync-commands";
+import { QuickDB } from "quick.db";
+import { createCanvas } from "canvas";
+import ms from "ms";
 
 dotenv.config();
 
@@ -22,6 +25,7 @@ const client = new Client({
 });
 
 client.commands = new Collection();
+const db = new QuickDB();
 
 // 📌 CHARGEMENT AUTOMATIQUE DES COMMANDES
 const loadCommands = (dir) => {
@@ -77,6 +81,146 @@ const loadEvents = (dir) => {
             error
           );
         });
+    }
+  }
+};
+
+const reloadGiveaways = async () => {
+  const giveaways = await db.all();
+  for (const { id, value } of giveaways) {
+    if (id.startsWith("giveaway_")) {
+      const giveawayData = value;
+      const remainingTime = giveawayData.endTime - Date.now();
+      if (remainingTime > 0) {
+        const giveawayChannel = client.channels.cache.get(id.split("_")[1]);
+        if (giveawayChannel) {
+          const message = await giveawayChannel.messages.fetch(
+            giveawayData.messageId
+          );
+          const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId("participate")
+              .setLabel("Participer")
+              .setStyle(ButtonStyle.Primary)
+          );
+
+          const updateCanvas = async (winners = [], finished = false) => {
+            const remainingTime = Math.max(
+              0,
+              giveawayData.endTime - Date.now()
+            );
+
+            const width = 800;
+            const height = 300;
+            const canvas = createCanvas(width, height);
+            const ctx = canvas.getContext("2d");
+
+            const gradient = ctx.createLinearGradient(0, 0, width, height);
+            gradient.addColorStop(0, "#0A192F");
+            gradient.addColorStop(1, "#001F3F");
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.strokeStyle = "#FFD700";
+            ctx.lineWidth = 8;
+            ctx.roundRect(10, 10, width - 20, height - 20, 20);
+            ctx.stroke();
+
+            ctx.font = "bold 32px Arial";
+            ctx.fillStyle = "#FFD700";
+            ctx.fillText(`🎉 Giveaway Démarré`, 50, 60);
+
+            ctx.font = "bold 26px Arial";
+            ctx.fillStyle = "#FFFFFF";
+            if (finished) {
+              ctx.fillText(`🎉 Giveaway Terminé`, 50, 120);
+              ctx.fillText(`🏆 Gagnants: ${winners.join(", ")}`, 50, 160);
+              ctx.fillText(
+                `⏰ Fin: ${new Date(giveawayData.endTime).toLocaleString()}`,
+                50,
+                200
+              );
+            } else {
+              ctx.fillText(
+                `⏳ Temps restant: ${ms(remainingTime, { long: true })}`,
+                50,
+                120
+              );
+              ctx.fillText(
+                `👥 Participants: ${giveawayData.participants.length}`,
+                50,
+                160
+              );
+              ctx.fillText(`🎁 Prix: ${giveawayData.prize}`, 50, 200);
+              ctx.fillText(
+                `🏆 Nombre de gagnants: ${giveawayData.winnerCount}`,
+                50,
+                240
+              );
+            }
+
+            const buffer = canvas.toBuffer();
+            return new AttachmentBuilder(buffer, { name: "giveaway.png" });
+          };
+
+          const collector = message.createMessageComponentCollector({
+            time: remainingTime,
+          });
+
+          collector.on("collect", async (i) => {
+            if (!giveawayData.participants.includes(i.user.id)) {
+              giveawayData.participants.push(i.user.id);
+              await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
+              if (!i.replied && !i.deferred) {
+                await i.reply({
+                  content: "🎉 Vous avez été ajouté au giveaway !",
+                  flags: 64,
+                });
+              }
+            } else {
+              if (!i.replied && !i.deferred) {
+                await i.reply({
+                  content: "❌ Vous êtes déjà inscrit à ce giveaway.",
+                  flags: 64,
+                });
+              }
+            }
+          });
+
+          collector.on("end", async () => {
+            if (giveawayData.participants.length === 0) {
+              await giveawayChannel.send({
+                files: [await updateCanvas([], true)],
+              });
+              return;
+            }
+
+            const winners = [];
+            for (let i = 0; i < giveawayData.winnerCount; i++) {
+              const winnerIndex = Math.floor(
+                Math.random() * giveawayData.participants.length
+              );
+              const winnerId = giveawayData.participants.splice(
+                winnerIndex,
+                1
+              )[0];
+              winners.push(`<@${winnerId}>`);
+            }
+
+            await message.edit({ files: [await updateCanvas(winners, true)] });
+          });
+
+          const interval = setInterval(async () => {
+            if (Date.now() >= giveawayData.endTime) {
+              clearInterval(interval);
+              return;
+            }
+            await message.edit({ files: [await updateCanvas()] });
+          }, 1000);
+
+          console.log(`✅ Giveaway reloaded in ${giveawayChannel.name}`);
+        }
+      }
     }
   }
 };
@@ -168,6 +312,9 @@ client.once("ready", async () => {
       error
     );
   }
+
+  // Reload active giveaways
+  await reloadGiveaways();
 });
 
 client.login(process.env.DISCORD_TOKEN);
