@@ -53,7 +53,7 @@ module.exports = {
       return interaction.reply({
         content:
           ":x: Vous devez avoir la permission `Gérer les messages` pour lancer un giveaway.",
-        ephemeral: true,
+        flags: Discord.MessageFlags.Ephemeral,
       });
     }
 
@@ -62,20 +62,17 @@ module.exports = {
     const giveawayWinnerCount = interaction.options.getInteger("gagnants");
     const giveawayPrize = interaction.options.getString("prix");
 
-    // 🔍 Vérification du type de salon (correction)
+    // Vérification du type de salon
     console.log("Type de salon:", giveawayChannel.type);
     if (!giveawayChannel.isTextBased()) {
       return interaction.reply({
         content: ":x: Le canal sélectionné n'est pas un canal textuel valide.",
-        ephemeral: true,
+        flags: Discord.MessageFlags.Ephemeral,
       });
     }
 
-    // 🔍 Correction du hostedBy pour éviter l'erreur "not a snowflake"
-    const hostedByText =
-      process.env.HOSTED_BY && process.env.HOSTED_BY.trim() !== ""
-        ? process.env.HOSTED_BY
-        : interaction.user.toString();
+    // Correction du hostedBy pour éviter l'erreur "not a snowflake"
+    const hostedByText = interaction.user.toString();
 
     // Correction du footer pour éviter les erreurs de validation
     messages.footer = {
@@ -167,7 +164,7 @@ module.exports = {
 
     // Démarrer le giveaway
     client.giveawaysManager
-      .start(giveawayChannel, {
+      .start(giveawayMessage, {
         duration: ms(giveawayDuration),
         prize: giveawayPrize,
         winnerCount: giveawayWinnerCount,
