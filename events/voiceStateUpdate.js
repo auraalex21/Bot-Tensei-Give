@@ -4,7 +4,7 @@ import { AttachmentBuilder, Events } from "discord.js";
 
 export default {
   name: Events.VoiceStateUpdate,
-  async execute(oldState, newState) {
+  async execute(client, oldState, newState) {
     console.log(
       `Mise à jour de l'état vocal : ${oldState.channelId} -> ${newState.channelId}`
     );
