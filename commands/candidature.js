@@ -21,23 +21,47 @@ export async function execute(interaction) {
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
 
+  const ageInput = new TextInputBuilder()
+    .setCustomId("ageInput")
+    .setLabel("Votre âge")
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true);
+
   const experienceInput = new TextInputBuilder()
     .setCustomId("experienceInput")
     .setLabel("Votre expérience")
     .setStyle(TextInputStyle.Paragraph)
     .setRequired(true);
 
-  const motivationInput = new TextInputBuilder()
-    .setCustomId("motivationInput")
-    .setLabel("Votre motivation")
-    .setStyle(TextInputStyle.Paragraph)
-    .setRequired(true);
+  const firstActionRow = new ActionRowBuilder().addComponents(nameInput);
+  const secondActionRow = new ActionRowBuilder().addComponents(ageInput);
+  const thirdActionRow = new ActionRowBuilder().addComponents(experienceInput);
 
-  modal.addComponents(
-    new ActionRowBuilder().addComponents(nameInput),
-    new ActionRowBuilder().addComponents(experienceInput),
-    new ActionRowBuilder().addComponents(motivationInput)
-  );
+  modal.addComponents(firstActionRow, secondActionRow, thirdActionRow);
 
-  await interaction.showModal(modal);
+  try {
+    await interaction.showModal(modal);
+  } catch (error) {
+    console.error("Erreur lors de l'affichage du modal :", error);
+
+    if (interaction.replied || interaction.deferred) {
+      try {
+        await interaction.followUp({
+          content: "Il y a eu une erreur en affichant le modal.",
+          ephemeral: true,
+        });
+      } catch (followUpError) {
+        console.error("Erreur lors de l'envoi du follow-up :", followUpError);
+      }
+    } else {
+      try {
+        await interaction.reply({
+          content: "Il y a eu une erreur en affichant le modal.",
+          ephemeral: true,
+        });
+      } catch (replyError) {
+        console.error("Erreur lors de l'envoi de la réponse :", replyError);
+      }
+    }
+  }
 }
