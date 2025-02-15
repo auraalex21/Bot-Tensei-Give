@@ -81,31 +81,6 @@ const loadEvents = (dir) => {
   }
 };
 
-const eventsPath = path.join(__dirname, "events");
-const eventFiles = fs
-  .readdirSync(eventsPath)
-  .filter((file) => file.endsWith(".js"));
-
-for (const file of eventFiles) {
-  const filePath = path.join(eventsPath, file);
-  const event = await import(pathToFileURL(filePath).href);
-  if (event.default && typeof event.default.execute === "function") {
-    if (event.default.once) {
-      client.once(event.default.name, (...args) =>
-        event.default.execute(client, ...args)
-      );
-    } else {
-      client.on(event.default.name, (...args) =>
-        event.default.execute(client, ...args)
-      );
-    }
-  } else {
-    console.error(
-      `❌ Erreur : L'événement ${filePath} n'a pas de fonction 'execute' valide.`
-    );
-  }
-}
-
 loadCommands(path.resolve(__dirname, "./commands"));
 loadEvents(path.resolve(__dirname, "./events"));
 
