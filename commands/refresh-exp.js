@@ -1,14 +1,13 @@
 import { SlashCommandBuilder } from "discord.js";
-import levels from "../config/levels";
 import { QuickDB } from "quick.db";
+import { addExperience } from "../config/levels.js"; // Ensure this path is correct
+
 const db = new QuickDB();
 
 export default {
   data: new SlashCommandBuilder()
     .setName("refresh-exp")
-    .setDescription(
-      "Rafraîchir l'expérience d'un utilisateur et recalculer son niveau"
-    )
+    .setDescription("Rafraîchir l'expérience d'un utilisateur")
     .addUserOption((option) =>
       option
         .setName("utilisateur")
@@ -16,51 +15,30 @@ export default {
           "L'utilisateur dont vous voulez rafraîchir l'expérience"
         )
         .setRequired(true)
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName("exp")
+        .setDescription("Le montant d'expérience à ajouter")
+        .setRequired(true)
     ),
 
-  async execute(client, interaction) {
+  async execute(interaction) {
     const user = interaction.options.getUser("utilisateur");
+    const exp = interaction.options.getInteger("exp");
     const guildId = interaction.guild.id;
-    const member = interaction.guild.members.cache.get(interaction.user.id);
+    const client = interaction.client;
 
-    // Check if the user has the required role
-    if (!member.roles.cache.has("1339230333953904751")) {
-      return interaction.reply({
-        content: ":x: Vous n'avez pas la permission d'utiliser cette commande.",
-        ephemeral: true,
-      });
-    }
+    const success = await addExperience(user.id, guildId, exp, client);
 
-    // Récupérer les données de l'utilisateur
-    const userData = await db.get(`levels_${guildId}_${user.id}`);
-    if (!userData) {
-      return interaction.reply({
-        content: `:x: Aucune donnée trouvée pour ${user.tag}.`,
-        ephemeral: true,
-      });
-    }
-
-    // Recalculer le niveau
-    let exp = userData.exp;
-    let level = userData.level;
-    const expNeeded = 5 * Math.pow(level, 2) + 50 * level + 100;
-
-    if (exp >= expNeeded) {
-      exp -= expNeeded;
-      level++;
-      await db.set(`levels_${guildId}_${user.id}`, {
-        exp,
-        level,
-        lastExpTime: userData.lastExpTime,
-      });
-
+    if (success) {
       interaction.reply({
-        content: `✅ L'expérience de ${user.tag} a été rafraîchie et son niveau a été augmenté à ${level}.`,
+        content: `✅ ${user.tag} a gagné ${exp} points d'expérience et a monté de niveau!`,
         ephemeral: true,
       });
     } else {
       interaction.reply({
-        content: `✅ L'expérience de ${user.tag} a été rafraîchie mais son niveau reste à ${level}.`,
+        content: `✅ ${user.tag} a gagné ${exp} points d'expérience.`,
         ephemeral: true,
       });
     }
