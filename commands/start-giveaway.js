@@ -113,7 +113,9 @@ module.exports = {
     }, 1000);
 
     // Gestion des participations
-    const filter = (i) => i.customId === "participer-giveaway";
+    const filter = (i) =>
+      i.customId === "participer-giveaway" &&
+      i.message.id === giveawayMessage.id;
     const collector = giveawayMessage.createMessageComponentCollector({
       filter,
       time: ms(giveawayDuration),
