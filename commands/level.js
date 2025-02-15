@@ -1,7 +1,6 @@
-import { SlashCommandBuilder } from "discord.js";
-import { getUserLevel } from "../config/levels.js"; // Ensure this path is correct
-import { createCanvas, loadImage } from "canvas";
-import Discord from "discord.js";
+import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
+import { getUserLevel } from "../config/levels.js";
+import { createCanvas } from "canvas";
 
 export const name = "level";
 
@@ -16,118 +15,84 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction) {
-  const user = interaction.options.getUser("utilisateur") || interaction.user;
-  const userLevel = await getUserLevel(user.id, interaction.guild.id);
+  console.log(`📩 Commande reçue : level - Interaction ID: ${interaction.id}`);
 
-  const width = 700;
-  const height = 250;
-  const padding = 30;
-  const avatarSize = 100;
-  const progressBarWidth = 400;
-  const progressBarHeight = 20;
-
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext("2d");
-
-  // Dégradé de fond amélioré
-  const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, "#141E30");
-  gradient.addColorStop(1, "#243B55");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, width, height);
-
-  // Chargement de l'avatar
-  const avatarURL = user.displayAvatarURL({ format: "png", size: 128 });
-  let avatar;
   try {
-    avatar = await loadImage(avatarURL);
-  } catch (err) {
-    console.error("Failed to load avatar image:", err);
-    avatar = await loadImage("https://cdn.discordapp.com/embed/avatars/0.png");
+    await interaction.deferReply({ ephemeral: true });
+
+    const user = interaction.options.getUser("utilisateur") || interaction.user;
+    const userLevel = await getUserLevel(user.id, interaction.guild.id);
+
+    const width = 800;
+    const height = 300;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext("2d");
+
+    // Fond avec un dégradé bleu foncé
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, "#0A192F");
+    gradient.addColorStop(1, "#001F3F");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // Bordure stylisée
+    ctx.strokeStyle = "#00A2FF";
+    ctx.lineWidth = 8;
+    ctx.roundRect(10, 10, width - 20, height - 20, 20);
+    ctx.stroke();
+
+    // Texte principal
+    ctx.font = "bold 32px Poppins";
+    ctx.fillStyle = "#00A2FF";
+    ctx.fillText(`📊 Niveau de ${user.tag}`, 50, 60);
+
+    ctx.font = "bold 26px Poppins";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(`Niveau: ${userLevel.level}`, 50, 120);
+    ctx.fillText(`Exp: ${userLevel.exp} / ${userLevel.level * 100}`, 50, 160);
+
+    // Barre de progression arrière-plan (blanche)
+    const progressBarWidth = 700;
+    const progressBarHeight = 30;
+    const progress = userLevel.exp / (userLevel.level * 100);
+
+    ctx.fillStyle = "#FFFFFF"; // Arrière-plan blanc
+    ctx.fillRect(50, 220, progressBarWidth, progressBarHeight);
+
+    // Barre de progression active (bleue)
+    ctx.fillStyle = "#00A2FF";
+    ctx.fillRect(50, 220, progressBarWidth * progress, progressBarHeight);
+
+    // Contour de la barre de progression
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(50, 220, progressBarWidth, progressBarHeight);
+
+    const buffer = canvas.toBuffer();
+    const attachment = new AttachmentBuilder(buffer, {
+      name: "level-info.png",
+    });
+
+    await interaction.editReply({ files: [attachment] });
+    console.log(`✅ Niveau affiché pour ${interaction.user.tag}`);
+  } catch (error) {
+    console.error(
+      "❌ Erreur lors de l'exécution de la commande level :",
+      error
+    );
+
+    if (!interaction.replied && !interaction.deferred) {
+      try {
+        await interaction.reply({
+          content: "🚨 Une erreur s'est produite, merci de réessayer.",
+          ephemeral: true,
+        });
+      } catch (replyError) {
+        console.error(
+          "❌ Impossible d'envoyer un message d'erreur :",
+          replyError
+        );
+      }
+    }
   }
-
-  // Dessiner l'avatar avec bordure et lumière
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(
-    padding + avatarSize / 2,
-    height / 2,
-    avatarSize / 2 + 5,
-    0,
-    Math.PI * 2
-  );
-  ctx.fillStyle = "#ffffff";
-  ctx.fill();
-  ctx.closePath();
-  ctx.clip();
-  ctx.drawImage(
-    avatar,
-    padding,
-    height / 2 - avatarSize / 2,
-    avatarSize,
-    avatarSize
-  );
-  ctx.restore();
-
-  // Nom d'utilisateur avec effet ombré
-  ctx.font = "bold 32px Arial";
-  ctx.fillStyle = "#ffffff";
-  ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
-  ctx.shadowBlur = 5;
-  ctx.fillText(user.tag, padding * 2 + avatarSize, height / 4);
-  ctx.shadowBlur = 0;
-
-  // Niveau en gras
-  ctx.font = "24px Arial";
-  ctx.fillStyle = "#dddddd";
-  ctx.fillText(
-    `Niveau ${userLevel.level}`,
-    padding * 2 + avatarSize,
-    height / 2
-  );
-
-  // Barre de progression avec bords arrondis
-  ctx.fillStyle = "#444";
-  ctx.fillRect(
-    padding * 2 + avatarSize,
-    height - padding - progressBarHeight,
-    progressBarWidth,
-    progressBarHeight
-  );
-  ctx.fillStyle = "#00ccff";
-  const progress = userLevel.exp / (userLevel.level * 100); // Progression sur 100 * niveau
-  ctx.beginPath();
-  ctx.moveTo(padding * 2 + avatarSize, height - padding - progressBarHeight);
-  ctx.lineTo(
-    padding * 2 + avatarSize + progressBarWidth * progress,
-    height - padding - progressBarHeight
-  );
-  ctx.lineTo(
-    padding * 2 + avatarSize + progressBarWidth * progress,
-    height - padding
-  );
-  ctx.lineTo(padding * 2 + avatarSize, height - padding);
-  ctx.closePath();
-  ctx.fill();
-
-  // Expérience en blanc avec ombrage
-  ctx.font = "18px Arial";
-  ctx.fillStyle = "#ffffff";
-  ctx.fillText(
-    `Exp: ${userLevel.exp} / ${userLevel.level * 100}`,
-    padding * 2 + avatarSize,
-    height - padding - 5
-  );
-
-  // Convertir le canvas en buffer
-  const buffer = canvas.toBuffer();
-  const attachment = new Discord.AttachmentBuilder(buffer, {
-    name: "level-info.png",
-  });
-
-  // Envoyer l'image
-  interaction.reply({
-    files: [attachment],
-    flags: Discord.MessageFlags.Ephemeral,
-  });
 }

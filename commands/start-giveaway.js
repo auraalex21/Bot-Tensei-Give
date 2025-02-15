@@ -4,11 +4,11 @@ import {
   ButtonBuilder,
   ButtonStyle,
   PermissionsBitField,
-  MessageFlags,
+  AttachmentBuilder,
 } from "discord.js";
 import ms from "ms";
-import { messages } from "../utils/messages.js"; // Ensure this path is correct
 import { QuickDB } from "quick.db";
+import { createCanvas } from "canvas";
 
 const db = new QuickDB();
 
@@ -40,156 +40,179 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction) {
-  const client = interaction.client;
-
-  // Vérification des permissions
-  if (
-    !interaction.member.permissions.has(
-      PermissionsBitField.Flags.ManageMessages
-    )
-  ) {
-    return interaction.reply({
-      content:
-        ":x: Vous devez avoir la permission `Gérer les messages` pour lancer un giveaway.",
-      flags: MessageFlags.Ephemeral,
-    });
-  }
-
-  const giveawayChannel = interaction.options.getChannel("canal");
-  const giveawayDuration = interaction.options.getString("durée");
-  const giveawayWinnerCount = interaction.options.getInteger("gagnants");
-  const giveawayPrize = interaction.options.getString("prix");
-
-  // Vérification du type de salon
-  console.log("Type de salon:", giveawayChannel.type);
-  if (!giveawayChannel.isTextBased()) {
-    return interaction.reply({
-      content: ":x: Le canal sélectionné n'est pas un canal textuel valide.",
-      flags: MessageFlags.Ephemeral,
-    });
-  }
-
-  // Correction du hostedBy pour éviter l'erreur "not a snowflake"
-  const hostedByText = interaction.user.toString();
-
-  // Correction du footer pour éviter les erreurs de validation
-  messages.footer = {
-    text: `Giveaway organisé par ${interaction.user.username || "le serveur"}`,
-  };
-
-  // Envoi du message initial avec un bouton pour participer
-  const giveawayMessage = await giveawayChannel.send({
-    content: `🎉 **GIVEAWAY** 🎉\n\n**Prix:** ${giveawayPrize}\n**Durée:** ${giveawayDuration}\n**Nombre de gagnants:** ${giveawayWinnerCount}\n\nCliquez sur le bouton ci-dessous pour participer !`,
-    components: [
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("participer-giveaway")
-          .setLabel("Participer")
-          .setStyle(ButtonStyle.Primary)
-      ),
-    ],
-  });
-
-  // ID du message de règlement et de l'emoji de validation
-  const rulesMessageId = "1339253344853692416";
-  const rulesEmoji = "✅";
-
-  // Vérification de l'ID du message de règlement
-  if (!/^\d+$/.test(rulesMessageId)) {
-    console.error(
-      "L'ID du message n'est pas un Snowflake valide :",
-      rulesMessageId
-    );
-    return interaction.reply({
-      content: ":x: L'ID du message de règlement est invalide.",
-      flags: MessageFlags.Ephemeral,
-    });
-  }
-
-  // Gestion du temps restant du giveaway
-  const endTime = Date.now() + ms(giveawayDuration);
-  const updateInterval = setInterval(async () => {
-    const remainingTime = endTime - Date.now();
-    if (remainingTime <= 0) {
-      clearInterval(updateInterval);
+  try {
+    if (interaction.replied || interaction.deferred) {
       return;
     }
-    const formattedTime = new Date(remainingTime).toISOString().substr(11, 8);
-    await giveawayMessage.edit({
-      content: `🎉 **GIVEAWAY** 🎉\n\n**Prix:** ${giveawayPrize}\n**Durée:** ${formattedTime}\n**Nombre de gagnants:** ${giveawayWinnerCount}\n\nCliquez sur le bouton ci-dessous pour participer !`,
-      components: giveawayMessage.components,
-    });
-  }, 1000);
+    await interaction.deferReply({ ephemeral: true });
 
-  // Gestion des participations
-  const filter = (i) =>
-    i.customId === "participer-giveaway" && i.message.id === giveawayMessage.id;
-  const collector = giveawayMessage.createMessageComponentCollector({
-    filter,
-    time: ms(giveawayDuration),
-  });
-
-  collector.on("collect", async (i) => {
-    const rulesMessage = await giveawayChannel.messages.fetch(rulesMessageId);
-    const userReactions = rulesMessage.reactions.cache.filter((reaction) =>
-      reaction.users.cache.has(i.user.id)
-    );
-
-    if (!userReactions.has(rulesEmoji)) {
-      return i.reply({
+    if (
+      !interaction.member.permissions.has(
+        PermissionsBitField.Flags.ManageMessages
+      )
+    ) {
+      return interaction.editReply({
         content:
-          ":x: Vous devez accepter le règlement pour participer à ce giveaway.",
-        flags: MessageFlags.Ephemeral,
+          "❌ Vous devez avoir la permission `Gérer les messages` pour organiser un giveaway.",
+        ephemeral: true,
       });
     }
 
-    if (!i.member.roles.cache.has("1340087668616204471")) {
-      return i.reply({
-        content:
-          ":x: Vous n'avez pas le rôle requis pour participer à ce giveaway.",
-        flags: MessageFlags.Ephemeral,
+    const giveawayChannel = interaction.options.getChannel("canal");
+    const giveawayDuration = interaction.options.getString("durée");
+    const giveawayWinnerCount = interaction.options.getInteger("gagnants");
+    const giveawayPrize = interaction.options.getString("prix");
+
+    if (!giveawayChannel.isTextBased()) {
+      return interaction.editReply({
+        content: "❌ Le canal sélectionné n'est pas un canal textuel valide.",
+        ephemeral: true,
       });
     }
 
-    await i.reply({
-      content: "🎉 Vous avez été ajouté au giveaway !",
-      flags: MessageFlags.Ephemeral,
-    });
-  });
-
-  // Démarrer le giveaway
-  client.giveawaysManager
-    .start(giveawayMessage, {
-      duration: ms(giveawayDuration),
+    const endTime = Date.now() + ms(giveawayDuration);
+    const giveawayData = {
       prize: giveawayPrize,
       winnerCount: giveawayWinnerCount,
-      hostedBy: hostedByText,
-      messages,
-      bonusEntries: [
-        { role: "1339902720546439189", bonus: 5 }, // Bronze
-        { role: "1339902718088577074", bonus: 10 }, // Argent
-        { role: "1339902715165147166", bonus: 15 }, // Or
-        { role: "1339902712724066406", bonus: 25 }, // Diamant
-      ],
-    })
-    .then(() => {
-      interaction.reply({
-        content: `🎉 Giveaway démarré dans ${giveawayChannel}!`,
-        flags: MessageFlags.Ephemeral,
-      });
-    })
-    .catch((error) => {
-      console.error("Failed to start giveaway:", error);
-      interaction.reply({
-        content: ":x: Une erreur s'est produite lors du démarrage du giveaway.",
-        flags: MessageFlags.Ephemeral,
-      });
+      hostedBy: interaction.user.id,
+      endTime,
+      participants: [],
+      roleId: "1340087668616204471",
+    };
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("participate")
+        .setLabel("Participer")
+        .setStyle(ButtonStyle.Primary)
+    );
+
+    const updateCanvas = async (winners = [], finished = false) => {
+      const remainingTime = Math.max(0, endTime - Date.now());
+
+      const width = 800;
+      const height = 300;
+      const canvas = createCanvas(width, height);
+      const ctx = canvas.getContext("2d");
+
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, "#0A192F");
+      gradient.addColorStop(1, "#001F3F");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = "#FFD700";
+      ctx.lineWidth = 8;
+      ctx.roundRect(10, 10, width - 20, height - 20, 20);
+      ctx.stroke();
+
+      ctx.font = "bold 32px Arial";
+      ctx.fillStyle = "#FFD700";
+      ctx.fillText(`🎉 Giveaway Démarré`, 50, 60);
+
+      ctx.font = "bold 26px Arial";
+      ctx.fillStyle = "#FFFFFF";
+      if (finished) {
+        ctx.fillText(`🎉 Giveaway Terminé`, 50, 120);
+        ctx.fillText(`🏆 Gagnants: ${winners.join(", ")}`, 50, 160);
+        ctx.fillText(`⏰ Fin: ${new Date(endTime).toLocaleString()}`, 50, 200);
+      } else {
+        ctx.fillText(
+          `⏳ Temps restant: ${ms(remainingTime, { long: true })}`,
+          50,
+          120
+        );
+        ctx.fillText(
+          `👥 Participants: ${giveawayData.participants.length}`,
+          50,
+          160
+        );
+        ctx.fillText(`🎁 Prix: ${giveawayPrize}`, 50, 200);
+        ctx.fillText(`🏆 Nombre de gagnants: ${giveawayWinnerCount}`, 50, 240);
+      }
+
+      const buffer = canvas.toBuffer();
+      return new AttachmentBuilder(buffer, { name: "giveaway.png" });
+    };
+
+    const message = await giveawayChannel.send({
+      files: [await updateCanvas()],
+      components: [row],
     });
 
-  db.set(`giveaway_${giveawayChannel.id}`, {
-    prize: giveawayPrize,
-    winnerCount: giveawayWinnerCount,
-    hostedBy: interaction.user.id,
-    duration: ms(giveawayDuration),
-  });
+    giveawayData.messageId = message.id;
+    await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
+
+    await interaction.editReply({
+      content: "✅ Giveaway démarré avec succès !",
+      ephemeral: true,
+    });
+
+    const collector = message.createMessageComponentCollector({
+      time: ms(giveawayDuration),
+    });
+
+    collector.on("collect", async (i) => {
+      if (!i.member.roles.cache.has(giveawayData.roleId)) {
+        if (!i.replied && !i.deferred) {
+          return i.reply({
+            content:
+              "❌ Vous n'avez pas le rôle requis pour participer à ce giveaway. Allez cocher le reglement pour avoir le role",
+            ephemeral: true,
+          });
+        }
+      } else {
+        giveawayData.participants.push(i.user.id);
+        await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
+        if (!i.replied && !i.deferred) {
+          await i.reply({
+            content: "🎉 Vous avez été ajouté au giveaway !",
+            ephemeral: true,
+          });
+        }
+      }
+    });
+
+    collector.on("end", async () => {
+      if (giveawayData.participants.length === 0) {
+        await giveawayChannel.send({
+          files: [await updateCanvas([], true)],
+        });
+        return;
+      }
+
+      const winners = [];
+      for (let i = 0; i < giveawayWinnerCount; i++) {
+        const winnerIndex = Math.floor(
+          Math.random() * giveawayData.participants.length
+        );
+        const winnerId = giveawayData.participants.splice(winnerIndex, 1)[0];
+        winners.push(`<@${winnerId}>`);
+      }
+
+      await message.edit({ files: [await updateCanvas(winners, true)] });
+    });
+
+    const interval = setInterval(async () => {
+      if (Date.now() >= endTime) {
+        clearInterval(interval);
+        return;
+      }
+      await message.edit({ files: [await updateCanvas()] });
+    }, 1000);
+
+    console.log(`✅ Giveaway démarré dans ${giveawayChannel.name}`);
+  } catch (error) {
+    console.error(
+      "❌ Erreur lors de l'exécution de la commande start-giveaway :",
+      error
+    );
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content:
+          "❌ Une erreur s'est produite lors de l'exécution de cette commande.",
+        ephemeral: true,
+      });
+    }
+  }
 }

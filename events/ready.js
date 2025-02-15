@@ -1,23 +1,33 @@
-export default (client) => {
-  console.log(
-    `Prêt en tant que ${client.user.tag} pour servir dans ${client.channels.cache.size} canaux sur ${client.guilds.cache.size} serveurs, pour un total de ${client.users.cache.size} utilisateurs.`
-  );
+import { Events } from "discord.js";
 
-  client.on("interactionCreate", async (interaction) => {
-    if (!interaction.isCommand()) return;
+const targetMessageId = "1339253344853692416";
+const targetChannelId = "1339231311545503826";
+const botReactionEmoji = "✅"; // Emoji the bot will react with
 
-    const command = client.commands.get(interaction.commandName);
+export default {
+  name: Events.ClientReady,
+  once: true,
+  async execute(client) {
+    console.log(`Prêt en tant que ${client.user.tag}`);
 
-    if (!command) return;
-
+    // Add reaction to the specified message
     try {
-      await command.execute(interaction);
+      const channel = await client.channels.fetch(targetChannelId);
+      if (!channel.isTextBased()) {
+        console.error("The target channel is not a text channel.");
+        return;
+      }
+
+      const message = await channel.messages.fetch(targetMessageId);
+      await message.react(botReactionEmoji);
+      console.log(
+        `Réaction ${botReactionEmoji} ajoutée au message ${targetMessageId}`
+      );
     } catch (error) {
-      console.error(error);
-      await interaction.reply({
-        content: "There was an error while executing this command!",
-        ephemeral: true,
-      });
+      console.error(
+        `Erreur lors de l'ajout de la réaction au message :`,
+        error
+      );
     }
-  });
+  },
 };

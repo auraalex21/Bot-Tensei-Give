@@ -3,7 +3,6 @@ import path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { Client, GatewayIntentBits, Collection } from "discord.js";
 import dotenv from "dotenv";
-// @ts-ignore
 import synchronizeSlashCommands from "discord-sync-commands";
 
 dotenv.config();
@@ -18,11 +17,13 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.MessageContent,
   ],
 });
 
 client.commands = new Collection();
 
+// 📌 CHARGEMENT AUTOMATIQUE DES COMMANDES
 const loadCommands = (dir) => {
   const files = fs.readdirSync(dir);
   for (const file of files) {
@@ -34,16 +35,45 @@ const loadCommands = (dir) => {
         .then((command) => {
           if (command.data) {
             client.commands.set(command.data.name, command);
-            console.log(`👌 Commande chargée : ${command.data.name}`);
+            console.log(`✅ Commande chargée : ${command.data.name}`);
+          }
+        })
+        .catch((error) =>
+          console.error(`❌ Erreur chargement commande ${filePath} :`, error)
+        );
+    }
+  }
+};
+
+const registeredEvents = new Set();
+
+const loadEvents = (dir) => {
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    const filePath = path.join(dir, file);
+    if (file.endsWith(".js")) {
+      import(pathToFileURL(filePath).href)
+        .then((event) => {
+          if (event.default && typeof event.default.execute === "function") {
+            const eventName = event.default.name;
+            if (!registeredEvents.has(eventName)) {
+              console.log(`👌 Événement chargé : ${eventName}`);
+              client.on(eventName, (...args) =>
+                event.default.execute(client, ...args)
+              );
+              registeredEvents.add(eventName);
+            } else {
+              console.warn(`⚠️ Événement déjà enregistré : ${eventName}`);
+            }
           } else {
             console.error(
-              `❌ La commande dans ${filePath} n'a pas de nom défini.`
+              `❌ Erreur : L'événement ${filePath} n'a pas de fonction 'execute' valide.`
             );
           }
         })
         .catch((error) => {
           console.error(
-            `❌ Erreur lors du chargement de la commande ${filePath} :`,
+            `❌ Erreur lors du chargement de l'événement ${filePath} :`,
             error
           );
         });
@@ -51,7 +81,33 @@ const loadCommands = (dir) => {
   }
 };
 
+const eventsPath = path.join(__dirname, "events");
+const eventFiles = fs
+  .readdirSync(eventsPath)
+  .filter((file) => file.endsWith(".js"));
+
+for (const file of eventFiles) {
+  const filePath = path.join(eventsPath, file);
+  const event = await import(pathToFileURL(filePath).href);
+  if (event.default && typeof event.default.execute === "function") {
+    if (event.default.once) {
+      client.once(event.default.name, (...args) =>
+        event.default.execute(client, ...args)
+      );
+    } else {
+      client.on(event.default.name, (...args) =>
+        event.default.execute(client, ...args)
+      );
+    }
+  } else {
+    console.error(
+      `❌ Erreur : L'événement ${filePath} n'a pas de fonction 'execute' valide.`
+    );
+  }
+}
+
 loadCommands(path.resolve(__dirname, "./commands"));
+loadEvents(path.resolve(__dirname, "./events"));
 
 client.once("ready", async () => {
   console.log(`Prêt en tant que ${client.user.tag}`);
@@ -136,54 +192,6 @@ client.once("ready", async () => {
       "❌ Erreur lors de la synchronisation des commandes :",
       error
     );
-  }
-});
-
-fs.readdir(path.resolve(__dirname, "./events/"), (_err, files) => {
-  files.forEach((file) => {
-    if (!file.endsWith(".js")) return;
-    import(
-      pathToFileURL(path.resolve(__dirname, `./events/${file}`)).href
-    ).then((event) => {
-      let eventName = file.split(".")[0];
-      console.log(`👌 Événement chargé : ${eventName}`);
-      client.on(eventName, event.default.bind(null, client));
-    });
-  });
-});
-
-client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isCommand()) return;
-
-  const command = client.commands.get(interaction.commandName);
-
-  if (!command) return;
-
-  try {
-    console.log(`Commande reçue : ${interaction.commandName}`);
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(error);
-
-    if (interaction.replied || interaction.deferred) {
-      try {
-        await interaction.followUp({
-          content: "Il y a eu une erreur en exécutant cette commande.",
-          ephemeral: true,
-        });
-      } catch (followUpError) {
-        console.error("Erreur lors de l'envoi du follow-up :", followUpError);
-      }
-    } else {
-      try {
-        await interaction.reply({
-          content: "Il y a eu une erreur en exécutant cette commande.",
-          ephemeral: true,
-        });
-      } catch (replyError) {
-        console.error("Erreur lors de l'envoi de la réponse :", replyError);
-      }
-    }
   }
 });
 

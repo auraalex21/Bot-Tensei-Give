@@ -4,64 +4,138 @@ import {
   TextInputBuilder,
   TextInputStyle,
   ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  AttachmentBuilder,
 } from "discord.js";
+import { createCanvas } from "canvas";
+
+const activeInteractions = new Set();
 
 export const data = new SlashCommandBuilder()
   .setName("candidature")
-  .setDescription("Soumettre une candidature");
+  .setDescription("Envoyer une candidature de staff");
 
 export async function execute(interaction) {
-  const modal = new ModalBuilder()
-    .setCustomId("candidatureModal")
-    .setTitle("Soumettre une candidature");
-
-  const nameInput = new TextInputBuilder()
-    .setCustomId("nameInput")
-    .setLabel("Votre Pseudo")
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true);
-
-  const ageInput = new TextInputBuilder()
-    .setCustomId("ageInput")
-    .setLabel("Votre âge")
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true);
-
-  const experienceInput = new TextInputBuilder()
-    .setCustomId("experienceInput")
-    .setLabel("Votre expérience")
-    .setStyle(TextInputStyle.Paragraph)
-    .setRequired(true);
-
-  const firstActionRow = new ActionRowBuilder().addComponents(nameInput);
-  const secondActionRow = new ActionRowBuilder().addComponents(ageInput);
-  const thirdActionRow = new ActionRowBuilder().addComponents(experienceInput);
-
-  modal.addComponents(firstActionRow, secondActionRow, thirdActionRow);
+  if (activeInteractions.has(interaction.user.id)) return;
+  activeInteractions.add(interaction.user.id);
 
   try {
+    const modal = new ModalBuilder()
+      .setCustomId("candidatureModal")
+      .setTitle("📩 Candidature de Staff ");
+
+    const pseudoInput = new TextInputBuilder()
+      .setCustomId("pseudoInput")
+      .setLabel("Votre Pseudo")
+      .setStyle(TextInputStyle.Short)
+      .setRequired(true);
+
+    const experienceInput = new TextInputBuilder()
+      .setCustomId("experienceInput")
+      .setLabel("Expérience en modération")
+      .setStyle(TextInputStyle.Paragraph)
+      .setRequired(true);
+
+    const motivationInput = new TextInputBuilder()
+      .setCustomId("motivationInput")
+      .setLabel("Pourquoi devenir staff ?")
+      .setStyle(TextInputStyle.Paragraph)
+      .setRequired(true);
+
+    modal.addComponents(
+      new ActionRowBuilder().addComponents(pseudoInput),
+      new ActionRowBuilder().addComponents(experienceInput),
+      new ActionRowBuilder().addComponents(motivationInput)
+    );
+
     await interaction.showModal(modal);
   } catch (error) {
-    console.error("Erreur lors de l'affichage du modal :", error);
+    console.error("Erreur d'affichage du modal:", error);
+  } finally {
+    setTimeout(() => activeInteractions.delete(interaction.user.id), 5000);
+  }
+}
 
-    if (interaction.replied || interaction.deferred) {
-      try {
-        await interaction.followUp({
-          content: "Il y a eu une erreur en affichant le modal.",
-          ephemeral: true,
-        });
-      } catch (followUpError) {
-        console.error("Erreur lors de l'envoi du follow-up :", followUpError);
-      }
+export async function handleModalSubmit(interaction) {
+  try {
+    const pseudo = interaction.fields.getTextInputValue("pseudoInput");
+    const experience = interaction.fields.getTextInputValue("experienceInput");
+    const motivation = interaction.fields.getTextInputValue("motivationInput");
+
+    const width = 900,
+      height = 600;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext("2d");
+
+    // Fond noir et contours bleu ciel avec effet moderne
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#1a1a1a";
+    ctx.fillRect(50, 50, width - 100, height - 100);
+    ctx.strokeStyle = "#00BFFF";
+    ctx.lineWidth = 5;
+    ctx.strokeRect(50, 50, width - 100, height - 100);
+
+    // Titre centré
+    ctx.font = "bold 40px Arial";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText("📩 Candidature de Staff", width / 2, 100);
+
+    // Contenu mieux organisé
+    ctx.textAlign = "left";
+    ctx.font = "bold 28px Arial";
+    ctx.fillText("Pseudo:", 80, 180);
+    ctx.font = "24px Arial";
+    ctx.fillText(pseudo, 300, 180);
+
+    ctx.font = "bold 28px Arial";
+    ctx.fillText("Expérience:", 80, 260);
+    ctx.font = "24px Arial";
+    ctx.fillText(experience, 80, 300, 720);
+
+    ctx.font = "bold 28px Arial";
+    ctx.fillText("Motivation:", 80, 380);
+    ctx.font = "24px Arial";
+    ctx.fillText(motivation, 80, 420, 720);
+
+    const buffer = canvas.toBuffer();
+    const attachment = new AttachmentBuilder(buffer, {
+      name: "candidature.png",
+    });
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("acceptCandidature")
+        .setLabel("✅ Accepter")
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId("rejectCandidature")
+        .setLabel("❌ Refuser")
+        .setStyle(ButtonStyle.Danger)
+    );
+
+    const channel = interaction.client.channels.cache.get(
+      "1340014452451315722"
+    );
+    if (channel) {
+      await channel.send({ files: [attachment], components: [row] });
+      await interaction.reply({
+        content: "Votre candidature a été envoyée avec succès.",
+        ephemeral: true,
+      });
     } else {
-      try {
-        await interaction.reply({
-          content: "Il y a eu une erreur en affichant le modal.",
-          ephemeral: true,
-        });
-      } catch (replyError) {
-        console.error("Erreur lors de l'envoi de la réponse :", replyError);
-      }
+      await interaction.reply({
+        content: "Erreur: Salon introuvable.",
+        ephemeral: true,
+      });
     }
+  } catch (error) {
+    console.error("Erreur soumission candidature:", error);
+    await interaction.reply({
+      content: "Erreur lors de l'envoi de votre candidature.",
+      ephemeral: true,
+    });
   }
 }

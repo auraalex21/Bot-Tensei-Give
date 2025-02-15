@@ -1,108 +1,120 @@
-import { SlashCommandBuilder } from "discord.js";
+import {
+  SlashCommandBuilder,
+  AttachmentBuilder,
+  PermissionsBitField,
+} from "discord.js";
 import { QuickDB } from "quick.db";
-import { sendMessage } from "../utils/messages.js"; // Ensure this path is correct
+import { createCanvas } from "canvas";
 
 const db = new QuickDB();
 
-export const name = "drop-giveaway";
-
 export const data = new SlashCommandBuilder()
-  .setName("drop-giveaway")
-  .setDescription("Créer un drop giveaway")
+  .setName("timeout")
+  .setDescription("Mettre un utilisateur en timeout")
+  .addUserOption((option) =>
+    option
+      .setName("utilisateur")
+      .setDescription("L'utilisateur à mettre en timeout")
+      .setRequired(true)
+  )
   .addIntegerOption((option) =>
     option
-      .setName("gagnants")
-      .setDescription("Combien de gagnants le giveaway doit avoir")
+      .setName("durée")
+      .setDescription("La durée du timeout (en minutes)")
       .setRequired(true)
   )
   .addStringOption((option) =>
     option
-      .setName("prix")
-      .setDescription("Quel est le prix du giveaway")
-      .setRequired(true)
-  )
-  .addChannelOption((option) =>
-    option
-      .setName("canal")
-      .setDescription("Le canal pour démarrer le giveaway")
-      .setRequired(true)
+      .setName("raison")
+      .setDescription("La raison du timeout")
+      .setRequired(false)
   );
 
 export async function execute(interaction) {
-  const client = interaction.client;
+  try {
+    await interaction.deferReply({ ephemeral: true });
 
-  // Si le membre n'a pas les permissions nécessaires
-  if (
-    !interaction.member.permissions.has("MANAGE_MESSAGES") &&
-    !interaction.member.roles.cache.some((r) => r.name === "Giveaways")
-  ) {
-    return interaction.reply({
+    if (
+      !interaction.member.permissions.has(
+        PermissionsBitField.Flags.ModerateMembers
+      )
+    ) {
+      return interaction.editReply({
+        content:
+          "❌ Vous n'avez pas la permission de mettre des membres en timeout.",
+        ephemeral: true,
+      });
+    }
+
+    const user = interaction.options.getUser("utilisateur");
+    const duration = interaction.options.getInteger("durée");
+    const reason =
+      interaction.options.getString("raison") || "Aucune raison fournie";
+
+    const member = interaction.guild.members.cache.get(user.id);
+    if (!member) {
+      return interaction.editReply({
+        content: "❌ Utilisateur non trouvé.",
+        ephemeral: true,
+      });
+    }
+
+    await member.timeout(duration * 60 * 1000, reason);
+    const timeouts = (await db.get(`timeouts_${user.id}`)) || [];
+    timeouts.push({
+      reason,
+      date: new Date().toISOString(),
+      moderatorId: interaction.user.id,
+    });
+    await db.set(`timeouts_${user.id}`, timeouts);
+
+    const width = 700;
+    const height = 250;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext("2d");
+
+    // Fond avec un dégradé bleu foncé
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, "#0A192F");
+    gradient.addColorStop(1, "#001F3F");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // Bordure stylisée
+    ctx.strokeStyle = "#FFD700";
+    ctx.lineWidth = 8;
+    ctx.roundRect(10, 10, width - 20, height - 20, 20);
+    ctx.stroke();
+
+    // Texte principal
+    ctx.font = "bold 32px Poppins";
+    ctx.fillStyle = "#FFD700";
+    ctx.fillText(`⏳ Timeout Appliqué`, 50, 60);
+
+    ctx.font = "bold 26px Poppins";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(`👤 Utilisateur: ${user.tag}`, 50, 120);
+    ctx.fillText(`⏱ Durée: ${duration} minute(s)`, 50, 160);
+    ctx.fillText(`📌 Raison: ${reason}`, 50, 200);
+
+    const buffer = canvas.toBuffer();
+    const attachment = new AttachmentBuilder(buffer, {
+      name: "timeout-info.png",
+    });
+
+    await interaction.editReply({ files: [attachment] });
+    console.log(
+      `✅ ${user.tag} a été mis en timeout pour ${duration} minute(s). Raison : ${reason}`
+    );
+  } catch (error) {
+    console.error(
+      "❌ Erreur lors de l'exécution de la commande timeout :",
+      error
+    );
+    await interaction.editReply({
       content:
-        ":x: Vous devez avoir les permissions de gérer les messages pour démarrer des giveaways.",
+        "❌ Une erreur s'est produite lors de l'exécution de cette commande.",
       ephemeral: true,
     });
   }
-
-  const giveawayChannel = interaction.options.getChannel("canal");
-  const giveawayWinnerCount = interaction.options.getInteger("gagnants");
-  const giveawayPrize = interaction.options.getString("prix");
-
-  if (giveawayChannel.type !== "GUILD_TEXT") {
-    return interaction.reply({
-      content: ":x: Le canal sélectionné n'est pas basé sur du texte.",
-      ephemeral: true,
-    });
-  }
-
-  // Correction de l'erreur avec setFooter() et hostedBy
-  messages.embedFooter = {
-    text: `Giveaway organisé par ${interaction.user.username || "le serveur"}`,
-  };
-
-  const hostedByText =
-    process.env.HOSTED_BY && process.env.HOSTED_BY.trim() !== ""
-      ? process.env.HOSTED_BY
-      : `Organisé par ${interaction.user.username}`;
-
-  // Démarrer le giveaway
-  client.giveawaysManager.start(giveawayChannel, {
-    // Le nombre de gagnants pour ce drop
-    winnerCount: giveawayWinnerCount,
-    // Le prix du giveaway
-    prize: giveawayPrize,
-    // Qui organise ce giveaway
-    hostedBy: hostedByText,
-    // spécifier drop
-    isDrop: true,
-    // Messages
-    messages,
-    // Attribuer des taux de chance supplémentaires en fonction des rôles
-    bonusEntries: [
-      {
-        role: "1339902720546439189", // Bronze
-        bonus: 5,
-      },
-      {
-        role: "1339902718088577074", // Argent
-        bonus: 10,
-      },
-      {
-        role: "1339902715165147166", // Or
-        bonus: 15,
-      },
-      {
-        role: "1339902712724066406", // Diamant
-        bonus: 25,
-      },
-    ],
-  });
-
-  db.set(`giveaway_${giveawayChannel.id}`, {
-    prize: giveawayPrize,
-    winnerCount: giveawayWinnerCount,
-    hostedBy: interaction.user.id,
-    isDrop: true,
-  });
-
-  interaction.reply(`Giveaway démarré dans ${giveawayChannel}!`);
 }
