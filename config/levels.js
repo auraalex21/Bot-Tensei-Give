@@ -60,7 +60,7 @@ export async function setLastMessageTime(userId, guildId, timestamp) {
     await db.set(`lastMessageTime_${guildId}_${userId}`, timestamp);
   } catch (error) {
     if (error.code === "SQLITE_CONSTRAINT_PRIMARYKEY") {
-      await db.update(`lastMessageTime_${guildId}_${userId}`, timestamp);
+      await db.set(`lastMessageTime_${guildId}_${userId}`, timestamp);
     } else {
       throw error;
     }
