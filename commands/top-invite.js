@@ -3,31 +3,31 @@ import { QuickDB } from "quick.db";
 
 const db = new QuickDB();
 
-export default {
-  data: new SlashCommandBuilder()
-    .setName("top-invite")
-    .setDescription("Afficher le classement des invitations"),
+export const name = "top-invite";
 
-  async execute(interaction) {
-    const invites = await db.all();
-    const sortedInvites = invites
-      .filter((invite) => invite.id.startsWith("invite_"))
-      .sort((a, b) => b.value.uses - a.value.uses)
-      .slice(0, 10);
+export const data = new SlashCommandBuilder()
+  .setName("top-invite")
+  .setDescription("Afficher le classement des invitations");
 
-    const embed = {
-      title: "Classement des invitations",
-      description: sortedInvites
-        .map(
-          (invite, index) =>
-            `${index + 1}. ${invite.id.split("_")[1]} - ${
-              invite.value.uses
-            } utilisations`
-        )
-        .join("\n"),
-      color: 0x00ff00,
-    };
+export async function execute(interaction) {
+  const invites = await db.all();
+  const sortedInvites = invites
+    .filter((invite) => invite.id.startsWith("invite_"))
+    .sort((a, b) => b.value.uses - a.value.uses)
+    .slice(0, 10);
 
-    interaction.reply({ embeds: [embed], ephemeral: true });
-  },
-};
+  const embed = {
+    title: "Classement des invitations",
+    description: sortedInvites
+      .map(
+        (invite, index) =>
+          `${index + 1}. ${invite.id.split("_")[1]} - ${
+            invite.value.uses
+          } utilisations`
+      )
+      .join("\n"),
+    color: 0x00ff00,
+  };
+
+  interaction.reply({ embeds: [embed], ephemeral: true });
+}

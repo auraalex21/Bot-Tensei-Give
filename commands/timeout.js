@@ -35,7 +35,7 @@ export async function execute(interaction) {
     return interaction.reply({
       content:
         ":x: Vous n'avez pas la permission de mettre des membres en timeout.",
-      flags: Discord.MessageFlags.Ephemeral,
+      ephemeral: true,
     });
   }
 
@@ -43,7 +43,7 @@ export async function execute(interaction) {
   if (!member) {
     return interaction.reply({
       content: ":x: Utilisateur non trouvé.",
-      flags: Discord.MessageFlags.Ephemeral,
+      ephemeral: true,
     });
   }
 
