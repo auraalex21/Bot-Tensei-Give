@@ -44,7 +44,7 @@ export async function execute(interaction) {
     if (interaction.replied || interaction.deferred) {
       return;
     }
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 });
 
     if (
       !interaction.member.permissions.has(
@@ -54,7 +54,7 @@ export async function execute(interaction) {
       return interaction.editReply({
         content:
           "❌ Vous devez avoir la permission `Gérer les messages` pour organiser un giveaway.",
-        ephemeral: true,
+        flags: 64,
       });
     }
 
@@ -66,7 +66,7 @@ export async function execute(interaction) {
     if (!giveawayChannel.isTextBased()) {
       return interaction.editReply({
         content: "❌ Le canal sélectionné n'est pas un canal textuel valide.",
-        ephemeral: true,
+        flags: 64,
       });
     }
 
@@ -144,7 +144,7 @@ export async function execute(interaction) {
 
     await interaction.editReply({
       content: "✅ Giveaway démarré avec succès !",
-      ephemeral: true,
+      flags: 64,
     });
 
     const collector = message.createMessageComponentCollector({
@@ -158,14 +158,14 @@ export async function execute(interaction) {
         if (!i.replied && !i.deferred) {
           await i.reply({
             content: "🎉 Vous avez été ajouté au giveaway !",
-            ephemeral: true,
+            flags: 64,
           });
         }
       } else {
         if (!i.replied && !i.deferred) {
           await i.reply({
             content: "❌ Vous êtes déjà inscrit à ce giveaway.",
-            ephemeral: true,
+            flags: 64,
           });
         }
       }
@@ -209,7 +209,7 @@ export async function execute(interaction) {
       await interaction.reply({
         content:
           "❌ Une erreur s'est produite lors de l'exécution de cette commande.",
-        ephemeral: true,
+        flags: 64,
       });
     }
   }

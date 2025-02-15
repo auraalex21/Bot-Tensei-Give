@@ -35,7 +35,7 @@ export default {
         if (!interaction.replied && !interaction.deferred) {
           await interaction.reply({
             content: "There was an error while executing this command!",
-            ephemeral: true,
+            flags: 64,
           });
         }
       }
@@ -126,12 +126,12 @@ async function handleModalSubmit(interaction) {
       await channel.send({ files: [attachment], components: [row] });
       await interaction.reply({
         content: "Votre candidature a été soumise avec succès.",
-        ephemeral: true,
+        flags: 64,
       });
     } else {
       await interaction.reply({
         content: "Erreur : Le salon de candidature n'a pas été trouvé.",
-        ephemeral: true,
+        flags: 64,
       });
     }
   } catch (error) {
@@ -140,7 +140,7 @@ async function handleModalSubmit(interaction) {
       await interaction.reply({
         content:
           "Une erreur s'est produite lors de la soumission de votre candidature.",
-        ephemeral: true,
+        flags: 64,
       });
     }
   }
@@ -155,7 +155,7 @@ export async function handleInteraction(interaction) {
       if (!interaction.replied && !interaction.deferred) {
         return interaction.reply({
           content: "❌ Giveaway non trouvé.",
-          ephemeral: true,
+          flags: 64,
         });
       }
       return;
@@ -171,7 +171,7 @@ export async function handleInteraction(interaction) {
         try {
           await interaction.reply({
             content: "❌ Vous êtes déjà inscrit à ce giveaway.",
-            ephemeral: true,
+            flags: 64,
           });
         } catch (error) {
           console.error(
@@ -246,7 +246,7 @@ export async function handleInteraction(interaction) {
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({
           content: "✅ Vous avez été inscrit au giveaway avec succès !",
-          ephemeral: true,
+          flags: 64,
         });
       }
     } catch (error) {
@@ -255,7 +255,7 @@ export async function handleInteraction(interaction) {
         await interaction.reply({
           content:
             "❌ Une erreur s'est produite lors de la mise à jour du canvas.",
-          ephemeral: true,
+          flags: 64,
         });
       }
     }
