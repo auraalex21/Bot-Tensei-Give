@@ -53,3 +53,18 @@ export async function deleteAllLevels() {
     }
   }
 }
+
+export async function getLeaderboard(guildId) {
+  const keys = await db.all();
+  const leaderboard = [];
+
+  for (const { id, value } of keys) {
+    if (id.startsWith(`levels_${guildId}_`)) {
+      const userId = id.split("_")[2];
+      leaderboard.push({ userId, ...value });
+    }
+  }
+
+  leaderboard.sort((a, b) => b.level - a.level || b.exp - a.exp);
+  return leaderboard;
+}
