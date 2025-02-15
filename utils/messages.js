@@ -22,3 +22,7 @@ export const messages = {
     pluralS: false, // pas de "s" à la fin des unités de temps
   },
 };
+
+export function sendMessage(interaction, content) {
+  return interaction.reply({ content, flags: 64 });
+}
