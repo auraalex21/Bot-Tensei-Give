@@ -68,7 +68,7 @@ fs.readdir(path.resolve(__dirname, "./events/"), (_err, files) => {
 client.once("ready", async () => {
   console.log(`Prêt en tant que ${client.user.tag}`);
 
-  const { GiveawaysManager } = await import("discord-giveaways");
+  const GiveawaysManager = await import("discord-giveaways");
 
   client.giveawaysManager = new GiveawaysManager(client, {
     storage: path.resolve(__dirname, "./giveaways.json"),
