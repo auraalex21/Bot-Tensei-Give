@@ -161,24 +161,6 @@ export async function handleInteraction(interaction) {
       return;
     }
 
-    if (!interaction.member.roles.cache.has(giveawayData.roleId)) {
-      if (!interaction.replied && !interaction.deferred) {
-        try {
-          await interaction.reply({
-            content:
-              "❌ Vous n'avez pas le rôle requis pour participer à ce giveaway. Allez cocher le reglement pour avoir le role",
-            ephemeral: true,
-          });
-        } catch (error) {
-          console.error(
-            "❌ Erreur lors de la réponse à l'interaction :",
-            error
-          );
-        }
-      }
-      return;
-    }
-
     if (giveawayData.participants.includes(interaction.user.id)) {
       if (!interaction.replied && !interaction.deferred) {
         try {
