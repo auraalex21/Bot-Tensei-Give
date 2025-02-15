@@ -97,6 +97,10 @@ module.exports = {
       ],
     });
 
+    // ID du message de règlement et de l'emoji de validation
+    const rulesMessageId = "ID_DU_MESSAGE_DE_REGLEMENT";
+    const rulesEmoji = "✅";
+
     // Gestion du temps restant du giveaway
     const endTime = Date.now() + ms(giveawayDuration);
     const updateInterval = setInterval(async () => {
@@ -122,6 +126,19 @@ module.exports = {
     });
 
     collector.on("collect", async (i) => {
+      const rulesMessage = await giveawayChannel.messages.fetch(rulesMessageId);
+      const userReactions = rulesMessage.reactions.cache.filter((reaction) =>
+        reaction.users.cache.has(i.user.id)
+      );
+
+      if (!userReactions.has(rulesEmoji)) {
+        return i.reply({
+          content:
+            ":x: Vous devez accepter le règlement pour participer à ce giveaway.",
+          ephemeral: true,
+        });
+      }
+
       if (!i.member.roles.cache.has("1340087668616204471")) {
         return i.reply({
           content:
@@ -129,6 +146,7 @@ module.exports = {
           ephemeral: true,
         });
       }
+
       await i.reply({
         content: "🎉 Vous avez été ajouté au giveaway !",
         ephemeral: true,
