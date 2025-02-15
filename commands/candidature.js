@@ -40,7 +40,11 @@ export async function execute(interaction) {
   modal.addComponents(firstActionRow, secondActionRow, thirdActionRow);
 
   try {
-    await interaction.showModal(modal);
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.showModal(modal);
+    } else {
+      console.error("L'interaction a déjà été reconnue.");
+    }
   } catch (error) {
     console.error("Erreur lors de l'affichage du modal :", error);
 
