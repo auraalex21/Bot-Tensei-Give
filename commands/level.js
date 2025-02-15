@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
-import levels from "../config/levels";
+import { getUserLevel } from "../config/levels.js"; // Ensure this path is correct
 import { createCanvas, loadImage } from "canvas";
 import Discord from "discord.js";
 
@@ -16,7 +16,7 @@ export default {
 
   async execute(interaction) {
     const user = interaction.options.getUser("utilisateur") || interaction.user;
-    const userLevel = await levels.getUserLevel(user.id, interaction.guild.id);
+    const userLevel = await getUserLevel(user.id, interaction.guild.id);
 
     const width = 700;
     const height = 250;
