@@ -1,7 +1,15 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
-import { Client, GatewayIntentBits, Collection } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  Collection,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  AttachmentBuilder,
+} from "discord.js";
 import dotenv from "dotenv";
 import synchronizeSlashCommands from "discord-sync-commands";
 import { QuickDB } from "quick.db";
@@ -97,7 +105,7 @@ const reloadGiveaways = async () => {
           const message = await giveawayChannel.messages.fetch(
             giveawayData.messageId
           );
-          const row = new ActionRowBuilder().addComponents(
+          new ActionRowBuilder().addComponents(
             new ButtonBuilder()
               .setCustomId("participate")
               .setLabel("Participer")
