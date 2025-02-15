@@ -1,5 +1,6 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { getLeaderboard } from "../config/levels.js";
+import { createCanvas, loadImage } from "canvas";
 
 export const data = new SlashCommandBuilder()
   .setName("leaderboard-level")
@@ -16,18 +17,40 @@ export async function execute(interaction) {
     });
   }
 
+  const canvas = createCanvas(800, 600);
+  const ctx = canvas.getContext("2d");
+
+  // Fond noir
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Titre
+  ctx.fillStyle = "#007BFF";
+  ctx.font = "bold 40px Arial";
+  ctx.fillText("🏆 Classement des Niveaux 🏆", 150, 50);
+
+  // Dessin des joueurs
   const topUsers = leaderboard.slice(0, 10);
-  const leaderboardMessage = topUsers
-    .map(
-      (user, index) =>
-        `${index + 1}. <@${user.userId}> - Niveau ${user.level} (${
-          user.exp
-        } XP)`
-    )
-    .join("\n");
+  ctx.font = "30px Arial";
+
+  for (let i = 0; i < topUsers.length; i++) {
+    const user = topUsers[i];
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(
+      `${i + 1}. ${user.username} - Niveau ${user.level} (${user.exp} XP)`,
+      50,
+      100 + i * 50
+    );
+  }
+
+  // Générer l'image
+  const attachment = new AttachmentBuilder(canvas.toBuffer(), {
+    name: "leaderboard.png",
+  });
 
   return interaction.reply({
-    content: `🏆 **Classement des niveaux** 🏆\n\n${leaderboardMessage}`,
-    ephemeral: true,
+    content: "Voici le classement des niveaux :",
+    files: [attachment],
+    ephemeral: false,
   });
 }
