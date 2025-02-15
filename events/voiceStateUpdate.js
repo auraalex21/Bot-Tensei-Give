@@ -1,4 +1,4 @@
-import { addExperience } from "../config/levels.js"; // Ensure this path is correct
+import { addExperience, getUserLevel } from "../config/levels.js";
 import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder, Events } from "discord.js";
 
@@ -40,7 +40,7 @@ export default {
         );
 
         if (leveledUp) {
-          const userLevel = await levels.getUserLevel(
+          const userLevel = await getUserLevel(
             newState.member.user.id,
             newState.guild.id
           );
