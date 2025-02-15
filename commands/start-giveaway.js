@@ -77,7 +77,6 @@ export async function execute(interaction) {
       hostedBy: interaction.user.id,
       endTime,
       participants: [],
-      roleId: "1340087668616204471",
     };
 
     const row = new ActionRowBuilder().addComponents(
@@ -153,20 +152,19 @@ export async function execute(interaction) {
     });
 
     collector.on("collect", async (i) => {
-      if (!i.member.roles.cache.has(giveawayData.roleId)) {
-        if (!i.replied && !i.deferred) {
-          return i.reply({
-            content:
-              "❌ Vous n'avez pas le rôle requis pour participer à ce giveaway. Allez cocher le reglement pour avoir le role",
-            ephemeral: true,
-          });
-        }
-      } else {
+      if (!giveawayData.participants.includes(i.user.id)) {
         giveawayData.participants.push(i.user.id);
         await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
         if (!i.replied && !i.deferred) {
           await i.reply({
             content: "🎉 Vous avez été ajouté au giveaway !",
+            ephemeral: true,
+          });
+        }
+      } else {
+        if (!i.replied && !i.deferred) {
+          await i.reply({
+            content: "❌ Vous êtes déjà inscrit à ce giveaway.",
             ephemeral: true,
           });
         }
