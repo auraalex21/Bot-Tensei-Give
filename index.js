@@ -165,10 +165,26 @@ client.on("interactionCreate", async (interaction) => {
     await command.execute(interaction);
   } catch (error) {
     console.error(error);
-    await interaction.reply({
-      content: "Il y a eu une erreur en exécutant cette commande.",
-      ephemeral: true,
-    });
+
+    if (interaction.replied || interaction.deferred) {
+      try {
+        await interaction.followUp({
+          content: "Il y a eu une erreur en exécutant cette commande.",
+          ephemeral: true,
+        });
+      } catch (followUpError) {
+        console.error("Erreur lors de l'envoi du follow-up :", followUpError);
+      }
+    } else {
+      try {
+        await interaction.reply({
+          content: "Il y a eu une erreur en exécutant cette commande.",
+          ephemeral: true,
+        });
+      } catch (replyError) {
+        console.error("Erreur lors de l'envoi de la réponse :", replyError);
+      }
+    }
   }
 });
 
