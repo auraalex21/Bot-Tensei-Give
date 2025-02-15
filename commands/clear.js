@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
 
-export default {
+const command = {
   name: "clear",
   data: new SlashCommandBuilder()
     .setName("clear")
@@ -41,3 +41,5 @@ export default {
     });
   },
 };
+
+export default command;
