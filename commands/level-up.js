@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
-import levels from "../config/levels";
+// import levels from "../config/levels";
 import { QuickDB } from "quick.db";
 const db = new QuickDB();
 
