@@ -101,6 +101,18 @@ module.exports = {
     const rulesMessageId = "ID_DU_MESSAGE_DE_REGLEMENT";
     const rulesEmoji = "✅";
 
+    // Vérification de l'ID du message de règlement
+    if (!/^\d+$/.test(rulesMessageId)) {
+      console.error(
+        "L'ID du message n'est pas un Snowflake valide :",
+        rulesMessageId
+      );
+      return interaction.reply({
+        content: ":x: L'ID du message de règlement est invalide.",
+        flags: Discord.MessageFlags.Ephemeral,
+      });
+    }
+
     // Gestion du temps restant du giveaway
     const endTime = Date.now() + ms(giveawayDuration);
     const updateInterval = setInterval(async () => {
