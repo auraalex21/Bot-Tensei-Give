@@ -1,24 +1,30 @@
-import levels from "../config/levels";
+import {
+  addExperience,
+  setLastMessageTime,
+  getLastMessageTime,
+} from "../config/levels.js"; // Ensure this path is correct
 import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder } from "discord.js";
 
 export default async (client, message) => {
   if (message.author.bot) return;
 
-  const excludedChannels = [
-    "1339588778909765712",
-    "1340010734750535691",
-    "1339589443870265385",
-  ];
-  if (excludedChannels.includes(message.channel.id)) return;
+  const guildId = message.guild.id;
+  const userId = message.author.id;
 
-  const expGained = Math.floor(Math.random() * 10) + 5;
-  const leveledUp = await levels.addExperience(
-    message.author.id,
-    message.guild.id,
-    expGained,
-    client
-  );
+  const lastMessageTime = await getLastMessageTime(userId, guildId);
+  const now = Date.now();
+
+  // Vérifier si 3 secondes se sont écoulées depuis le dernier message
+  if (lastMessageTime && now - lastMessageTime < 3000) {
+    return;
+  }
+
+  await setLastMessageTime(userId, guildId, now);
+
+  // Ajouter de l'expérience à l'utilisateur
+  const exp = Math.floor(Math.random() * 10) + 1; // Expérience aléatoire entre 1 et 10
+  const leveledUp = await addExperience(userId, guildId, exp, client);
 
   if (leveledUp) {
     const userLevel = await levels.getUserLevel(
@@ -137,10 +143,4 @@ export default async (client, message) => {
       });
     }
   }
-
-  await levels.setLastMessageTime(
-    message.author.id,
-    message.guild.id,
-    Date.now()
-  );
 };
