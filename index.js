@@ -133,6 +133,16 @@ client.once("ready", async () => {
   } else {
     console.log(`✅ Le bot est présent dans la guilde : ${guild.name}`);
   }
+
+  // Vérifiez si le bot a les permissions nécessaires
+  const botMember = guild.members.cache.get(client.user.id);
+  if (!botMember.permissions.has("ADMINISTRATOR")) {
+    console.error(
+      "❌ Le bot n'a pas les permissions administratives nécessaires."
+    );
+  } else {
+    console.log("✅ Le bot a les permissions administratives nécessaires.");
+  }
 });
 
 client.on("interactionCreate", async (interaction) => {
