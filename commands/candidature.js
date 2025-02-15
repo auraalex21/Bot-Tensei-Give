@@ -40,12 +40,7 @@ export async function execute(interaction) {
   modal.addComponents(firstActionRow, secondActionRow, thirdActionRow);
 
   try {
-    await interaction.deferReply({ ephemeral: true });
     await interaction.showModal(modal);
-    await interaction.followUp({
-      content: "Le modal a été affiché avec succès.",
-      ephemeral: true,
-    });
   } catch (error) {
     console.error("Erreur lors de l'affichage du modal :", error);
 
