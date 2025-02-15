@@ -53,7 +53,16 @@ synchronizeSlashCommands(
     debug: true,
     guildId: process.env.GUILD_ID,
   }
-);
+)
+  .then(() => {
+    console.log("✅ Commandes synchronisées avec succès.");
+  })
+  .catch((error) => {
+    console.error(
+      "❌ Erreur lors de la synchronisation des commandes :",
+      error
+    );
+  });
 
 fs.readdir(path.resolve(__dirname, "./events/"), (_err, files) => {
   files.forEach((file) => {
