@@ -3,6 +3,7 @@ import {
   setLastMessageTime,
   getLastMessageTime,
   getUserLevel,
+  incrementMessageCount,
 } from "../config/levels.js";
 import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder, Events } from "discord.js";
@@ -28,6 +29,9 @@ export default {
     // Ajouter de l'expérience à l'utilisateur
     const exp = Math.floor(Math.random() * 10) + 1; // Expérience aléatoire entre 1 et 10
     const leveledUp = await addExperience(userId, guildId, exp, client);
+
+    // Incrémenter le compteur de messages
+    await incrementMessageCount(userId, guildId);
 
     if (leveledUp) {
       const userLevel = await getUserLevel(userId, guildId);

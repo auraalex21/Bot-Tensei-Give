@@ -3,7 +3,12 @@ const db = new QuickDB();
 
 export async function addExperience(userId, guildId, exp, client) {
   const key = `levels_${guildId}_${userId}`;
-  const user = (await db.get(key)) || { exp: 0, level: 1 };
+  const user = (await db.get(key)) || {
+    exp: 0,
+    level: 1,
+    messages: 0,
+    voice: 0,
+  };
   user.exp += exp;
 
   const nextLevelExp = user.level * 100;
@@ -31,7 +36,12 @@ export async function addExperience(userId, guildId, exp, client) {
 
 export async function getUserLevel(userId, guildId) {
   const key = `levels_${guildId}_${userId}`;
-  const user = (await db.get(key)) || { exp: 0, level: 1 };
+  const user = (await db.get(key)) || {
+    exp: 0,
+    level: 1,
+    messages: 0,
+    voice: 0,
+  };
   return user;
 }
 
@@ -67,4 +77,58 @@ export async function getLeaderboard(guildId) {
 
   leaderboard.sort((a, b) => b.level - a.level || b.exp - a.exp);
   return leaderboard;
+}
+
+export async function incrementMessageCount(userId, guildId) {
+  const key = `levels_${guildId}_${userId}`;
+  const user = (await db.get(key)) || {
+    exp: 0,
+    level: 1,
+    messages: 0,
+    voice: 0,
+  };
+  user.messages += 1;
+  await db.set(key, user);
+}
+
+export async function incrementVoiceTime(userId, guildId, time) {
+  const key = `levels_${guildId}_${userId}`;
+  const user = (await db.get(key)) || {
+    exp: 0,
+    level: 1,
+    messages: 0,
+    voice: 0,
+  };
+  user.voice += time;
+  await db.set(key, user);
+}
+
+export async function getTopMessageUsers(guildId) {
+  const keys = await db.all();
+  const users = [];
+
+  for (const { id, value } of keys) {
+    if (id.startsWith(`levels_${guildId}_`)) {
+      const userId = id.split("_")[2];
+      users.push({ userId, ...value });
+    }
+  }
+
+  users.sort((a, b) => b.messages - a.messages);
+  return users.slice(0, 10);
+}
+
+export async function getTopVoiceUsers(guildId) {
+  const keys = await db.all();
+  const users = [];
+
+  for (const { id, value } of keys) {
+    if (id.startsWith(`levels_${guildId}_`)) {
+      const userId = id.split("_")[2];
+      users.push({ userId, ...value });
+    }
+  }
+
+  users.sort((a, b) => b.voice - a.voice);
+  return users.slice(0, 10);
 }

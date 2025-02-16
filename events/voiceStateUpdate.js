@@ -1,4 +1,8 @@
-import { addExperience, getUserLevel } from "../config/levels.js";
+import {
+  addExperience,
+  getUserLevel,
+  incrementVoiceTime,
+} from "../config/levels.js";
 import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder, Events } from "discord.js";
 
@@ -38,6 +42,8 @@ export default {
           expGained,
           client
         );
+
+        await incrementVoiceTime(userId, guildId, 60); // Increment voice time by 60 seconds
 
         if (leveledUp) {
           const userLevel = await getUserLevel(
