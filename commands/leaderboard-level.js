@@ -22,14 +22,14 @@ export async function execute(interaction) {
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext("2d");
 
-  // 🔹 Fond moderne avec gradient
+  // 🔹 Fond avec effet gradient
   const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
   gradient.addColorStop(0, "#10172A");
   gradient.addColorStop(1, "#182848");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 🔹 Bordure avec effet bleu
+  // 🔹 Bordure bleue moderne
   ctx.strokeStyle = "#007BFF";
   ctx.lineWidth = 3;
   ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
@@ -55,9 +55,9 @@ export async function execute(interaction) {
 
   for (let i = 0; i < topUsers.length; i++) {
     const user = topUsers[i];
-    const yPosition = 120 + i * 55;
+    const baseY = 120 + i * 70; // Espacement amélioré
 
-    // 🏅 Icônes pour les trois premiers
+    // 🏅 Icônes pour le podium
     let rankIcon = "";
     if (i === 0) rankIcon = "🥇";
     else if (i === 1) rankIcon = "🥈";
@@ -68,39 +68,32 @@ export async function execute(interaction) {
     ctx.fillText(
       `${rankIcon} ${i + 1}. ${user.username || "Inconnu"}`,
       50,
-      yPosition
+      baseY
     );
 
-    // 🔹 XP bien centré entre pseudo et niveau
+    // 🔹 XP à droite du pseudo
     ctx.fillStyle = "#00FF00";
-    ctx.textAlign = "center";
-    ctx.fillText(`${user.exp} XP`, canvasWidth / 2, yPosition);
+    ctx.fillText(`${user.exp} XP`, 300, baseY);
 
     // 🔹 Niveau aligné à droite
     ctx.fillStyle = "#FFD700";
     ctx.textAlign = "right";
-    ctx.fillText(`Niveau ${user.level}`, canvasWidth - 50, yPosition);
+    ctx.fillText(`Niveau ${user.level}`, canvasWidth - 50, baseY);
 
-    // 🔹 Barre de progression XP sous l’XP
+    // 🔹 Barre de progression sous le pseudo
     const progressBarWidth = 250;
     const progressBarHeight = 14;
     const progress = Math.min(user.exp / (user.level * 100), 1);
 
-    // 🔸 Barre de fond
     ctx.fillStyle = "#333";
-    ctx.fillRect(
-      canvasWidth / 2 - 125,
-      yPosition + 10,
-      progressBarWidth,
-      progressBarHeight
-    );
+    ctx.fillRect(50, baseY + 10, progressBarWidth, progressBarHeight);
 
-    // 🔸 Barre dynamique avec effet lumineux
+    // 🔸 Barre dynamique (couleur selon l'avancement)
     ctx.fillStyle =
       progress > 0.7 ? "#00FF00" : progress > 0.4 ? "#FFA500" : "#FF0000";
     ctx.fillRect(
-      canvasWidth / 2 - 125,
-      yPosition + 10,
+      50,
+      baseY + 10,
       progressBarWidth * progress,
       progressBarHeight
     );
