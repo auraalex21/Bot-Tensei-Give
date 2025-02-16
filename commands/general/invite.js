@@ -51,22 +51,22 @@ export async function execute(interaction) {
     ctx.fillStyle = "#00A2FF";
     ctx.shadowColor = "rgba(0, 162, 255, 0.7)";
     ctx.shadowBlur = 10;
-    ctx.fillText("📊 Statistiques d'invitation", 50, 60);
+    ctx.fillText("📊 Statistiques d'invitation", 40, 60);
     ctx.shadowBlur = 0; // Réinitialisation de l'ombre
 
     // Texte Utilisateur
     ctx.font = "bold 26px Arial";
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText("👤 Utilisateur:", 50, 140);
+    ctx.fillText("👤 Utilisateur:", 40, 140);
     ctx.fillStyle = "#DDDDDD";
     ctx.fillText(user.tag, 250, 140, 500);
 
     // Texte Invitations (Corrigé)
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText("📥 Invitations:", 50, 240);
+    ctx.fillText("📥 Invitations:", 40, 240);
     ctx.fillStyle = "#DDDDDD";
     ctx.font = "bold 24px Arial"; // Taille de texte réduite pour éviter le chevauchement
-    ctx.fillText(`${invites} personne(s)`, 250, 240);
+    ctx.fillText(`${invites} personne(s)`, 270, 240);
 
     // Ajout de l'avatar
     const avatar = await loadImage(user.displayAvatarURL({ format: "png" }));
