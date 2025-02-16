@@ -5,16 +5,18 @@ import {
   getUserLevel,
   incrementMessageCount,
 } from "../config/levels.js";
-import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder, Events } from "discord.js";
 import axios from "axios";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const HUGGING_FACE_API_URL = "https://api-inference.huggingface.co/models/gpt2";
+// Modèle IA amélioré (meilleure cohérence des réponses)
+const HUGGING_FACE_API_URL =
+  "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1";
 const MAX_MESSAGE_LENGTH = 2000;
 
+// Liste de mots inappropriés à filtrer
 const inappropriateContent = ["badword1", "badword2", "badword3"];
 
 function containsInappropriateContent(text) {
@@ -34,7 +36,8 @@ export default {
         return message.reply("Comment puis-je vous aider ?");
       }
 
-      const thinkingMessage = await message.reply("L'IA réfléchit...");
+      // Indiquer que le bot réfléchit
+      const thinkingMessage = await message.reply("✍️ Réflexion en cours...");
 
       try {
         const response = await axios.post(
@@ -49,42 +52,57 @@ export default {
           }
         );
 
-        let reply = response.data[0].generated_text.trim();
-        if (reply.length > MAX_MESSAGE_LENGTH) {
-          reply = reply.substring(0, MAX_MESSAGE_LENGTH - 3) + "...";
+        // Vérifier si la réponse est valide
+        if (
+          !response.data ||
+          !response.data[0] ||
+          !response.data[0].generated_text
+        ) {
+          throw new Error("Réponse invalide de l'API.");
         }
 
+        let reply = response.data[0].generated_text.trim();
+
+        // Vérifier la cohérence de la réponse
+        if (reply.length < 5 || reply.includes("error")) {
+          reply = "Je ne suis pas sûr de comprendre. Peux-tu reformuler ?";
+        }
+
+        // Vérifier si la réponse contient du contenu inapproprié
         if (containsInappropriateContent(reply)) {
           reply = "Désolé, je ne peux pas répondre à cela.";
         }
 
+        // Limiter la longueur du message pour Discord
+        if (reply.length > MAX_MESSAGE_LENGTH) {
+          reply = reply.substring(0, MAX_MESSAGE_LENGTH - 3) + "...";
+        }
+
         await thinkingMessage.edit(reply);
       } catch (error) {
-        console.error("Erreur lors de la génération de la réponse IA :", error);
+        console.error(
+          "❌ Erreur lors de la génération de la réponse IA :",
+          error
+        );
         await thinkingMessage.edit(
           "Désolé, je n'ai pas pu générer une réponse."
         );
       }
     }
 
+    // Gestion de l'expérience et des niveaux
     const guildId = message.guild.id;
     const userId = message.author.id;
-
     const lastMessageTime = await getLastMessageTime(userId, guildId);
     const now = Date.now();
 
-    // Vérifier si 3 secondes se sont écoulées depuis le dernier message
     if (lastMessageTime && now - lastMessageTime < 3000) {
       return;
     }
 
     await setLastMessageTime(userId, guildId, now);
-
-    // Ajouter de l'expérience à l'utilisateur
-    const exp = Math.floor(Math.random() * 10) + 1; // Expérience aléatoire entre 1 et 10
+    const exp = Math.floor(Math.random() * 10) + 1;
     const leveledUp = await addExperience(userId, guildId, exp, client);
-
-    // Incrémenter le compteur de messages
     await incrementMessageCount(userId, guildId);
 
     if (leveledUp) {
@@ -179,15 +197,6 @@ export default {
           height / 2
         );
 
-        // Animation lumineuse autour du texte (optionnel)
-        ctx.font = "italic 22px Arial";
-        ctx.fillStyle = "#FFFFFF";
-        ctx.fillText(
-          "🚀 Continuez comme ça !",
-          padding * 2 + avatarSize,
-          height - padding
-        );
-
         // Convertir le canvas en buffer
         const buffer = canvas.toBuffer();
         const attachment = new AttachmentBuilder(buffer, {
@@ -196,6 +205,7 @@ export default {
 
         // Envoyer le message avec l'image
         levelUpChannel.send({
+          content: `🎉 ${message.author} a atteint le niveau ${userLevel.level} ! Félicitations !`,
           files: [attachment],
         });
       }
