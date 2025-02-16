@@ -35,6 +35,14 @@ const client = new Client({
 client.commands = new Collection();
 const db = new QuickDB();
 
+const phrases = [
+  "Bonjour ! Comment puis-je vous aider ?",
+  "Salut ! Besoin d'aide ?",
+  "Hey ! Que puis-je faire pour vous ?",
+  "Coucou ! Comment ça va ?",
+  "Hello ! Que puis-je faire pour vous aujourd'hui ?",
+];
+
 // 📌 CHARGEMENT AUTOMATIQUE DES COMMANDES
 const loadCommands = (dir) => {
   const files = fs.readdirSync(dir);
@@ -323,6 +331,13 @@ client.once("ready", async () => {
 
   // Reload active giveaways
   await reloadGiveaways();
+});
+
+client.on("messageCreate", (message) => {
+  if (message.mentions.has(client.user) && !message.author.bot) {
+    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+    message.reply(randomPhrase);
+  }
 });
 
 client.login(process.env.DISCORD_TOKEN);
