@@ -17,7 +17,7 @@ export async function execute(interaction) {
     });
   }
 
-  const canvasWidth = 800;
+  const canvasWidth = 850;
   const canvasHeight = 600;
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext("2d");
@@ -71,16 +71,15 @@ export async function execute(interaction) {
       baseY
     );
 
-    // 🔹 XP à droite du pseudo
-    ctx.fillStyle = "#00FF00";
-    ctx.fillText(`${user.exp} XP`, 300, baseY);
-
-    // 🔹 Niveau aligné à droite
+    // 🔹 Niveau à droite pour meilleur alignement
     ctx.fillStyle = "#FFD700";
-    ctx.textAlign = "right";
-    ctx.fillText(`Niveau ${user.level}`, canvasWidth - 50, baseY);
+    ctx.fillText(`Niveau ${user.level}`, canvasWidth - 180, baseY);
 
-    // 🔹 Barre de progression sous le pseudo
+    // 🔹 XP éloignée pour une meilleure clarté
+    ctx.fillStyle = "#00FF00";
+    ctx.fillText(`${user.exp} XP`, canvasWidth - 320, baseY);
+
+    // 🔹 Barre de progression SOUS le pseudo
     const progressBarWidth = 250;
     const progressBarHeight = 14;
     const progress = Math.min(user.exp / (user.level * 100), 1);
