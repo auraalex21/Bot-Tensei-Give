@@ -188,14 +188,14 @@ const reloadGiveaways = async () => {
               if (!i.replied && !i.deferred) {
                 await i.reply({
                   content: "🎉 Vous avez été ajouté au giveaway !",
-                  flags: 64,
+                  ephemeral: true,
                 });
               }
             } else {
               if (!i.replied && !i.deferred) {
                 await i.reply({
                   content: "❌ Vous êtes déjà inscrit à ce giveaway.",
-                  flags: 64,
+                  ephemeral: true,
                 });
               }
             }
@@ -222,6 +222,10 @@ const reloadGiveaways = async () => {
             }
 
             await message.edit({ files: [await updateCanvas(winners, true)] });
+
+            // Save the winners to the database
+            giveawayData.winners = winners;
+            await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
           });
 
           const interval = setInterval(async () => {

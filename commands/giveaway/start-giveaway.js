@@ -44,7 +44,7 @@ export async function execute(interaction) {
     if (interaction.replied || interaction.deferred) {
       return;
     }
-    await interaction.deferReply({ flags: 64 });
+    await interaction.deferReply({ ephemeral: true });
 
     if (
       !interaction.member.permissions.has(
@@ -54,7 +54,7 @@ export async function execute(interaction) {
       return interaction.editReply({
         content:
           "❌ Vous devez avoir la permission `Gérer les messages` pour organiser un giveaway.",
-        flags: 64,
+        ephemeral: true,
       });
     }
 
@@ -66,7 +66,7 @@ export async function execute(interaction) {
     if (!giveawayChannel.isTextBased()) {
       return interaction.editReply({
         content: "❌ Le canal sélectionné n'est pas un canal textuel valide.",
-        flags: 64,
+        ephemeral: true,
       });
     }
 
@@ -144,7 +144,7 @@ export async function execute(interaction) {
 
     await interaction.editReply({
       content: "✅ Giveaway démarré avec succès !",
-      flags: 64,
+      ephemeral: true,
     });
 
     const collector = message.createMessageComponentCollector({
@@ -158,14 +158,14 @@ export async function execute(interaction) {
         if (!i.replied && !i.deferred) {
           await i.reply({
             content: "🎉 Vous avez été ajouté au giveaway !",
-            flags: 64,
+            ephemeral: true,
           });
         }
       } else {
         if (!i.replied && !i.deferred) {
           await i.reply({
             content: "❌ Vous êtes déjà inscrit à ce giveaway.",
-            flags: 64,
+            ephemeral: true,
           });
         }
       }
@@ -189,6 +189,10 @@ export async function execute(interaction) {
       }
 
       await message.edit({ files: [await updateCanvas(winners, true)] });
+
+      // Save the winners to the database
+      giveawayData.winners = winners;
+      await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
     });
 
     const interval = setInterval(async () => {
@@ -209,7 +213,7 @@ export async function execute(interaction) {
       await interaction.reply({
         content:
           "❌ Une erreur s'est produite lors de l'exécution de cette commande.",
-        flags: 64,
+        ephemeral: true,
       });
     }
   }
