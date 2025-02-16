@@ -16,7 +16,7 @@ export async function addExperience(userId, guildId, exp, client) {
 
   if (user.exp >= nextLevelExp) {
     user.level++;
-    user.exp = user.exp - nextLevelExp;
+    user.exp = 0; // Reset experience to 0 when leveling up
     leveledUp = true;
 
     const levelUpChannelId = "1340011943733366805";
