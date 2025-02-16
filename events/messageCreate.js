@@ -15,6 +15,12 @@ dotenv.config();
 const HUGGING_FACE_API_URL = "https://api-inference.huggingface.co/models/gpt2";
 const MAX_MESSAGE_LENGTH = 2000;
 
+const inappropriateContent = ["badword1", "badword2", "badword3"];
+
+function containsInappropriateContent(text) {
+  return inappropriateContent.some((word) => text.includes(word));
+}
+
 export default {
   name: Events.MessageCreate,
   async execute(client, message) {
@@ -27,6 +33,8 @@ export default {
       if (prompt.length === 0) {
         return message.reply("Comment puis-je vous aider ?");
       }
+
+      const thinkingMessage = await message.reply("L'IA réfléchit...");
 
       try {
         const response = await axios.post(
@@ -45,10 +53,17 @@ export default {
         if (reply.length > MAX_MESSAGE_LENGTH) {
           reply = reply.substring(0, MAX_MESSAGE_LENGTH - 3) + "...";
         }
-        message.reply(reply);
+
+        if (containsInappropriateContent(reply)) {
+          reply = "Désolé, je ne peux pas répondre à cela.";
+        }
+
+        await thinkingMessage.edit(reply);
       } catch (error) {
         console.error("Erreur lors de la génération de la réponse IA :", error);
-        message.reply("Désolé, je n'ai pas pu générer une réponse.");
+        await thinkingMessage.edit(
+          "Désolé, je n'ai pas pu générer une réponse."
+        );
       }
     }
 
