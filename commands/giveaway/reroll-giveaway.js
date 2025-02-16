@@ -26,11 +26,17 @@ export async function execute(interaction) {
     });
   }
 
-  // Relancer le giveaway
-  interaction.client.giveawaysManager.reroll(giveawayId);
-
-  interaction.reply({
-    content: `✅ Le giveaway avec l'ID ${giveawayId} a été relancé.`,
-    ephemeral: true,
-  });
+  try {
+    await interaction.client.giveawaysManager.reroll(giveawayId);
+    interaction.reply({
+      content: `✅ Le giveaway avec l'ID ${giveawayId} a été relancé.`,
+      ephemeral: true,
+    });
+  } catch (error) {
+    console.error("❌ Erreur lors du reroll du giveaway :", error);
+    interaction.reply({
+      content: `❌ Une erreur s'est produite lors du reroll du giveaway : ${error.message}`,
+      ephemeral: true,
+    });
+  }
 }

@@ -15,6 +15,7 @@ import synchronizeSlashCommands from "discord-sync-commands";
 import { QuickDB } from "quick.db";
 import { createCanvas } from "canvas";
 import ms from "ms";
+import { GiveawaysManager } from "discord-giveaways";
 
 dotenv.config();
 
@@ -34,6 +35,17 @@ const client = new Client({
 
 client.commands = new Collection();
 const db = new QuickDB();
+
+client.giveawaysManager = new GiveawaysManager(client, {
+  storage: false, // Utilisez false si vous utilisez une base de données externe comme QuickDB
+  updateCountdownEvery: 10000,
+  default: {
+    botsCanWin: false,
+    embedColor: "#FF0000",
+    reaction: "🎉",
+  },
+  database: db, // Assurez-vous que le gestionnaire utilise QuickDB
+});
 
 // 📌 CHARGEMENT AUTOMATIQUE DES COMMANDES
 const loadCommands = (dir) => {
@@ -238,22 +250,6 @@ loadEvents(path.resolve(__dirname, "./events"));
 
 client.once("ready", async () => {
   console.log(`Prêt en tant que ${client.user.tag}`);
-  const { GiveawaysManager } = await import("discord-giveaways");
-
-  client.giveawaysManager = new GiveawaysManager(client, {
-    storage: path.resolve(__dirname, "./giveaways.json"),
-    default: {
-      botsCanWin: false,
-      embedColor: "#FF0000",
-      reaction: "🎉",
-      lastChance: {
-        enabled: true,
-        content: "⚠️ **DERNIÈRE CHANCE POUR PARTICIPER !** ⚠️",
-        threshold: 10000,
-        embedColor: "#FF0000",
-      },
-    },
-  });
 
   client.giveawaysManager.on(
     "giveawayReactionAdded",
