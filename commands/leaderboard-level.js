@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { getLeaderboard } from "../config/levels.js";
-import { createCanvas, registerFont } from "canvas";
-import { fillTextWithTwemoji } from "node-canvas-with-twemoji";
+import { createCanvas, loadImage } from "canvas";
+import twemoji from "twemoji";
 
 export const data = new SlashCommandBuilder()
   .setName("leaderboard-level")
@@ -71,13 +71,29 @@ export async function execute(interaction) {
     const username = discordUser ? discordUser.username : "Inconnu";
 
     // 🔹 Affichage du rang + pseudo
-    await fillTextWithTwemoji(
-      ctx,
-      `${rankIcon} ${i + 1}. ${username}`,
-      50,
-      baseY
-    );
-    ctx.fillText(`${rankIcon} ${i + 1}. ${username}`, 50, baseY);
+    const text = `${rankIcon} ${i + 1}. ${username}`;
+    const parsedText = twemoji.parse(text, {
+      folder: "svg",
+      ext: ".svg",
+    });
+
+    // Render text with emojis
+    const lines = parsedText.split("\n");
+    for (const line of lines) {
+      const images = line.match(/<img[^>]+src="([^">]+)"/g) || [];
+      let x = 50;
+      for (const part of line.split(/<img[^>]+src="[^">]+">/)) {
+        ctx.fillText(part, x, baseY);
+        x += ctx.measureText(part).width;
+        if (images.length > 0) {
+          const img = await loadImage(
+            images.shift().match(/src="([^">]+)"/)[1]
+          );
+          ctx.drawImage(img, x, baseY - 20, 20, 20);
+          x += 20;
+        }
+      }
+    }
 
     // 🔹 Barre de séparation avant l'XP
     ctx.strokeStyle = "#007BFF";
