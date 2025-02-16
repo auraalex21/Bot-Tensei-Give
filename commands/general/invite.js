@@ -66,7 +66,7 @@ export async function execute(interaction) {
     ctx.fillText("📥 Invitations:", 40, 240);
     ctx.fillStyle = "#DDDDDD";
     ctx.font = "bold 24px Arial"; // Taille de texte réduite pour éviter le chevauchement
-    ctx.fillText(`${invites} personne(s)`, 270, 240);
+    ctx.fillText(`${invites} personne(s)`, 260, 240);
 
     // Ajout de l'avatar
     const avatar = await loadImage(user.displayAvatarURL({ format: "png" }));
