@@ -13,6 +13,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const HUGGING_FACE_API_URL = "https://api-inference.huggingface.co/models/gpt2";
+const MAX_MESSAGE_LENGTH = 4000;
 
 export default {
   name: Events.MessageCreate,
@@ -40,7 +41,10 @@ export default {
           }
         );
 
-        const reply = response.data[0].generated_text.trim();
+        let reply = response.data[0].generated_text.trim();
+        if (reply.length > MAX_MESSAGE_LENGTH) {
+          reply = reply.substring(0, MAX_MESSAGE_LENGTH - 3) + "...";
+        }
         message.reply(reply);
       } catch (error) {
         console.error("Erreur lors de la génération de la réponse IA :", error);
