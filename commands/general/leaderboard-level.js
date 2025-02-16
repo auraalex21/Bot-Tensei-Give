@@ -24,7 +24,7 @@ export async function execute(interaction) {
   }
 
   const canvasWidth = 900;
-  const canvasHeight = 700; // Hauteur ajustée pour ajouter les infos de l'utilisateur
+  const canvasHeight = 750; // Hauteur ajustée pour une meilleure disposition
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext("2d");
 
@@ -61,7 +61,7 @@ export async function execute(interaction) {
 
   for (let i = 0; i < topUsers.length; i++) {
     const user = topUsers[i];
-    const baseY = 120 + i * 70; // Espacement optimisé
+    const baseY = 120 + i * 70;
 
     // 🏅 Icônes pour le podium
     let rankIcon = "⬜";
@@ -111,32 +111,42 @@ export async function execute(interaction) {
     ctx.moveTo(50, baseY + 35);
     ctx.lineTo(canvasWidth - 50, baseY + 35);
     ctx.stroke();
-    ctx.setLineDash([]); // Réinitialiser après utilisation
+    ctx.setLineDash([]);
   }
 
-  // 🔹 Récupérer les infos de l'utilisateur exécutant la commande
+  // 🔹 Affichage des infos utilisateur sous le classement
   const commandUserId = interaction.user.id;
   const commandUserData = leaderboard.find((u) => u.userId === commandUserId);
 
   if (commandUserData) {
-    const baseY = 500; // Position en dessous du top 5
+    const baseY = 530;
+
+    // 🟦 Fond arrondi avec contour pour une belle mise en forme
+    ctx.fillStyle = "#1E2A47";
+    ctx.roundRect(50, baseY, canvasWidth - 100, 120, 15);
+    ctx.fill();
+    ctx.strokeStyle = "#00A2FF";
+    ctx.lineWidth = 3;
+    ctx.stroke();
 
     // 🔹 Titre section utilisateur
     ctx.fillStyle = "#00A2FF";
     ctx.font = "bold 30px Arial";
-    ctx.fillText("📌 Tes Informations :", 50, baseY);
+    ctx.textAlign = "center";
+    ctx.fillText("📌 Tes Informations :", canvasWidth / 2, baseY + 35);
 
-    // 🔹 Infos utilisateur
+    // 🔹 Infos utilisateur bien alignées
     ctx.font = "22px Arial";
+    ctx.textAlign = "left";
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(`👤 ${interaction.user.username}`, 50, baseY + 40);
+    ctx.fillText(`👤 ${interaction.user.username}`, 80, baseY + 70);
     ctx.fillStyle = "#00FF00";
-    ctx.fillText(`XP: ${commandUserData.exp}`, 300, baseY + 40);
+    ctx.fillText(`XP: ${commandUserData.exp}`, 350, baseY + 70);
     ctx.fillStyle = "#FFD700";
-    ctx.fillText(`Niveau: ${commandUserData.level}`, 500, baseY + 40);
+    ctx.fillText(`Niveau: ${commandUserData.level}`, 550, baseY + 70);
 
-    // 🔹 Barre de progression utilisateur
-    const progressBarWidth = 400;
+    // 🔹 Barre de progression large et bien visible
+    const progressBarWidth = 500;
     const progressBarHeight = 18;
     const progress = Math.min(
       commandUserData.exp / (commandUserData.level * 100),
@@ -144,13 +154,13 @@ export async function execute(interaction) {
     );
 
     ctx.fillStyle = "#333";
-    ctx.fillRect(50, baseY + 60, progressBarWidth, progressBarHeight);
+    ctx.fillRect(200, baseY + 85, progressBarWidth, progressBarHeight);
 
     ctx.fillStyle =
       progress > 0.7 ? "#00FF00" : progress > 0.4 ? "#FFA500" : "#FF0000";
     ctx.fillRect(
-      50,
-      baseY + 60,
+      200,
+      baseY + 85,
       progressBarWidth * progress,
       progressBarHeight
     );

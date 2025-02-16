@@ -5,10 +5,8 @@ import {
   getUserLevel,
   incrementMessageCount,
 } from "../config/levels.js";
+import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder, Events } from "discord.js";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 export default {
   name: Events.MessageCreate,
@@ -17,6 +15,7 @@ export default {
 
     const guildId = message.guild.id;
     const userId = message.author.id;
+
     const lastMessageTime = await getLastMessageTime(userId, guildId);
     const now = Date.now();
 
@@ -126,6 +125,15 @@ export default {
           height / 2
         );
 
+        // Animation lumineuse autour du texte (optionnel)
+        ctx.font = "italic 22px Arial";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(
+          "🚀 Continuez comme ça !",
+          padding * 2 + avatarSize,
+          height - padding
+        );
+
         // Convertir le canvas en buffer
         const buffer = canvas.toBuffer();
         const attachment = new AttachmentBuilder(buffer, {
@@ -134,7 +142,6 @@ export default {
 
         // Envoyer le message avec l'image
         levelUpChannel.send({
-          content: `🎉 ${message.author} a atteint le niveau ${userLevel.level} ! Félicitations !`,
           files: [attachment],
         });
       }
