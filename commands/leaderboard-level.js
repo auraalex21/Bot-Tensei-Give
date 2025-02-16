@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { getLeaderboard } from "../config/levels.js";
-import { createCanvas } from "canvas";
+import { createCanvas, loadImage } from "canvas";
+import twemoji from "twemoji";
 
 export const data = new SlashCommandBuilder()
   .setName("leaderboard-level")
@@ -17,7 +18,7 @@ export async function execute(interaction) {
     });
   }
 
-  const canvasWidth = 850;
+  const canvasWidth = 900;
   const canvasHeight = 600;
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext("2d");
@@ -25,7 +26,7 @@ export async function execute(interaction) {
   // 🔹 Fond avec effet gradient
   const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
   gradient.addColorStop(0, "#10172A");
-  gradient.addColorStop(1, "#182848");
+  gradient.addColorStop(1, "#1E2A47");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -36,7 +37,7 @@ export async function execute(interaction) {
 
   // 🔹 Titre du classement
   ctx.fillStyle = "#00A2FF";
-  ctx.font = "bold 36px Arial";
+  ctx.font = "bold 38px Arial";
   ctx.textAlign = "center";
   ctx.fillText("🏆 Classement des Niveaux", canvasWidth / 2, 60);
 
@@ -55,10 +56,10 @@ export async function execute(interaction) {
 
   for (let i = 0; i < topUsers.length; i++) {
     const user = topUsers[i];
-    const baseY = 120 + i * 70; // Espacement amélioré
+    const baseY = 120 + i * 70; // Espacement optimisé
 
     // 🏅 Icônes pour le podium
-    let rankIcon = "";
+    let rankIcon = "⬜";
     if (i === 0) rankIcon = "🥇";
     else if (i === 1) rankIcon = "🥈";
     else if (i === 2) rankIcon = "🥉";
@@ -67,29 +68,29 @@ export async function execute(interaction) {
     const discordUser = await interaction.client.users
       .fetch(user.userId)
       .catch(() => null);
-    const username = discordUser ? discordUser.tag : "Inconnu";
+    const username = discordUser ? discordUser.username : "Inconnu";
 
-    // 🔹 Pseudo
+    // 🔹 Affichage du rang + pseudo
     ctx.fillStyle = "#FFFFFF";
     ctx.fillText(`${rankIcon} ${i + 1}. ${username}`, 50, baseY);
 
-    // 🔹 Niveau à droite pour meilleur alignement
+    // 🔹 Niveau aligné à droite
     ctx.fillStyle = "#FFD700";
-    ctx.fillText(`Niveau ${user.level}`, canvasWidth - 180, baseY);
+    ctx.fillText(`Niveau ${user.level}`, canvasWidth - 140, baseY);
 
-    // 🔹 XP éloignée pour une meilleure clarté
+    // 🔹 XP éloignée pour plus de clarté
     ctx.fillStyle = "#00FF00";
-    ctx.fillText(`${user.exp} XP`, canvasWidth - 320, baseY);
+    ctx.fillText(`${user.exp} XP`, canvasWidth - 270, baseY);
 
     // 🔹 Barre de progression SOUS le pseudo
-    const progressBarWidth = 250;
+    const progressBarWidth = 300;
     const progressBarHeight = 14;
     const progress = Math.min(user.exp / (user.level * 100), 1);
 
     ctx.fillStyle = "#333";
     ctx.fillRect(50, baseY + 10, progressBarWidth, progressBarHeight);
 
-    // 🔸 Barre dynamique (couleur selon l'avancement)
+    // 🔸 Barre dynamique (couleur selon avancement)
     ctx.fillStyle =
       progress > 0.7 ? "#00FF00" : progress > 0.4 ? "#FFA500" : "#FF0000";
     ctx.fillRect(
@@ -98,6 +99,14 @@ export async function execute(interaction) {
       progressBarWidth * progress,
       progressBarHeight
     );
+
+    // 🔹 Ajout d'une ligne de séparation entre chaque joueur
+    ctx.strokeStyle = "#007BFF";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(50, baseY + 30);
+    ctx.lineTo(canvasWidth - 50, baseY + 30);
+    ctx.stroke();
   }
 
   // 🔹 Générer l'image
