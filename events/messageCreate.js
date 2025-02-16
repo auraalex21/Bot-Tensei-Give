@@ -13,7 +13,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const HUGGING_FACE_API_URL = "https://api-inference.huggingface.co/models/gpt2";
-const MAX_MESSAGE_LENGTH = 4000;
+const MAX_MESSAGE_LENGTH = 2000;
 
 export default {
   name: Events.MessageCreate,
