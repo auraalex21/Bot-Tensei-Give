@@ -6,103 +6,32 @@ import {
   incrementMessageCount,
 } from "../config/levels.js";
 import { AttachmentBuilder, Events } from "discord.js";
-import axios from "axios";
 import dotenv from "dotenv";
 
 dotenv.config();
-
-// Modèle IA amélioré (meilleure cohérence des réponses)
-const HUGGING_FACE_API_URL =
-  "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1";
-const MAX_MESSAGE_LENGTH = 2000;
-
-// Liste de mots inappropriés à filtrer
-const inappropriateContent = ["badword1", "badword2", "badword3"];
-
-function containsInappropriateContent(text) {
-  return inappropriateContent.some((word) => text.includes(word));
-}
 
 export default {
   name: Events.MessageCreate,
   async execute(client, message) {
     if (message.author.bot) return;
 
-    const botMention = `<@${client.user.id}>`;
-    if (message.content.includes(botMention)) {
-      const prompt = message.content.replace(botMention, "").trim();
-
-      if (prompt.length === 0) {
-        return message.reply("Comment puis-je vous aider ?");
-      }
-
-      // Indiquer que le bot réfléchit
-      const thinkingMessage = await message.reply("✍️ Réflexion en cours...");
-
-      try {
-        const response = await axios.post(
-          HUGGING_FACE_API_URL,
-          {
-            inputs: prompt,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY}`,
-            },
-          }
-        );
-
-        // Vérifier si la réponse est valide
-        if (
-          !response.data ||
-          !response.data[0] ||
-          !response.data[0].generated_text
-        ) {
-          throw new Error("Réponse invalide de l'API.");
-        }
-
-        let reply = response.data[0].generated_text.trim();
-
-        // Vérifier la cohérence de la réponse
-        if (reply.length < 5 || reply.includes("error")) {
-          reply = "Je ne suis pas sûr de comprendre. Peux-tu reformuler ?";
-        }
-
-        // Vérifier si la réponse contient du contenu inapproprié
-        if (containsInappropriateContent(reply)) {
-          reply = "Désolé, je ne peux pas répondre à cela.";
-        }
-
-        // Limiter la longueur du message pour Discord
-        if (reply.length > MAX_MESSAGE_LENGTH) {
-          reply = reply.substring(0, MAX_MESSAGE_LENGTH - 3) + "...";
-        }
-
-        await thinkingMessage.edit(reply);
-      } catch (error) {
-        console.error(
-          "❌ Erreur lors de la génération de la réponse IA :",
-          error
-        );
-        await thinkingMessage.edit(
-          "Désolé, je n'ai pas pu générer une réponse."
-        );
-      }
-    }
-
-    // Gestion de l'expérience et des niveaux
     const guildId = message.guild.id;
     const userId = message.author.id;
     const lastMessageTime = await getLastMessageTime(userId, guildId);
     const now = Date.now();
 
+    // Vérifier si 3 secondes se sont écoulées depuis le dernier message
     if (lastMessageTime && now - lastMessageTime < 3000) {
       return;
     }
 
     await setLastMessageTime(userId, guildId, now);
-    const exp = Math.floor(Math.random() * 10) + 1;
+
+    // Ajouter de l'expérience à l'utilisateur
+    const exp = Math.floor(Math.random() * 10) + 1; // Expérience aléatoire entre 1 et 10
     const leveledUp = await addExperience(userId, guildId, exp, client);
+
+    // Incrémenter le compteur de messages
     await incrementMessageCount(userId, guildId);
 
     if (leveledUp) {
