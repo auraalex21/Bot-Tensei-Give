@@ -22,62 +22,75 @@ export async function execute(interaction) {
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext("2d");
 
-  // Fond avec un dégradé moderne
+  // Fond avec dégradé bleu foncé pour un effet plus moderne
   const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
-  gradient.addColorStop(0, "#1E1E2E"); // Bleu foncé
-  gradient.addColorStop(1, "#131322"); // Noir bleuté
+  gradient.addColorStop(0, "#182848");
+  gradient.addColorStop(1, "#0F172A");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Bordure arrondie
+  // Bordure plus fine et nette
   ctx.strokeStyle = "#007BFF";
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 3;
   ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
 
-  // Titre du classement
-  ctx.fillStyle = "#FFFFFF";
+  // Titre du classement avec effet ombre
+  ctx.fillStyle = "#007BFF";
   ctx.font = "bold 32px Arial";
-  ctx.fillText("🏆 Classement des Niveaux 🏆", 180, 50);
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowBlur = 8;
+  ctx.fillText("🏆 Classement des Niveaux", 200, 50);
+  ctx.shadowBlur = 0;
 
+  // Séparateur
+  ctx.strokeStyle = "#007BFF";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(50, 70);
+  ctx.lineTo(canvasWidth - 50, 70);
+  ctx.stroke();
+
+  // Affichage des joueurs
   const topUsers = leaderboard.slice(0, 10);
   ctx.font = "20px Arial";
 
   for (let i = 0; i < topUsers.length; i++) {
     const user = topUsers[i];
-    const yPosition = 100 + i * 50;
+    const yPosition = 120 + i * 50;
 
+    // Icônes pour les meilleurs
     let rankIcon = "";
     if (i === 0) rankIcon = "🥇";
     else if (i === 1) rankIcon = "🥈";
     else if (i === 2) rankIcon = "🥉";
 
+    // Nom d'utilisateur
     const username = user.username ? user.username : "Inconnu";
-
-    // Affichage du rang et du nom d'utilisateur
     ctx.fillStyle = "#FFFFFF";
     ctx.fillText(`${rankIcon} ${i + 1}. ${username}`, 50, yPosition);
 
-    // Niveau affiché à droite
+    // Niveau en doré
     ctx.fillStyle = "#FFD700";
-    ctx.fillText(`Niveau ${user.level}`, 500, yPosition);
+    ctx.fillText(`Niveau ${user.level}`, 450, yPosition);
 
-    // Barre de progression XP
-    const progressBarWidth = 200;
-    const progressBarHeight = 10;
+    // Barre de progression XP plus esthétique
+    const progressBarWidth = 180;
+    const progressBarHeight = 12;
     const progress = Math.min(user.exp / (user.level * 100), 1);
 
-    ctx.fillStyle = "#444";
-    ctx.fillRect(50, yPosition + 10, progressBarWidth, progressBarHeight);
+    ctx.fillStyle = "#333";
+    ctx.fillRect(50, yPosition + 8, progressBarWidth, progressBarHeight);
 
-    ctx.fillStyle = "#00FF00";
+    ctx.fillStyle =
+      progress > 0.7 ? "#00FF00" : progress > 0.4 ? "#FFA500" : "#FF0000";
     ctx.fillRect(
       50,
-      yPosition + 10,
+      yPosition + 8,
       progressBarWidth * progress,
       progressBarHeight
     );
 
-    // XP affiché à droite
+    // XP affiché en vert
     ctx.fillStyle = "#00FF00";
     ctx.fillText(`${user.exp} XP`, 260, yPosition + 20);
   }
