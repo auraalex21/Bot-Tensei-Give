@@ -63,13 +63,15 @@ export async function execute(interaction) {
     else if (i === 1) rankIcon = "🥈";
     else if (i === 2) rankIcon = "🥉";
 
+    // Fetch user information
+    const discordUser = await interaction.client.users
+      .fetch(user.userId)
+      .catch(() => null);
+    const username = discordUser ? discordUser.tag : "Inconnu";
+
     // 🔹 Pseudo
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(
-      `${rankIcon} ${i + 1}. ${user.username || "Inconnu"}`,
-      50,
-      baseY
-    );
+    ctx.fillText(`${rankIcon} ${i + 1}. ${username}`, 50, baseY);
 
     // 🔹 Niveau à droite pour meilleur alignement
     ctx.fillStyle = "#FFD700";
