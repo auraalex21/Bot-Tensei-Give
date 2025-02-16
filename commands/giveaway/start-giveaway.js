@@ -41,9 +41,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
   try {
-    if (interaction.replied || interaction.deferred) {
-      return;
-    }
+    if (!interaction.isRepliable()) return;
     await interaction.deferReply({ ephemeral: true });
 
     if (
@@ -86,56 +84,10 @@ export async function execute(interaction) {
         .setStyle(ButtonStyle.Primary)
     );
 
-    const updateCanvas = async (winners = [], finished = false) => {
-      const remainingTime = Math.max(0, endTime - Date.now());
-
-      const width = 800;
-      const height = 300;
-      const canvas = createCanvas(width, height);
-      const ctx = canvas.getContext("2d");
-
-      const gradient = ctx.createLinearGradient(0, 0, width, height);
-      gradient.addColorStop(0, "#0A192F");
-      gradient.addColorStop(1, "#001F3F");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
-
-      ctx.strokeStyle = "#FFD700";
-      ctx.lineWidth = 8;
-      ctx.roundRect(10, 10, width - 20, height - 20, 20);
-      ctx.stroke();
-
-      ctx.font = "bold 32px Arial";
-      ctx.fillStyle = "#FFD700";
-      ctx.fillText(`🎉 Giveaway Démarré`, 50, 60);
-
-      ctx.font = "bold 26px Arial";
-      ctx.fillStyle = "#FFFFFF";
-      if (finished) {
-        ctx.fillText(`🎉 Giveaway Terminé`, 50, 120);
-        ctx.fillText(`🏆 Gagnants: ${winners.join(", ")}`, 50, 160);
-        ctx.fillText(`⏰ Fin: ${new Date(endTime).toLocaleString()}`, 50, 200);
-      } else {
-        ctx.fillText(
-          `⏳ Temps restant: ${ms(remainingTime, { long: true })}`,
-          50,
-          120
-        );
-        ctx.fillText(
-          `👥 Participants: ${giveawayData.participants.length}`,
-          50,
-          160
-        );
-        ctx.fillText(`🎁 Prix: ${giveawayPrize}`, 50, 200);
-        ctx.fillText(`🏆 Nombre de gagnants: ${giveawayWinnerCount}`, 50, 240);
-      }
-
-      const buffer = canvas.toBuffer();
-      return new AttachmentBuilder(buffer, { name: "giveaway.png" });
-    };
-
     const message = await giveawayChannel.send({
-      files: [await updateCanvas()],
+      content: `🎉 **Giveaway Démarré !** 🎁 Prix: **${giveawayPrize}**\n👥 Participants: 0\n⏳ Fin: <t:${Math.floor(
+        endTime / 1000
+      )}:R>`,
       components: [row],
     });
 
@@ -152,35 +104,39 @@ export async function execute(interaction) {
     });
 
     collector.on("collect", async (i) => {
-      if (!giveawayData.participants.includes(i.user.id)) {
-        giveawayData.participants.push(i.user.id);
-        await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
-        if (!i.replied && !i.deferred) {
-          await i.reply({
+      try {
+        await i.deferUpdate(); // Empêche l'expiration de l'interaction
+
+        if (!giveawayData.participants.includes(i.user.id)) {
+          giveawayData.participants.push(i.user.id);
+          await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
+          await i.followUp({
             content: "🎉 Vous avez été ajouté au giveaway !",
             ephemeral: true,
           });
-        }
-      } else {
-        if (!i.replied && !i.deferred) {
-          await i.reply({
+        } else {
+          await i.followUp({
             content: "❌ Vous êtes déjà inscrit à ce giveaway.",
             ephemeral: true,
           });
         }
+      } catch (err) {
+        console.error(
+          "Erreur lors de la gestion de l'interaction du giveaway:",
+          err
+        );
       }
     });
 
     collector.on("end", async () => {
       if (giveawayData.participants.length === 0) {
-        await giveawayChannel.send({
-          files: [await updateCanvas([], true)],
-        });
+        await giveawayChannel.send("⛔ Aucun participant, giveaway annulé.");
         return;
       }
 
       const winners = [];
       for (let i = 0; i < giveawayWinnerCount; i++) {
+        if (giveawayData.participants.length === 0) break;
         const winnerIndex = Math.floor(
           Math.random() * giveawayData.participants.length
         );
@@ -188,9 +144,11 @@ export async function execute(interaction) {
         winners.push(`<@${winnerId}>`);
       }
 
-      await message.edit({ files: [await updateCanvas(winners, true)] });
-
-      // Save the winners to the database
+      await giveawayChannel.send(
+        `🎉 **Félicitations aux gagnants !** 🎊\n🏆 ${winners.join(
+          ", "
+        )}\n🎁 Prix: **${giveawayPrize}**`
+      );
       giveawayData.winners = winners;
       await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
     });
@@ -200,8 +158,12 @@ export async function execute(interaction) {
         clearInterval(interval);
         return;
       }
-      await message.edit({ files: [await updateCanvas()] });
-    }, 1000);
+      await message.edit({
+        content: `🎉 **Giveaway en cours !** 🎁 Prix: **${giveawayPrize}**\n👥 Participants: ${
+          giveawayData.participants.length
+        }\n⏳ Fin: <t:${Math.floor(endTime / 1000)}:R>`,
+      });
+    }, 60000);
 
     console.log(`✅ Giveaway démarré dans ${giveawayChannel.name}`);
   } catch (error) {
