@@ -1,6 +1,13 @@
 import { QuickDB } from "quick.db";
 const db = new QuickDB();
 
+const roleRewards = [
+  { level: 5, roleId: "1339902720546439189", bonus: 0.05 },
+  { level: 15, roleId: "1339902718088577074", bonus: 0.1 },
+  { level: 25, roleId: "1339902715165147166", bonus: 0.15 },
+  { level: 40, roleId: "1339902712724066406", bonus: 0.25 },
+];
+
 export async function addExperience(userId, guildId, exp, client) {
   const key = `levels_${guildId}_${userId}`;
   const user = (await db.get(key)) || {
@@ -28,6 +35,17 @@ export async function addExperience(userId, guildId, exp, client) {
         }** !`
       );
       user.levelUpNotified = true; // Mark as notified
+    }
+
+    // Attribuer des rôles en fonction du niveau
+    const member = await client.guilds.cache.get(guildId).members.fetch(userId);
+    for (const reward of roleRewards) {
+      if (user.level >= reward.level) {
+        const role = member.guild.roles.cache.get(reward.roleId);
+        if (role && !member.roles.cache.has(reward.roleId)) {
+          await member.roles.add(role);
+        }
+      }
     }
   } else {
     user.levelUpNotified = false; // Reset notification flag if not leveled up

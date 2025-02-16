@@ -9,6 +9,7 @@ import {
 import ms from "ms";
 import { QuickDB } from "quick.db";
 import { createCanvas } from "canvas";
+import { getUserLevel } from "../../config/levels.js";
 
 const db = new QuickDB();
 
@@ -186,20 +187,32 @@ export async function execute(interaction) {
         return;
       }
 
+      const weightedParticipants = [];
+      for (const participant of giveawayData.participants) {
+        const userLevel = await getUserLevel(participant, interaction.guild.id);
+        const bonus = roleRewards.reduce((acc, reward) => {
+          if (userLevel.level >= reward.level) {
+            return acc + reward.bonus;
+          }
+          return acc;
+        }, 0);
+        const weight = 1 + bonus;
+        for (let i = 0; i < weight; i++) {
+          weightedParticipants.push(participant);
+        }
+      }
+
       const winners = [];
       for (let i = 0; i < giveawayWinnerCount; i++) {
         const winnerIndex = Math.floor(
-          Math.random() * giveawayData.participants.length
+          Math.random() * weightedParticipants.length
         );
-        const winnerId = giveawayData.participants.splice(winnerIndex, 1)[0];
+        const winnerId = weightedParticipants.splice(winnerIndex, 1)[0];
         winners.push(`<@${winnerId}>`);
       }
 
       try {
         await message.edit({ files: [await updateCanvas(winners, true)] });
-        await giveawayChannel.send(
-          `🎉 Félicitations aux gagnants: ${winners.join(", ")}`
-        );
       } catch (error) {
         console.error("❌ Erreur lors de la modification du message :", error);
       }
