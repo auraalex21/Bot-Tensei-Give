@@ -1,10 +1,10 @@
 import { QuickDB } from "quick.db";
 const db = new QuickDB();
 
-export async function addInvite(userId, guildId) {
+export async function addInvite(userId, guildId, count = 1) {
   const key = `invites_${guildId}_${userId}`;
   const invites = (await db.get(key)) || 0;
-  await db.set(key, invites + 1);
+  await db.set(key, invites + count);
 }
 
 export async function getInvites(userId, guildId) {
