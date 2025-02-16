@@ -162,17 +162,31 @@ export async function execute(interaction) {
             giveawayData.participants.push(i.user.id);
             await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
             if (!i.replied && !i.deferred) {
-              await i.reply({
-                content: "🎉 Vous avez été ajouté au giveaway !",
-                ephemeral: true,
-              });
+              try {
+                await i.reply({
+                  content: "🎉 Vous avez été ajouté au giveaway !",
+                  ephemeral: true,
+                });
+              } catch (error) {
+                console.error(
+                  "❌ Erreur lors de la réponse à l'interaction :",
+                  error
+                );
+              }
             }
           } else {
             if (!i.replied && !i.deferred) {
-              await i.reply({
-                content: "❌ Vous êtes déjà inscrit à ce giveaway.",
-                ephemeral: true,
-              });
+              try {
+                await i.reply({
+                  content: "❌ Vous êtes déjà inscrit à ce giveaway.",
+                  ephemeral: true,
+                });
+              } catch (error) {
+                console.error(
+                  "❌ Erreur lors de la réponse à l'interaction :",
+                  error
+                );
+              }
             }
           }
         }, 1000); // Delay to avoid too many requests at once
