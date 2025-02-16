@@ -1,7 +1,8 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { getLeaderboard } from "../config/levels.js";
 import { createCanvas, loadImage } from "canvas";
-import twemoji from "twemoji";
+import path from "path";
+import fs from "fs";
 
 export const data = new SlashCommandBuilder()
   .setName("leaderboard-level")
@@ -72,26 +73,23 @@ export async function execute(interaction) {
 
     // 🔹 Affichage du rang + pseudo
     const text = `${rankIcon} ${i + 1}. ${username}`;
-    const parsedText = twemoji.parse(text, {
-      folder: "svg",
-      ext: ".svg",
-    });
+    const parts = text.split(/(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/gu);
 
-    // Render text with emojis
-    const lines = parsedText.split("\n");
-    for (const line of lines) {
-      const images = line.match(/<img[^>]+src="([^">]+)"/g) || [];
-      let x = 50;
-      for (const part of line.split(/<img[^>]+src="[^">]+">/)) {
-        ctx.fillText(part, x, baseY);
-        x += ctx.measureText(part).width;
-        if (images.length > 0) {
-          const img = await loadImage(
-            images.shift().match(/src="([^">]+)"/)[1]
-          );
+    let x = 50;
+    for (const part of parts) {
+      if (/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/u.test(part)) {
+        const emojiPath = path.resolve(
+          __dirname,
+          `../assets/twemoji/${part.codePointAt(0).toString(16)}.svg`
+        );
+        if (fs.existsSync(emojiPath)) {
+          const img = await loadImage(emojiPath);
           ctx.drawImage(img, x, baseY - 20, 20, 20);
           x += 20;
         }
+      } else {
+        ctx.fillText(part, x, baseY);
+        x += ctx.measureText(part).width;
       }
     }
 
