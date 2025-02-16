@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { QuickDB } from "quick.db";
-import { createCanvas } from "canvas";
+import { createCanvas, loadImage } from "canvas";
 
 const db = new QuickDB();
 
@@ -15,9 +15,7 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction) {
-  console.log(
-    `\ud83d\udce9 Commande reçue : invite - Interaction ID: ${interaction.id}`
-  );
+  console.log(`📩 Commande reçue : invite - Interaction ID: ${interaction.id}`);
 
   if (Date.now() - interaction.createdTimestamp > 2900) {
     console.warn(`⏳ Interaction trop ancienne : ${interaction.id}`);
@@ -36,8 +34,8 @@ export async function execute(interaction) {
     const invites = (await db.get(`invites_${user.id}`)) || 0;
 
     // Création du canvas
-    const width = 600;
-    const height = 250;
+    const width = 800;
+    const height = 400;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
@@ -55,23 +53,27 @@ export async function execute(interaction) {
     ctx.stroke();
 
     // Texte principal
-    ctx.font = "bold 30px Poppins";
+    ctx.font = "bold 36px Poppins";
     ctx.fillStyle = "#00A2FF";
     ctx.fillText("📊 Statistiques d'invitation", 50, 60);
 
     // Texte utilisateur
-    ctx.font = "bold 24px Poppins";
+    ctx.font = "bold 28px Poppins";
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(`👤 Utilisateur:`, 50, 120);
+    ctx.fillText(`👤 Utilisateur:`, 50, 140);
     ctx.fillStyle = "#DDDDDD";
-    ctx.fillText(`${user.tag}`, 200, 120, 350);
+    ctx.fillText(`${user.tag}`, 250, 140, 500);
 
     // Nombre d'invitations
-    ctx.font = "bold 24px Poppins";
+    ctx.font = "bold 28px Poppins";
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText("📥 Invitations:", 50, 180);
+    ctx.fillText("📥 Invitations:", 50, 220);
     ctx.fillStyle = "#DDDDDD";
-    ctx.fillText(`${invites} personne(s)`, 250, 180);
+    ctx.fillText(`${invites} personne(s)`, 250, 220);
+
+    // Ajout d'une image d'avatar
+    const avatar = await loadImage(user.displayAvatarURL({ format: "png" }));
+    ctx.drawImage(avatar, width - 150, 50, 100, 100);
 
     const buffer = canvas.toBuffer();
     const attachment = new AttachmentBuilder(buffer, { name: "invites.png" });

@@ -197,6 +197,9 @@ export async function execute(interaction) {
 
       try {
         await message.edit({ files: [await updateCanvas(winners, true)] });
+        await giveawayChannel.send(
+          `🎉 Félicitations aux gagnants: ${winners.join(", ")}`
+        );
       } catch (error) {
         console.error("❌ Erreur lors de la modification du message :", error);
       }
