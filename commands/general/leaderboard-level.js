@@ -24,7 +24,7 @@ export async function execute(interaction) {
   }
 
   const canvasWidth = 900;
-  const canvasHeight = 600;
+  const canvasHeight = 700; // Hauteur ajustée pour ajouter les infos de l'utilisateur
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext("2d");
 
@@ -54,8 +54,8 @@ export async function execute(interaction) {
   ctx.lineTo(canvasWidth - 50, 80);
   ctx.stroke();
 
-  // 🔹 Affichage des joueurs
-  const topUsers = leaderboard.slice(0, 10);
+  // 🔹 Affichage des 5 premiers joueurs
+  const topUsers = leaderboard.slice(0, 5);
   ctx.font = "22px Arial";
   ctx.textAlign = "left";
 
@@ -76,48 +76,12 @@ export async function execute(interaction) {
     const username = discordUser ? discordUser.username : "Inconnu";
 
     // 🔹 Affichage du rang + pseudo
-    const text = `${rankIcon} ${i + 1}. ${username}`;
-    const parts = text.split(/(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/gu);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(`${rankIcon} ${i + 1}. ${username}`, 50, baseY);
 
-    let x = 50;
-    for (const part of parts) {
-      if (/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/u.test(part)) {
-        const emojiPath = path.resolve(
-          __dirname,
-          `../assets/twemoji/${part.codePointAt(0).toString(16)}.svg`
-        );
-        if (fs.existsSync(emojiPath)) {
-          const img = await loadImage(emojiPath);
-          ctx.drawImage(img, x, baseY - 20, 20, 20);
-          x += 20;
-        }
-      } else {
-        ctx.fillText(part, x, baseY);
-        x += ctx.measureText(part).width;
-      }
-    }
-
-    // 🔹 Barre de séparation avant l'XP
-    ctx.strokeStyle = "#007BFF";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(canvasWidth - 370, baseY - 15);
-    ctx.lineTo(canvasWidth - 370, baseY + 5);
-    ctx.stroke();
-
-    // 🔹 XP bien alignée
+    // 🔹 XP et Niveau
     ctx.fillStyle = "#00FF00";
     ctx.fillText(`${user.exp} XP`, canvasWidth - 350, baseY);
-
-    // 🔹 Séparateur entre XP et Niveau
-    ctx.strokeStyle = "#007BFF";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(canvasWidth - 250, baseY - 15);
-    ctx.lineTo(canvasWidth - 250, baseY + 5);
-    ctx.stroke();
-
-    // 🔹 Niveau aligné à droite
     ctx.fillStyle = "#FFD700";
     ctx.fillText(`Niveau ${user.level}`, canvasWidth - 230, baseY);
 
@@ -139,7 +103,7 @@ export async function execute(interaction) {
       progressBarHeight
     );
 
-    // 🔹 Séparateur horizontal moderne entre chaque joueur
+    // 🔹 Séparateur horizontal entre chaque joueur
     ctx.strokeStyle = "#0056B3";
     ctx.lineWidth = 1.5;
     ctx.setLineDash([5, 5]);
@@ -148,6 +112,48 @@ export async function execute(interaction) {
     ctx.lineTo(canvasWidth - 50, baseY + 35);
     ctx.stroke();
     ctx.setLineDash([]); // Réinitialiser après utilisation
+  }
+
+  // 🔹 Récupérer les infos de l'utilisateur exécutant la commande
+  const commandUserId = interaction.user.id;
+  const commandUserData = leaderboard.find((u) => u.userId === commandUserId);
+
+  if (commandUserData) {
+    const baseY = 500; // Position en dessous du top 5
+
+    // 🔹 Titre section utilisateur
+    ctx.fillStyle = "#00A2FF";
+    ctx.font = "bold 30px Arial";
+    ctx.fillText("📌 Tes Informations :", 50, baseY);
+
+    // 🔹 Infos utilisateur
+    ctx.font = "22px Arial";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(`👤 ${interaction.user.username}`, 50, baseY + 40);
+    ctx.fillStyle = "#00FF00";
+    ctx.fillText(`XP: ${commandUserData.exp}`, 300, baseY + 40);
+    ctx.fillStyle = "#FFD700";
+    ctx.fillText(`Niveau: ${commandUserData.level}`, 500, baseY + 40);
+
+    // 🔹 Barre de progression utilisateur
+    const progressBarWidth = 400;
+    const progressBarHeight = 18;
+    const progress = Math.min(
+      commandUserData.exp / (commandUserData.level * 100),
+      1
+    );
+
+    ctx.fillStyle = "#333";
+    ctx.fillRect(50, baseY + 60, progressBarWidth, progressBarHeight);
+
+    ctx.fillStyle =
+      progress > 0.7 ? "#00FF00" : progress > 0.4 ? "#FFA500" : "#FF0000";
+    ctx.fillRect(
+      50,
+      baseY + 60,
+      progressBarWidth * progress,
+      progressBarHeight
+    );
   }
 
   // 🔹 Générer l'image
