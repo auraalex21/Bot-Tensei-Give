@@ -1,5 +1,6 @@
 import { QuickDB } from "quick.db";
 import { Events } from "discord.js";
+import { getInvites, addInvite } from "../config/invites.js";
 
 const db = new QuickDB();
 
@@ -10,7 +11,7 @@ export default {
     try {
       const inviterId = await db.get(`invitedBy_${member.id}`);
       if (inviterId) {
-        const currentInvites = (await db.get(`invites_${inviterId}`)) || 0;
+        const currentInvites = await getInvites(inviterId, member.guild.id);
         await db.set(`invites_${inviterId}`, currentInvites - 1);
       }
 

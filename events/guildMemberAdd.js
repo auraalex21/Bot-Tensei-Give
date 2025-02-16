@@ -1,5 +1,6 @@
 import { QuickDB } from "quick.db";
 import { Events } from "discord.js";
+import { addInvite } from "../config/invites.js";
 
 const db = new QuickDB();
 
@@ -16,8 +17,7 @@ export default {
 
     if (invite) {
       const inviter = invite.inviter;
-      const currentInvites = (await db.get(`invites_${inviter.id}`)) || 0;
-      await db.set(`invites_${inviter.id}`, currentInvites + 1);
+      await addInvite(inviter.id, member.guild.id);
       await db.set(`invitedBy_${member.id}`, inviter.id); // Enregistrer qui a invité le membre
     }
 

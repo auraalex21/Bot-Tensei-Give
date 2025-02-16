@@ -1,8 +1,6 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
-import { QuickDB } from "quick.db";
+import { addInvite, getInvites } from "../../config/invites.js";
 import { createCanvas } from "canvas";
-
-const db = new QuickDB();
 
 export const data = new SlashCommandBuilder()
   .setName("add-invite")
@@ -35,9 +33,8 @@ export async function execute(interaction) {
       return;
     }
 
-    let invites = (await db.get(`invites_${user.id}`)) || 0;
-    invites += nombre;
-    await db.set(`invites_${user.id}`, invites);
+    await addInvite(user.id, interaction.guild.id, nombre);
+    const invites = await getInvites(user.id, interaction.guild.id);
 
     const width = 700;
     const height = 250;
