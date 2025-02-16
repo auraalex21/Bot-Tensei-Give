@@ -188,7 +188,11 @@ export async function execute(interaction) {
         winners.push(`<@${winnerId}>`);
       }
 
-      await message.edit({ files: [await updateCanvas(winners, true)] });
+      try {
+        await message.edit({ files: [await updateCanvas(winners, true)] });
+      } catch (error) {
+        console.error("❌ Erreur lors de la modification du message :", error);
+      }
 
       // Save the winners to the database
       giveawayData.winners = winners;
@@ -200,7 +204,11 @@ export async function execute(interaction) {
         clearInterval(interval);
         return;
       }
-      await message.edit({ files: [await updateCanvas()] });
+      try {
+        await message.edit({ files: [await updateCanvas()] });
+      } catch (error) {
+        console.error("❌ Erreur lors de la modification du message :", error);
+      }
     }, 1000);
 
     console.log(`✅ Giveaway démarré dans ${giveawayChannel.name}`);
