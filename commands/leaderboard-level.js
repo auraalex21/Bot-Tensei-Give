@@ -17,42 +17,69 @@ export async function execute(interaction) {
     });
   }
 
-  const canvasWidth = 800;
+  const canvasWidth = 700;
   const canvasHeight = 600;
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext("2d");
 
-  // Fond avec une couleur sobre
-  ctx.fillStyle = "#0F172A";
+  // Fond avec un dégradé moderne
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+  gradient.addColorStop(0, "#1E1E2E"); // Bleu foncé
+  gradient.addColorStop(1, "#131322"); // Noir bleuté
+  ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Bordure
+  // Bordure arrondie
   ctx.strokeStyle = "#007BFF";
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 4;
   ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
 
   // Titre du classement
-  ctx.fillStyle = "#007BFF";
-  ctx.font = "bold 36px Arial";
-  ctx.fillText("🏆 Classement des Niveaux 🏆", 200, 50);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "bold 32px Arial";
+  ctx.fillText("🏆 Classement des Niveaux 🏆", 180, 50);
 
-  // Dessin des joueurs
   const topUsers = leaderboard.slice(0, 10);
-  ctx.font = "28px Arial";
+  ctx.font = "20px Arial";
 
   for (let i = 0; i < topUsers.length; i++) {
     const user = topUsers[i];
     const yPosition = 100 + i * 50;
 
-    const username = user.username ? user.username : "Inconnu";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(`${i + 1}. ${username}`, 50, yPosition);
+    let rankIcon = "";
+    if (i === 0) rankIcon = "🥇";
+    else if (i === 1) rankIcon = "🥈";
+    else if (i === 2) rankIcon = "🥉";
 
+    const username = user.username ? user.username : "Inconnu";
+
+    // Affichage du rang et du nom d'utilisateur
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(`${rankIcon} ${i + 1}. ${username}`, 50, yPosition);
+
+    // Niveau affiché à droite
     ctx.fillStyle = "#FFD700";
-    ctx.fillText(`Niveau ${user.level}`, 350, yPosition);
+    ctx.fillText(`Niveau ${user.level}`, 500, yPosition);
+
+    // Barre de progression XP
+    const progressBarWidth = 200;
+    const progressBarHeight = 10;
+    const progress = Math.min(user.exp / (user.level * 100), 1);
+
+    ctx.fillStyle = "#444";
+    ctx.fillRect(50, yPosition + 10, progressBarWidth, progressBarHeight);
 
     ctx.fillStyle = "#00FF00";
-    ctx.fillText(`${user.exp} XP`, 550, yPosition);
+    ctx.fillRect(
+      50,
+      yPosition + 10,
+      progressBarWidth * progress,
+      progressBarHeight
+    );
+
+    // XP affiché à droite
+    ctx.fillStyle = "#00FF00";
+    ctx.fillText(`${user.exp} XP`, 260, yPosition + 20);
   }
 
   // Générer l'image
