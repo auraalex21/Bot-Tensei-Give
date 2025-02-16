@@ -70,7 +70,15 @@ export async function execute(interaction) {
 
     // Ajout de l'avatar
     const avatarURL = user.displayAvatarURL({ format: "png" });
-    const avatar = await loadImage(avatarURL);
+    let avatar;
+    try {
+      avatar = await loadImage(avatarURL);
+    } catch (error) {
+      console.error("Erreur lors du chargement de l'avatar :", error);
+      avatar = await loadImage(
+        "https://cdn.discordapp.com/embed/avatars/0.png"
+      );
+    }
     const avatarSize = 100;
     ctx.save();
     ctx.beginPath();
