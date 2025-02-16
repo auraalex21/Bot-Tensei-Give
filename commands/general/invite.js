@@ -1,8 +1,6 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
-import { QuickDB } from "quick.db";
+import { getInvites } from "../../config/invites.js";
 import { createCanvas, loadImage } from "canvas";
-
-const db = new QuickDB();
 
 export const data = new SlashCommandBuilder()
   .setName("invite")
@@ -17,11 +15,6 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction) {
   console.log(`📩 Commande reçue : invite - Interaction ID: ${interaction.id}`);
 
-  if (Date.now() - interaction.createdTimestamp > 2900) {
-    console.warn(`⏳ Interaction trop ancienne : ${interaction.id}`);
-    return;
-  }
-
   try {
     await interaction.deferReply({ ephemeral: true });
 
@@ -31,7 +24,7 @@ export async function execute(interaction) {
       return;
     }
 
-    const invites = (await db.get(`invites_${user.id}`)) || 0;
+    const invites = await getInvites(user.id, interaction.guild.id);
 
     // Création du canvas
     const width = 800;
