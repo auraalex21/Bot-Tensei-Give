@@ -7,11 +7,44 @@ import {
 } from "../config/levels.js";
 import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder, Events } from "discord.js";
+import { Configuration, OpenAIApi } from "openai";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
 
 export default {
   name: Events.MessageCreate,
   async execute(client, message) {
     if (message.author.bot) return;
+
+    const botMention = `<@${client.user.id}>`;
+    if (message.content.includes(botMention)) {
+      const prompt = message.content.replace(botMention, "").trim();
+
+      if (prompt.length === 0) {
+        return message.reply("Comment puis-je vous aider ?");
+      }
+
+      try {
+        const response = await openai.createCompletion({
+          model: "text-davinci-003",
+          prompt: prompt,
+          max_tokens: 150,
+          temperature: 0.7,
+        });
+
+        const reply = response.data.choices[0].text.trim();
+        message.reply(reply);
+      } catch (error) {
+        console.error("Erreur lors de la génération de la réponse IA :", error);
+        message.reply("Désolé, je n'ai pas pu générer une réponse.");
+      }
+    }
 
     const guildId = message.guild.id;
     const userId = message.author.id;
