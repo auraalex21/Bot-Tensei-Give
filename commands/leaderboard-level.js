@@ -3,6 +3,10 @@ import { getLeaderboard } from "../config/levels.js";
 import { createCanvas, loadImage } from "canvas";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const data = new SlashCommandBuilder()
   .setName("leaderboard-level")
