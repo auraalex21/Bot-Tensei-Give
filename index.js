@@ -57,12 +57,6 @@ const loadCommands = (dir) => {
   }
 };
 
-// Load commands from categorized folders
-const commandCategories = ["admin", "giveaway", "level", "general"];
-commandCategories.forEach((category) => {
-  loadCommands(path.resolve(__dirname, `./commands/${category}`));
-});
-
 const registeredEvents = new Set();
 
 const loadEvents = (dir) => {
@@ -188,14 +182,14 @@ const reloadGiveaways = async () => {
               if (!i.replied && !i.deferred) {
                 await i.reply({
                   content: "🎉 Vous avez été ajouté au giveaway !",
-                  ephemeral: true,
+                  flags: 64,
                 });
               }
             } else {
               if (!i.replied && !i.deferred) {
                 await i.reply({
                   content: "❌ Vous êtes déjà inscrit à ce giveaway.",
-                  ephemeral: true,
+                  flags: 64,
                 });
               }
             }
@@ -222,10 +216,6 @@ const reloadGiveaways = async () => {
             }
 
             await message.edit({ files: [await updateCanvas(winners, true)] });
-
-            // Save the winners to the database
-            giveawayData.winners = winners;
-            await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
           });
 
           const interval = setInterval(async () => {

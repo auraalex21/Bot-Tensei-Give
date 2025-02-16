@@ -9,24 +9,18 @@ import { createCanvas } from "canvas";
 const db = new QuickDB();
 
 export const data = new SlashCommandBuilder()
-  .setName("timeout")
-  .setDescription("Mettre un utilisateur en timeout")
+  .setName("warn")
+  .setDescription("Avertir un utilisateur")
   .addUserOption((option) =>
     option
       .setName("utilisateur")
-      .setDescription("L'utilisateur à mettre en timeout")
-      .setRequired(true)
-  )
-  .addIntegerOption((option) =>
-    option
-      .setName("durée")
-      .setDescription("La durée du timeout (en minutes)")
+      .setDescription("L'utilisateur à avertir")
       .setRequired(true)
   )
   .addStringOption((option) =>
     option
       .setName("raison")
-      .setDescription("La raison du timeout")
+      .setDescription("La raison de l'avertissement")
       .setRequired(false)
   );
 
@@ -40,14 +34,12 @@ export async function execute(interaction) {
       )
     ) {
       return interaction.editReply({
-        content:
-          "❌ Vous n'avez pas la permission de mettre des membres en timeout.",
+        content: "❌ Vous n'avez pas la permission d'avertir des membres.",
         ephemeral: true,
       });
     }
 
     const user = interaction.options.getUser("utilisateur");
-    const duration = interaction.options.getInteger("durée");
     const reason =
       interaction.options.getString("raison") || "Aucune raison fournie";
 
@@ -59,14 +51,13 @@ export async function execute(interaction) {
       });
     }
 
-    await member.timeout(duration * 60 * 1000, reason);
-    const timeouts = (await db.get(`timeouts_${user.id}`)) || [];
-    timeouts.push({
+    const warnings = (await db.get(`warnings_${user.id}`)) || [];
+    warnings.push({
       reason,
       date: new Date().toISOString(),
       moderatorId: interaction.user.id,
     });
-    await db.set(`timeouts_${user.id}`, timeouts);
+    await db.set(`warnings_${user.id}`, warnings);
 
     const width = 700;
     const height = 250;
@@ -89,28 +80,22 @@ export async function execute(interaction) {
     // Texte principal
     ctx.font = "bold 32px Poppins";
     ctx.fillStyle = "#FFD700";
-    ctx.fillText(`⏳ Timeout Appliqué`, 50, 60);
+    ctx.fillText(`⚠️ Avertissement`, 50, 60);
 
     ctx.font = "bold 26px Poppins";
     ctx.fillStyle = "#FFFFFF";
     ctx.fillText(`👤 Utilisateur: ${user.tag}`, 50, 120);
-    ctx.fillText(`⏱ Durée: ${duration} minute(s)`, 50, 160);
-    ctx.fillText(`📌 Raison: ${reason}`, 50, 200);
+    ctx.fillText(`📌 Raison: ${reason}`, 50, 160);
 
     const buffer = canvas.toBuffer();
     const attachment = new AttachmentBuilder(buffer, {
-      name: "timeout-info.png",
+      name: "warning-info.png",
     });
 
     await interaction.editReply({ files: [attachment] });
-    console.log(
-      `✅ ${user.tag} a été mis en timeout pour ${duration} minute(s). Raison : ${reason}`
-    );
+    console.log(`✅ ${user.tag} a été averti. Raison : ${reason}`);
   } catch (error) {
-    console.error(
-      "❌ Erreur lors de l'exécution de la commande timeout :",
-      error
-    );
+    console.error("❌ Erreur lors de l'exécution de la commande warn :", error);
     await interaction.editReply({
       content:
         "❌ Une erreur s'est produite lors de l'exécution de cette commande.",
