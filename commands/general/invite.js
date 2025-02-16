@@ -69,7 +69,8 @@ export async function execute(interaction) {
     ctx.fillText(`${invites} personne(s)`, 260, 240);
 
     // Ajout de l'avatar
-    const avatar = await loadImage(user.displayAvatarURL({ format: "png" }));
+    const avatarURL = user.displayAvatarURL({ format: "png" });
+    const avatar = await loadImage(avatarURL);
     const avatarSize = 100;
     ctx.save();
     ctx.beginPath();
