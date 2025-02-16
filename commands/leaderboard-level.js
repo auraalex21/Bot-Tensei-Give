@@ -1,7 +1,6 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { getLeaderboard } from "../config/levels.js";
-import { createCanvas, loadImage } from "canvas";
-import twemoji from "twemoji";
+import { createCanvas } from "canvas";
 
 export const data = new SlashCommandBuilder()
   .setName("leaderboard-level")
@@ -74,13 +73,30 @@ export async function execute(interaction) {
     ctx.fillStyle = "#FFFFFF";
     ctx.fillText(`${rankIcon} ${i + 1}. ${username}`, 50, baseY);
 
+    // 🔹 Barre de séparation entre XP et Niveau
+    const separatorX = canvasWidth - 250;
+    ctx.strokeStyle = "#007BFF";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(separatorX, baseY - 15);
+    ctx.lineTo(separatorX, baseY + 5);
+    ctx.stroke();
+
     // 🔹 Niveau aligné à droite
     ctx.fillStyle = "#FFD700";
     ctx.fillText(`Niveau ${user.level}`, canvasWidth - 140, baseY);
 
+    // 🔹 Barre de séparation avant l'XP
+    ctx.strokeStyle = "#007BFF";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(canvasWidth - 320, baseY - 15);
+    ctx.lineTo(canvasWidth - 320, baseY + 5);
+    ctx.stroke();
+
     // 🔹 XP éloignée pour plus de clarté
     ctx.fillStyle = "#00FF00";
-    ctx.fillText(`${user.exp} XP`, canvasWidth - 270, baseY);
+    ctx.fillText(`${user.exp} XP`, canvasWidth - 290, baseY);
 
     // 🔹 Barre de progression SOUS le pseudo
     const progressBarWidth = 300;
