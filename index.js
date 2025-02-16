@@ -36,15 +36,35 @@ const client = new Client({
 client.commands = new Collection();
 const db = new QuickDB();
 
-client.giveawaysManager = new GiveawaysManager(client, {
-  storage: false, // Utilisez false si vous utilisez une base de données externe comme QuickDB
+class CustomGiveawaysManager extends GiveawaysManager {
+  async getAllGiveaways() {
+    return await db.all().then((data) => data.map((entry) => entry.value));
+  }
+
+  async saveGiveaway(messageId, giveawayData) {
+    await db.set(`giveaway_${messageId}`, giveawayData);
+    return true;
+  }
+
+  async editGiveaway(messageId, giveawayData) {
+    await db.set(`giveaway_${messageId}`, giveawayData);
+    return true;
+  }
+
+  async deleteGiveaway(messageId) {
+    await db.delete(`giveaway_${messageId}`);
+    return true;
+  }
+}
+
+client.giveawaysManager = new CustomGiveawaysManager(client, {
+  storage: false, // Utilisez false car nous utilisons QuickDB
   updateCountdownEvery: 10000,
   default: {
     botsCanWin: false,
     embedColor: "#FF0000",
     reaction: "🎉",
   },
-  database: db, // Assurez-vous que le gestionnaire utilise QuickDB
 });
 
 // 📌 CHARGEMENT AUTOMATIQUE DES COMMANDES
