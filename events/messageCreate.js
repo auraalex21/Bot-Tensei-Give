@@ -41,7 +41,13 @@ export default {
         message.reply(reply);
       } catch (error) {
         console.error("Erreur lors de la génération de la réponse IA :", error);
-        message.reply("Désolé, je n'ai pas pu générer une réponse.");
+        if (error.code === "insufficient_quota") {
+          message.reply(
+            "Désolé, le quota de l'API OpenAI a été dépassé. Veuillez réessayer plus tard."
+          );
+        } else {
+          message.reply("Désolé, je n'ai pas pu générer une réponse.");
+        }
       }
     }
 
