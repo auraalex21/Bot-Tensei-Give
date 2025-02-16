@@ -6,6 +6,8 @@ import {
 import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder, Events } from "discord.js";
 
+const voiceTimes = new Map();
+
 export default {
   name: Events.VoiceStateUpdate,
   async execute(client, oldState, newState) {
@@ -26,6 +28,21 @@ export default {
 
     if (!oldState.channelId && newState.channelId) {
       // L'utilisateur a rejoint un canal vocal
+      voiceTimes.set(userId, Date.now());
+    } else if (oldState.channelId && !newState.channelId) {
+      // User left a voice channel
+      const joinTime = voiceTimes.get(userId);
+      if (joinTime) {
+        const timeSpent = Date.now() - joinTime;
+        const exp = Math.floor(timeSpent / 60000); // 1 XP per minute
+        await incrementVoiceTime(userId, guildId, timeSpent);
+        await addExperience(userId, guildId, exp, client);
+        voiceTimes.delete(userId);
+      }
+    }
+
+    if (!oldState.channelId && newState.channelId) {
+      // L'utilisateur a rejoint un canal vocal
       const interval = setInterval(async () => {
         if (
           !newState.channelId ||
@@ -35,7 +52,7 @@ export default {
           return;
         }
 
-        const expGained = 30;
+        const expGained = Math.floor(Math.random() * 16) + 15; // Random XP between 15 and 30
         const leveledUp = await addExperience(
           userId,
           guildId,
