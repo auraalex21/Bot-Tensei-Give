@@ -1,9 +1,6 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { getInvites } from "../../config/invites.js";
-import { createCanvas, loadImage, registerFont } from "canvas";
-
-// Charger une police stylée (si disponible)
-registerFont("./assets/fonts/Poppins-Bold.ttf", { family: "Poppins" });
+import { createCanvas, loadImage } from "canvas";
 
 export const data = new SlashCommandBuilder()
   .setName("invite")
@@ -30,8 +27,8 @@ export async function execute(interaction) {
     const invites = await getInvites(user.id, interaction.guild.id);
 
     // Création du canvas
-    const width = 800,
-      height = 400;
+    const width = 800;
+    const height = 400;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
@@ -50,7 +47,7 @@ export async function execute(interaction) {
     ctx.stroke();
 
     // Titre principal
-    ctx.font = "bold 36px Poppins";
+    ctx.font = "bold 36px Arial";
     ctx.fillStyle = "#00A2FF";
     ctx.shadowColor = "rgba(0, 162, 255, 0.7)";
     ctx.shadowBlur = 10;
@@ -58,7 +55,7 @@ export async function execute(interaction) {
     ctx.shadowBlur = 0; // Réinitialisation de l'ombre
 
     // Texte Utilisateur
-    ctx.font = "bold 28px Poppins";
+    ctx.font = "bold 28px Arial";
     ctx.fillStyle = "#FFFFFF";
     ctx.fillText("👤 Utilisateur:", 50, 140);
     ctx.fillStyle = "#DDDDDD";
