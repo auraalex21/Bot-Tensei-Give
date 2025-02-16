@@ -1,6 +1,9 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { getInvites } from "../../config/invites.js";
-import { createCanvas, loadImage } from "canvas";
+import { createCanvas, loadImage, registerFont } from "canvas";
+
+// Charger une police stylée (si disponible)
+registerFont("./assets/fonts/Poppins-Bold.ttf", { family: "Poppins" });
 
 export const data = new SlashCommandBuilder()
   .setName("invite")
@@ -27,54 +30,62 @@ export async function execute(interaction) {
     const invites = await getInvites(user.id, interaction.guild.id);
 
     // Création du canvas
-    const width = 800;
-    const height = 400;
+    const width = 800,
+      height = 400;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
-    // Fond avec dégradé bleu foncé
+    // Dégradé de fond amélioré
     const gradient = ctx.createLinearGradient(0, 0, width, height);
     gradient.addColorStop(0, "#0A192F");
     gradient.addColorStop(1, "#001F3F");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
-    // Bordure arrondie
+    // Bordure néon
     ctx.strokeStyle = "#00A2FF";
-    ctx.lineWidth = 6;
-    ctx.roundRect(10, 10, width - 20, height - 20, 15);
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.roundRect(10, 10, width - 20, height - 20, 20);
     ctx.stroke();
 
-    // Texte principal
+    // Titre principal
     ctx.font = "bold 36px Poppins";
     ctx.fillStyle = "#00A2FF";
+    ctx.shadowColor = "rgba(0, 162, 255, 0.7)";
+    ctx.shadowBlur = 10;
     ctx.fillText("📊 Statistiques d'invitation", 50, 60);
+    ctx.shadowBlur = 0; // Réinitialisation de l'ombre
 
-    // Texte utilisateur
+    // Texte Utilisateur
     ctx.font = "bold 28px Poppins";
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(`👤 Utilisateur:`, 50, 140);
+    ctx.fillText("👤 Utilisateur:", 50, 140);
     ctx.fillStyle = "#DDDDDD";
-    ctx.fillText(`${user.tag}`, 250, 140, 500);
+    ctx.fillText(user.tag, 250, 140, 500);
 
-    // Nombre d'invitations
-    ctx.font = "bold 28px Poppins";
+    // Texte Invitations
     ctx.fillStyle = "#FFFFFF";
     ctx.fillText("📥 Invitations:", 50, 220);
     ctx.fillStyle = "#DDDDDD";
     ctx.fillText(`${invites} personne(s)`, 250, 220);
 
-    // Ajout d'une image d'avatar
+    // Ajout de l'avatar
     const avatar = await loadImage(user.displayAvatarURL({ format: "png" }));
-    ctx.drawImage(avatar, width - 150, 50, 100, 100);
+    const avatarSize = 100;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(width - 100, 100, avatarSize / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(avatar, width - 150, 50, avatarSize, avatarSize);
+    ctx.restore();
 
+    // Conversion en buffer
     const buffer = canvas.toBuffer();
     const attachment = new AttachmentBuilder(buffer, { name: "invites.png" });
 
-    await interaction.editReply({
-      content: ``,
-      files: [attachment],
-    });
+    await interaction.editReply({ files: [attachment] });
 
     console.log(`✅ Informations envoyées à ${interaction.user.tag}`);
   } catch (error) {
