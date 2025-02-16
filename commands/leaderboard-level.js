@@ -40,7 +40,7 @@ export async function execute(interaction) {
   ctx.textAlign = "center";
   ctx.fillText("🏆 Classement des Niveaux", canvasWidth / 2, 60);
 
-  // 🔹 Séparateur
+  // 🔹 Séparateur titre
   ctx.strokeStyle = "#00A2FF";
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -77,15 +77,15 @@ export async function execute(interaction) {
     ctx.strokeStyle = "#007BFF";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(canvasWidth - 360, baseY - 15);
-    ctx.lineTo(canvasWidth - 360, baseY + 5);
+    ctx.moveTo(canvasWidth - 370, baseY - 15);
+    ctx.lineTo(canvasWidth - 370, baseY + 5);
     ctx.stroke();
 
-    // 🔹 XP bien alignée au centre
+    // 🔹 XP bien alignée
     ctx.fillStyle = "#00FF00";
-    ctx.fillText(`${user.exp} XP`, canvasWidth - 340, baseY);
+    ctx.fillText(`${user.exp} XP`, canvasWidth - 350, baseY);
 
-    // 🔹 Barre de séparation entre XP et Niveau
+    // 🔹 Séparateur entre XP et Niveau
     ctx.strokeStyle = "#007BFF";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -115,13 +115,15 @@ export async function execute(interaction) {
       progressBarHeight
     );
 
-    // 🔹 Ajout d'une ligne de séparation entre chaque joueur
-    ctx.strokeStyle = "#007BFF";
-    ctx.lineWidth = 1;
+    // 🔹 Séparateur horizontal moderne entre chaque joueur
+    ctx.strokeStyle = "#0056B3";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 5]);
     ctx.beginPath();
-    ctx.moveTo(50, baseY + 30);
-    ctx.lineTo(canvasWidth - 50, baseY + 30);
+    ctx.moveTo(50, baseY + 35);
+    ctx.lineTo(canvasWidth - 50, baseY + 35);
     ctx.stroke();
+    ctx.setLineDash([]); // Réinitialiser après utilisation
   }
 
   // 🔹 Générer l'image
