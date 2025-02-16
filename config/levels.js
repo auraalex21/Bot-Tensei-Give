@@ -21,13 +21,16 @@ export async function addExperience(userId, guildId, exp, client) {
 
     const levelUpChannelId = "1340011943733366805";
     const levelUpChannel = client.channels.cache.get(levelUpChannelId);
-    if (levelUpChannel) {
+    if (levelUpChannel && !user.levelUpNotified) {
       levelUpChannel.send(
         `🎉 ${client.users.cache.get(userId)}, vous avez atteint le niveau **${
           user.level
         }** !`
       );
+      user.levelUpNotified = true; // Mark as notified
     }
+  } else {
+    user.levelUpNotified = false; // Reset notification flag if not leveled up
   }
 
   await db.set(key, user);

@@ -142,7 +142,6 @@ export default {
 
         // Envoyer le message avec l'image
         levelUpChannel.send({
-          content: `🎉 ${message.author}, vous avez atteint le niveau **${userLevel.level}** !`,
           files: [attachment],
         });
       }
