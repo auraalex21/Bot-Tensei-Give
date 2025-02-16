@@ -77,6 +77,7 @@ export async function execute(interaction) {
       hostedBy: interaction.user.id,
       endTime,
       participants: [],
+      pendingParticipants: new Set(),
     };
 
     const row = new ActionRowBuilder().addComponents(
@@ -152,22 +153,28 @@ export async function execute(interaction) {
     });
 
     collector.on("collect", async (i) => {
-      if (!giveawayData.participants.includes(i.user.id)) {
-        giveawayData.participants.push(i.user.id);
-        await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
-        if (!i.replied && !i.deferred) {
-          await i.reply({
-            content: "🎉 Vous avez été ajouté au giveaway !",
-            ephemeral: true,
-          });
-        }
-      } else {
-        if (!i.replied && !i.deferred) {
-          await i.reply({
-            content: "❌ Vous êtes déjà inscrit à ce giveaway.",
-            ephemeral: true,
-          });
-        }
+      if (!giveawayData.pendingParticipants.has(i.user.id)) {
+        giveawayData.pendingParticipants.add(i.user.id);
+        setTimeout(async () => {
+          giveawayData.pendingParticipants.delete(i.user.id);
+          if (!giveawayData.participants.includes(i.user.id)) {
+            giveawayData.participants.push(i.user.id);
+            await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
+            if (!i.replied && !i.deferred) {
+              await i.reply({
+                content: "🎉 Vous avez été ajouté au giveaway !",
+                ephemeral: true,
+              });
+            }
+          } else {
+            if (!i.replied && !i.deferred) {
+              await i.reply({
+                content: "❌ Vous êtes déjà inscrit à ce giveaway.",
+                ephemeral: true,
+              });
+            }
+          }
+        }, 1000); // Delay to avoid too many requests at once
       }
     });
 
