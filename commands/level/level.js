@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
-import { getUserLevel } from "../config/levels.js";
+import { getUserLevel } from "../../config/levels.js";
 import { createCanvas } from "canvas";
 
 export const name = "level";

@@ -57,6 +57,12 @@ const loadCommands = (dir) => {
   }
 };
 
+// Load commands from categorized folders
+const commandCategories = ["admin", "giveaway", "level", "general"];
+commandCategories.forEach((category) => {
+  loadCommands(path.resolve(__dirname, `./commands/${category}`));
+});
+
 const registeredEvents = new Set();
 
 const loadEvents = (dir) => {

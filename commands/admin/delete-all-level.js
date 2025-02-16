@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
-import { deleteAllLevels } from "../config/levels.js";
+import { deleteAllLevels } from "../../config/levels.js";
 
 export const data = new SlashCommandBuilder()
   .setName("delete-all-level")

@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
 import { QuickDB } from "quick.db";
-import { addExperience } from "../config/levels.js"; // Ensure this path is correct
+import { addExperience } from "../../config/levels.js"; // Ensure this path is correct
 
 const db = new QuickDB();
 

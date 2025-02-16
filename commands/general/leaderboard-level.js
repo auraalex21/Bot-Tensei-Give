@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
-import { getLeaderboard } from "../config/levels.js";
+import { getLeaderboard } from "../../config/levels.js";
 import { createCanvas, loadImage } from "canvas";
 import path from "path";
 import fs from "fs";

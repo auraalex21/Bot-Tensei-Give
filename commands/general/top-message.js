@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
-import { getTopMessageUsers } from "../config/levels.js";
+import { getTopMessageUsers } from "../../config/levels.js";
 import { createCanvas } from "canvas";
 
 export const data = new SlashCommandBuilder()
