@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { getLeaderboard } from "../config/levels.js";
-import { createCanvas } from "canvas";
+import { createCanvas, registerFont } from "canvas";
+import { fillTextWithTwemoji } from "node-canvas-with-twemoji";
 
 export const data = new SlashCommandBuilder()
   .setName("leaderboard-level")
@@ -70,7 +71,12 @@ export async function execute(interaction) {
     const username = discordUser ? discordUser.username : "Inconnu";
 
     // 🔹 Affichage du rang + pseudo
-    ctx.fillStyle = "#FFFFFF";
+    await fillTextWithTwemoji(
+      ctx,
+      `${rankIcon} ${i + 1}. ${username}`,
+      50,
+      baseY
+    );
     ctx.fillText(`${rankIcon} ${i + 1}. ${username}`, 50, baseY);
 
     // 🔹 Barre de séparation avant l'XP
