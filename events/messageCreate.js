@@ -7,14 +7,12 @@ import {
 } from "../config/levels.js";
 import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder, Events } from "discord.js";
-import OpenAI from "openai";
+import axios from "axios";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const HUGGING_FACE_API_URL = "https://api-inference.huggingface.co/models/gpt2";
 
 export default {
   name: Events.MessageCreate,
@@ -30,24 +28,23 @@ export default {
       }
 
       try {
-        const response = await openai.completions.create({
-          model: "gpt-3.5-turbo",
-          prompt: prompt,
-          max_tokens: 150,
-          temperature: 0.7,
-        });
+        const response = await axios.post(
+          HUGGING_FACE_API_URL,
+          {
+            inputs: prompt,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY}`,
+            },
+          }
+        );
 
-        const reply = response.choices[0].text.trim();
+        const reply = response.data[0].generated_text.trim();
         message.reply(reply);
       } catch (error) {
         console.error("Erreur lors de la génération de la réponse IA :", error);
-        if (error.code === "insufficient_quota") {
-          message.reply(
-            "Désolé, le quota de l'API OpenAI a été dépassé. Veuillez réessayer plus tard."
-          );
-        } else {
-          message.reply("Désolé, je n'ai pas pu générer une réponse.");
-        }
+        message.reply("Désolé, je n'ai pas pu générer une réponse.");
       }
     }
 
