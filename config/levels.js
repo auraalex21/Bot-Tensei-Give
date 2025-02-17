@@ -8,16 +8,13 @@ const roleRewards = [
   { level: 40, roleId: "1339902712724066406", bonus: 0.25 },
 ];
 
-export async function addExperience(userId, guildId, exp, client) {
-  const userKey = `levels_${guildId}_${userId}`;
-  let userData = await db.get(userKey);
-
-  if (!userData) {
-    userData = { level: 1, exp: 0 };
-  }
+// ✅ Ajouter de l'expérience à un utilisateur
+export async function addExperience(userId, guildId, exp) {
+  const key = `levels_${guildId}_${userId}`;
+  let userData = (await db.get(key)) || { level: 1, exp: 0 };
 
   userData.exp += exp;
-  console.log(`User ${userId} gained ${exp} XP. Total XP: ${userData.exp}`);
+  console.log(`📈 [XP] ${userId} a gagné ${exp} XP. Total: ${userData.exp}`);
 
   const requiredExp = userData.level * 100;
   let leveledUp = false;
@@ -26,29 +23,59 @@ export async function addExperience(userId, guildId, exp, client) {
     userData.exp -= requiredExp;
     userData.level++;
     leveledUp = true;
-    console.log(`User ${userId} leveled up to ${userData.level}`);
+    console.log(
+      `🏆 [LEVEL UP] ${userId} est maintenant niveau ${userData.level}`
+    );
   }
 
-  await db.set(userKey, userData);
+  await db.set(key, userData);
   return leveledUp;
 }
 
+// ✅ Ajouter du temps vocal à un utilisateur
+export async function incrementVoiceTime(userId, guildId, time) {
+  const key = `voiceTime_${guildId}_${userId}`;
+  const totalTime = (await db.get(key)) || 0;
+  await db.set(key, totalTime + time);
+}
+
+// ✅ Récupérer les meilleurs utilisateurs vocaux
+export async function getTopVoiceUsers(guildId) {
+  const keys = await db.all();
+  const users = [];
+
+  for (const { id, value } of keys) {
+    if (id.startsWith(`voiceTime_${guildId}_`)) {
+      const userId = id.split("_")[2];
+      users.push({ userId, voiceTime: value });
+    }
+  }
+
+  // Trier du plus actif au moins actif
+  users.sort((a, b) => b.voiceTime - a.voiceTime);
+  return users.slice(0, 10);
+}
+
+// ✅ Récupérer le niveau d'un utilisateur
 export async function getUserLevel(userId, guildId) {
-  const userKey = `levels_${guildId}_${userId}`;
-  const userData = await db.get(userKey);
+  const key = `levels_${guildId}_${userId}`;
+  const userData = await db.get(key);
   return userData || { level: 1, exp: 0 };
 }
 
-export async function setLastMessageTime(userId, guildId, timestamp) {
-  const key = `lastMessageTime_${guildId}_${userId}`;
-  await db.set(key, timestamp);
-}
-
+// ✅ Récupérer le dernier temps de message d'un utilisateur
 export async function getLastMessageTime(userId, guildId) {
   const key = `lastMessageTime_${guildId}_${userId}`;
   return await db.get(key);
 }
 
+// ✅ Définir le dernier temps de message d'un utilisateur
+export async function setLastMessageTime(userId, guildId, timestamp) {
+  const key = `lastMessageTime_${guildId}_${userId}`;
+  await db.set(key, timestamp);
+}
+
+// ✅ Supprimer tous les niveaux
 export async function deleteAllLevels() {
   const keys = await db.all();
   for (const { id } of keys) {
@@ -58,6 +85,7 @@ export async function deleteAllLevels() {
   }
 }
 
+// ✅ Récupérer le classement des utilisateurs
 export async function getLeaderboard(guildId) {
   const keys = await db.all();
   const leaderboard = [];
@@ -73,18 +101,7 @@ export async function getLeaderboard(guildId) {
   return leaderboard;
 }
 
-export async function incrementMessageCount(userId, guildId) {
-  const key = `messageCount_${guildId}_${userId}`;
-  const count = (await db.get(key)) || 0;
-  await db.set(key, count + 1);
-}
-
-export async function incrementVoiceTime(userId, guildId, time) {
-  const key = `voiceTime_${guildId}_${userId}`;
-  const totalTime = (await db.get(key)) || 0;
-  await db.set(key, totalTime + time);
-}
-
+// ✅ Récupérer les meilleurs utilisateurs par messages
 export async function getTopMessageUsers(guildId) {
   const keys = await db.all();
   const users = [];
@@ -100,17 +117,9 @@ export async function getTopMessageUsers(guildId) {
   return users.slice(0, 10);
 }
 
-export async function getTopVoiceUsers(guildId) {
-  const keys = await db.all();
-  const users = [];
-
-  for (const { id, value } of keys) {
-    if (id.startsWith(`levels_${guildId}_`)) {
-      const userId = id.split("_")[2];
-      users.push({ userId, ...value });
-    }
-  }
-
-  users.sort((a, b) => b.voice - a.voice);
-  return users.slice(0, 10);
+// ✅ Incrémenter le compteur de messages d'un utilisateur
+export async function incrementMessageCount(userId, guildId) {
+  const key = `messageCount_${guildId}_${userId}`;
+  const count = (await db.get(key)) || 0;
+  await db.set(key, count + 1);
 }

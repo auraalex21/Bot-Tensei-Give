@@ -3,17 +3,18 @@ import {
   getUserLevel,
   incrementVoiceTime,
 } from "../config/levels.js";
-import { createCanvas, loadImage } from "canvas";
-import { AttachmentBuilder, Events } from "discord.js";
+import { Events } from "discord.js";
 
 const voiceTimes = new Map();
+const voiceIntervals = new Map(); // Stocke les intervalles actifs
 
 export default {
   name: Events.VoiceStateUpdate,
   async execute(client, oldState, newState) {
     console.log(
-      `Mise à jour de l'état vocal : ${oldState.channelId} -> ${newState.channelId}`
+      `🔊 Mise à jour de l'état vocal : ${oldState.channelId} -> ${newState.channelId}`
     );
+
     if (newState.member.user.bot) return;
 
     const excludedChannels = [
@@ -21,169 +22,89 @@ export default {
       "1340010734750535691",
       "1339589443870265385",
     ];
-    if (excludedChannels.includes(newState.channelId)) return;
+    if (newState.channelId && excludedChannels.includes(newState.channelId))
+      return;
 
     const guildId = newState.guild.id;
     const userId = newState.member.user.id;
 
     if (!oldState.channelId && newState.channelId) {
-      // L'utilisateur a rejoint un canal vocal
+      console.log(`[VOIX] ${userId} a rejoint le vocal.`);
       voiceTimes.set(userId, Date.now());
-    } else if (oldState.channelId && !newState.channelId) {
-      // User left a voice channel
-      const joinTime = voiceTimes.get(userId);
-      if (joinTime) {
-        const timeSpent = Date.now() - joinTime;
-        const exp = Math.floor(timeSpent / 60000); // 1 XP per minute
-        await incrementVoiceTime(userId, guildId, timeSpent);
-        await addExperience(userId, guildId, exp, client);
-        voiceTimes.delete(userId);
-      }
-    }
 
-    if (!oldState.channelId && newState.channelId) {
-      // L'utilisateur a rejoint un canal vocal
+      // ✅ Démarrer un intervalle pour mise à jour continue
       const interval = setInterval(async () => {
-        if (
-          !newState.channelId ||
-          excludedChannels.includes(newState.channelId)
-        ) {
+        const currentChannel =
+          newState.guild.members.cache.get(userId)?.voice.channelId;
+
+        if (!currentChannel || excludedChannels.includes(currentChannel)) {
           clearInterval(interval);
+          voiceIntervals.delete(userId);
+          console.log(`[VOIX] Arrêt de la mise à jour pour ${userId}`);
           return;
         }
 
-        const expGained = Math.floor(Math.random() * 5) + 1; // Random XP between 1 and 5
-        const leveledUp = await addExperience(
-          userId,
-          guildId,
-          expGained,
-          client
+        await incrementVoiceTime(userId, guildId, 60000); // Ajout de 1 minute
+        await addExperience(userId, guildId, 1, client); // Ajout d'XP
+
+        console.log(`[VOIX] ${userId} a gagné 1 minute.`);
+      }, 60000); // Toutes les 60 secondes
+
+      voiceIntervals.set(userId, interval);
+    } else if (oldState.channelId && !newState.channelId) {
+      const joinTime = voiceTimes.get(userId);
+      if (joinTime) {
+        const timeSpent = Date.now() - joinTime;
+        console.log(
+          `[VOIX] ${userId} a quitté après ${timeSpent / 60000} min.`
         );
+        await incrementVoiceTime(userId, guildId, timeSpent);
+        voiceTimes.delete(userId);
+      }
 
-        await incrementVoiceTime(userId, guildId, 60); // Increment voice time by 60 seconds
+      // ✅ Arrêter l'intervalle de mise à jour
+      if (voiceIntervals.has(userId)) {
+        clearInterval(voiceIntervals.get(userId));
+        voiceIntervals.delete(userId);
+      }
+    } else if (
+      oldState.channelId &&
+      newState.channelId &&
+      oldState.channelId !== newState.channelId
+    ) {
+      const joinTime = voiceTimes.get(userId);
+      if (joinTime) {
+        const timeSpent = Date.now() - joinTime;
+        console.log(
+          `[VOIX] ${userId} a changé de canal après ${timeSpent / 60000} min.`
+        );
+        await incrementVoiceTime(userId, guildId, timeSpent);
+      }
+      voiceTimes.set(userId, Date.now());
 
-        if (leveledUp) {
-          const userLevel = await getUserLevel(
-            newState.member.user.id,
-            newState.guild.id
-          );
-          const levelUpChannelId = "1340011943733366805";
-          const levelUpChannel = client.channels.cache.get(levelUpChannelId);
+      // ✅ Redémarrer l'intervalle dans le nouveau canal
+      if (voiceIntervals.has(userId)) {
+        clearInterval(voiceIntervals.get(userId));
+      }
 
-          if (levelUpChannel) {
-            const width = 700;
-            const height = 250;
-            const padding = 30;
-            const avatarSize = 120;
+      const interval = setInterval(async () => {
+        const currentChannel =
+          newState.guild.members.cache.get(userId)?.voice.channelId;
 
-            // Création du canvas
-            const canvas = createCanvas(width, height);
-            const ctx = canvas.getContext("2d");
-
-            // Fond avec dégradé
-            const gradient = ctx.createLinearGradient(0, 0, width, height);
-            gradient.addColorStop(0, "#141E30");
-            gradient.addColorStop(1, "#243B55");
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, width, height);
-
-            // Chargement de l'avatar
-            const avatarURL = newState.member.user.displayAvatarURL({
-              format: "png",
-              size: 128,
-            });
-            let avatar;
-            try {
-              avatar = await loadImage(avatarURL);
-            } catch (err) {
-              console.error("Erreur de chargement de l'avatar:", err);
-              avatar = await loadImage(
-                "https://cdn.discordapp.com/embed/avatars/0.png"
-              );
-            }
-
-            // Contour lumineux autour de l'avatar
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(
-              padding + avatarSize / 2,
-              height / 2,
-              avatarSize / 2 + 10,
-              0,
-              Math.PI * 2
-            );
-            ctx.fillStyle = "#FFD700";
-            ctx.shadowColor = "#FFD700";
-            ctx.shadowBlur = 15;
-            ctx.fill();
-            ctx.closePath();
-            ctx.restore();
-
-            // Avatar en cercle
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(
-              padding + avatarSize / 2,
-              height / 2,
-              avatarSize / 2,
-              0,
-              Math.PI * 2
-            );
-            ctx.closePath();
-            ctx.clip();
-            ctx.drawImage(
-              avatar,
-              padding,
-              height / 2 - avatarSize / 2,
-              avatarSize,
-              avatarSize
-            );
-            ctx.restore();
-
-            // Nom d'utilisateur stylisé
-            ctx.font = "bold 35px Arial";
-            ctx.fillStyle = "#ffffff";
-            ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-            ctx.shadowBlur = 5;
-            ctx.fillText(
-              newState.member.user.tag,
-              padding * 2 + avatarSize,
-              height / 3
-            );
-            ctx.shadowBlur = 0;
-
-            // Texte du niveau
-            ctx.font = "bold 28px Arial";
-            ctx.fillStyle = "#FFD700";
-            ctx.fillText(
-              `Niveau ${userLevel.level}`,
-              padding * 2 + avatarSize,
-              height / 2
-            );
-
-            // Texte motivant
-            ctx.font = "italic 22px Arial";
-            ctx.fillStyle = "#FFFFFF";
-            ctx.fillText(
-              "🚀 Continuez comme ça !",
-              padding * 2 + avatarSize,
-              height - padding
-            );
-
-            // Convertir le canvas en buffer
-            const buffer = canvas.toBuffer();
-            const attachment = new AttachmentBuilder(buffer, {
-              name: "level-up.png",
-            });
-
-            // Envoyer le message avec l'image
-            levelUpChannel.send({
-              content: `🎉 ${newState.member}, vous avez atteint le niveau **${userLevel.level}** !`,
-              files: [attachment],
-            });
-          }
+        if (!currentChannel || excludedChannels.includes(currentChannel)) {
+          clearInterval(interval);
+          voiceIntervals.delete(userId);
+          console.log(`[VOIX] Arrêt de la mise à jour pour ${userId}`);
+          return;
         }
-      }, 60000); // Ajout de l'expérience toutes les 60 secondes
+
+        await incrementVoiceTime(userId, guildId, 60000);
+        await addExperience(userId, guildId, 1, client);
+
+        console.log(`[VOIX] ${userId} a gagné 1 minute.`);
+      }, 60000);
+
+      voiceIntervals.set(userId, interval);
     }
   },
 };

@@ -14,7 +14,7 @@ export async function execute(interaction) {
 
   if (!topUsers.length) {
     return interaction.reply({
-      content: "❌ Aucun utilisateur trouvé dans le classement.",
+      content: "❌ Aucun utilisateur trouvé dans le classement vocal.",
       ephemeral: true,
     });
   }
@@ -24,19 +24,13 @@ export async function execute(interaction) {
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext("2d");
 
-  // Fond avec effet gradient
-  const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
-  gradient.addColorStop(0, "#0A192F");
-  gradient.addColorStop(1, "#1C3554");
-  ctx.fillStyle = gradient;
+  ctx.fillStyle = "#0A192F";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Bordure bleue
   ctx.strokeStyle = "#007BFF";
   ctx.lineWidth = 4;
   ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
 
-  // Titre
   ctx.fillStyle = "#00A2FF";
   ctx.font = "bold 40px Arial";
   ctx.textAlign = "center";
@@ -55,10 +49,15 @@ export async function execute(interaction) {
       .catch(() => null);
     const username = discordUser ? discordUser.username : "Utilisateur inconnu";
 
+    const totalMinutes = Math.floor(user.voiceTime / 60000) || 0;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const timeString = `${hours}h ${minutes}min`;
+
     ctx.fillStyle = "#FFFFFF";
     ctx.fillText(`${rankIcon} ${username}`, 50, baseY);
     ctx.fillStyle = "#00FF00";
-    ctx.fillText(`${user.voice} min`, canvasWidth - 200, baseY);
+    ctx.fillText(timeString, canvasWidth - 200, baseY);
 
     ctx.strokeStyle = "#0056B3";
     ctx.setLineDash([5, 5]);
