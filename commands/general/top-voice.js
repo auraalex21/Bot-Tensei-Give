@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
-import { getTopVoiceUsers } from "../../config/levels.js";
+import { getTopVoiceUsers, getUserLevel } from "../../config/levels.js";
 import { createCanvas } from "canvas";
 
 export const data = new SlashCommandBuilder()
@@ -39,7 +39,7 @@ export async function execute(interaction) {
   ctx.font = "22px Arial";
   ctx.textAlign = "left";
 
-  for (let i = 0; i < topUsers.length; i++) {
+  for (let i = 0; i < Math.min(topUsers.length, 5); i++) {
     const user = topUsers[i];
     const baseY = 120 + i * 70;
     const rankIcon = ["🥇", "🥈", "🥉"][i] || `#${i + 1}`;
@@ -72,8 +72,16 @@ export async function execute(interaction) {
     name: "top-voice.png",
   });
 
+  const user = interaction.user;
+  const userLevel = await getUserLevel(user.id, guildId);
+  const userVoiceTime = (await db.get(`voiceTime_${guildId}_${user.id}`)) || 0;
+  const userTotalMinutes = Math.floor(userVoiceTime / 60000) || 0;
+  const userHours = Math.floor(userTotalMinutes / 60);
+  const userMinutes = userTotalMinutes % 60;
+  const userTimeString = `${userHours}h ${userMinutes}min`;
+
   return interaction.reply({
-    content: "📊 Voici le classement des utilisateurs par activité vocale :",
+    content: `📊 Voici le classement des utilisateurs par activité vocale :\n\n**Vos informations :**\nNiveau : ${userLevel.level}\nTemps vocal : ${userTimeString}`,
     files: [attachment],
   });
 }
