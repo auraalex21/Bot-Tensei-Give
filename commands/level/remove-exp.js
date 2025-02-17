@@ -31,6 +31,15 @@ export async function execute(interaction) {
   const expToRemove = interaction.options.getInteger("exp");
   const levelsToRemove = interaction.options.getInteger("niveau");
   const guildId = interaction.guild.id;
+  const member = interaction.guild.members.cache.get(interaction.user.id);
+
+  // Check if the user has the required role
+  if (!member.roles.cache.has("1339295239059410974")) {
+    return interaction.reply({
+      content: ":x: Vous n'avez pas la permission d'utiliser cette commande.",
+      ephemeral: true,
+    });
+  }
 
   if (!expToRemove && !levelsToRemove) {
     return interaction.reply({
