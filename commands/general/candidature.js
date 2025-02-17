@@ -57,6 +57,25 @@ export async function execute(interaction) {
   }
 }
 
+function wrapText(context, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(" ");
+  let line = "";
+
+  for (let i = 0; i < words.length; i++) {
+    let testLine = line + words[i] + " ";
+    let metrics = context.measureText(testLine);
+    let testWidth = metrics.width;
+    if (testWidth > maxWidth && i > 0) {
+      context.fillText(line, x, y);
+      line = words[i] + " ";
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  context.fillText(line, x, y);
+}
+
 export async function handleModalSubmit(interaction) {
   try {
     const pseudo = interaction.fields.getTextInputValue("pseudoInput");
@@ -68,7 +87,6 @@ export async function handleModalSubmit(interaction) {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
-    // Fond noir et contours bleu ciel avec effet moderne
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, width, height);
     ctx.fillStyle = "#1a1a1a";
@@ -77,13 +95,11 @@ export async function handleModalSubmit(interaction) {
     ctx.lineWidth = 5;
     ctx.strokeRect(50, 50, width - 100, height - 100);
 
-    // Titre centré
     ctx.font = "bold 40px Arial";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
     ctx.fillText("📩 Candidature de Staff", width / 2, 100);
 
-    // Contenu mieux organisé
     ctx.textAlign = "left";
     ctx.font = "bold 28px Arial";
     ctx.fillText("Pseudo:", 80, 180);
@@ -93,12 +109,12 @@ export async function handleModalSubmit(interaction) {
     ctx.font = "bold 28px Arial";
     ctx.fillText("Expérience:", 80, 260);
     ctx.font = "24px Arial";
-    ctx.fillText(experience, 80, 300, 720);
+    wrapText(ctx, experience, 80, 300, 720, 30);
 
     ctx.font = "bold 28px Arial";
     ctx.fillText("Motivation:", 80, 380);
     ctx.font = "24px Arial";
-    ctx.fillText(motivation, 80, 420, 720);
+    wrapText(ctx, motivation, 80, 420, 720, 30);
 
     const buffer = canvas.toBuffer();
     const attachment = new AttachmentBuilder(buffer, {
