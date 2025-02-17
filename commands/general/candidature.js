@@ -58,14 +58,15 @@ export async function execute(interaction) {
 }
 
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
-  const words = text.match(/.{1,30}/g) || [];
+  const words = text.split(" ");
   let line = "";
+  const margin = 10; // Marge de 10 pixels
 
   for (let i = 0; i < words.length; i++) {
     let testLine = line + words[i] + " ";
     let metrics = context.measureText(testLine);
     let testWidth = metrics.width;
-    if (testWidth > maxWidth && i > 0) {
+    if (testWidth > maxWidth - margin && i > 0) {
       context.fillText(line, x, y);
       line = words[i] + " ";
       y += lineHeight;
