@@ -52,7 +52,7 @@ export default {
           return;
         }
 
-        const expGained = Math.floor(Math.random() * 16) + 15; // Random XP between 15 and 30
+        const expGained = Math.floor(Math.random() * 5) + 1; // Random XP between 1 and 5
         const leveledUp = await addExperience(
           userId,
           guildId,

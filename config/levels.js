@@ -9,70 +9,43 @@ const roleRewards = [
 ];
 
 export async function addExperience(userId, guildId, exp, client) {
-  const key = `levels_${guildId}_${userId}`;
-  const user = (await db.get(key)) || {
-    exp: 0,
-    level: 1,
-    messages: 0,
-    voice: 0,
-  };
-  user.exp += exp;
+  const userKey = `levels_${guildId}_${userId}`;
+  let userData = await db.get(userKey);
 
-  const nextLevelExp = user.level * 100;
-  let leveledUp = false;
-
-  if (user.exp >= nextLevelExp) {
-    user.level++;
-    user.exp = 0; // Reset experience to 0 when leveling up
-    leveledUp = true;
-
-    const levelUpChannelId = "1340011943733366805";
-    const levelUpChannel = client.channels.cache.get(levelUpChannelId);
-    if (levelUpChannel && !user.levelUpNotified) {
-      levelUpChannel.send(
-        `🎉 ${client.users.cache.get(userId)}, vous avez atteint le niveau **${
-          user.level
-        }** !`
-      );
-      user.levelUpNotified = true; // Mark as notified
-    }
-
-    // Attribuer des rôles en fonction du niveau
-    const member = await client.guilds.cache.get(guildId).members.fetch(userId);
-    for (const reward of roleRewards) {
-      if (user.level >= reward.level) {
-        const role = member.guild.roles.cache.get(reward.roleId);
-        if (role && !member.roles.cache.has(reward.roleId)) {
-          await member.roles.add(role);
-        }
-      }
-    }
-  } else {
-    user.levelUpNotified = false; // Reset notification flag if not leveled up
+  if (!userData) {
+    userData = { level: 1, exp: 0 };
   }
 
-  await db.set(key, user);
+  userData.exp += exp;
+  console.log(`User ${userId} gained ${exp} XP. Total XP: ${userData.exp}`);
+
+  const requiredExp = userData.level * 100;
+  let leveledUp = false;
+
+  while (userData.exp >= requiredExp) {
+    userData.exp -= requiredExp;
+    userData.level++;
+    leveledUp = true;
+    console.log(`User ${userId} leveled up to ${userData.level}`);
+  }
+
+  await db.set(userKey, userData);
   return leveledUp;
 }
 
 export async function getUserLevel(userId, guildId) {
-  const key = `levels_${guildId}_${userId}`;
-  const user = (await db.get(key)) || {
-    exp: 0,
-    level: 1,
-    messages: 0,
-    voice: 0,
-  };
-  return user;
+  const userKey = `levels_${guildId}_${userId}`;
+  const userData = await db.get(userKey);
+  return userData || { level: 1, exp: 0 };
 }
 
 export async function setLastMessageTime(userId, guildId, timestamp) {
-  const key = `lastMessage_${guildId}_${userId}`;
+  const key = `lastMessageTime_${guildId}_${userId}`;
   await db.set(key, timestamp);
 }
 
 export async function getLastMessageTime(userId, guildId) {
-  const key = `lastMessage_${guildId}_${userId}`;
+  const key = `lastMessageTime_${guildId}_${userId}`;
   return await db.get(key);
 }
 
@@ -101,27 +74,15 @@ export async function getLeaderboard(guildId) {
 }
 
 export async function incrementMessageCount(userId, guildId) {
-  const key = `levels_${guildId}_${userId}`;
-  const user = (await db.get(key)) || {
-    exp: 0,
-    level: 1,
-    messages: 0,
-    voice: 0,
-  };
-  user.messages += 1;
-  await db.set(key, user);
+  const key = `messageCount_${guildId}_${userId}`;
+  const count = (await db.get(key)) || 0;
+  await db.set(key, count + 1);
 }
 
 export async function incrementVoiceTime(userId, guildId, time) {
-  const key = `levels_${guildId}_${userId}`;
-  const user = (await db.get(key)) || {
-    exp: 0,
-    level: 1,
-    messages: 0,
-    voice: 0,
-  };
-  user.voice += time;
-  await db.set(key, user);
+  const key = `voiceTime_${guildId}_${userId}`;
+  const totalTime = (await db.get(key)) || 0;
+  await db.set(key, totalTime + time);
 }
 
 export async function getTopMessageUsers(guildId) {

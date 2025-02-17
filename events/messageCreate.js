@@ -27,7 +27,7 @@ export default {
     await setLastMessageTime(userId, guildId, now);
 
     // Ajouter de l'expérience à l'utilisateur
-    const exp = Math.floor(Math.random() * 10) + 1; // Expérience aléatoire entre 1 et 10
+    const exp = Math.floor(Math.random() * 5) + 1; // Expérience aléatoire entre 1 et 5
     const leveledUp = await addExperience(userId, guildId, exp, client);
 
     // Incrémenter le compteur de messages
