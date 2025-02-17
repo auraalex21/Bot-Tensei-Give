@@ -29,32 +29,13 @@ export default {
       }, {})
     );
 
-    // Add role to the new member
-    const roleId = "1339298936099442759"; // ID du rôle à ajouter
-
-    try {
-      const role = member.guild.roles.cache.get(roleId);
-      if (!role) {
-        console.error(`❌ Le rôle avec l'ID ${roleId} n'existe pas.`);
-        return;
-      }
-
-      // Vérifiez si le bot a les permissions nécessaires
-      const botMember = member.guild.members.cache.get(client.user.id);
-      if (!botMember.permissions.has("MANAGE_ROLES")) {
-        console.error(
-          `❌ Le bot n'a pas les permissions nécessaires pour gérer les rôles.`
-        );
-        return;
-      }
-
-      await member.roles.add(role);
-      console.log(`✅ Rôle ajouté à ${member.user.tag}`);
-    } catch (error) {
+    // Vérifiez si le bot a les permissions nécessaires
+    const botMember = member.guild.members.cache.get(client.user.id);
+    if (!botMember.permissions.has("MANAGE_ROLES")) {
       console.error(
-        `❌ Erreur lors de l'ajout du rôle à ${member.user.tag}:`,
-        error
+        `❌ Le bot n'a pas les permissions nécessaires pour gérer les rôles.`
       );
+      return;
     }
   },
 };
