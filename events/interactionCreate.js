@@ -1,6 +1,5 @@
 import { QuickDB } from "quick.db";
 import { createCanvas } from "canvas";
-import ms from "ms";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -14,19 +13,9 @@ const db = new QuickDB();
 export default {
   name: Events.InteractionCreate,
   async execute(client, interaction) {
-    console.log(`Interaction créée : ${interaction.id}`);
     if (interaction.isCommand()) {
       const command = client.commands.get(interaction.commandName);
       if (!command) return;
-
-      console.log(
-        `📩 Commande reçue : ${interaction.commandName} - Interaction ID: ${interaction.id}`
-      );
-
-      if (Date.now() - interaction.createdTimestamp > 2900) {
-        console.warn(`⏳ Interaction trop ancienne : ${interaction.id}`);
-        return;
-      }
 
       try {
         await command.execute(interaction);
@@ -45,21 +34,47 @@ export default {
       }
     } else if (interaction.isButton()) {
       if (interaction.customId === "acceptCandidature") {
-        await interaction.update({
-          content: "✅ Candidature acceptée.",
-          components: [],
-        });
+        await handleCandidatureDecision(interaction, true);
       } else if (interaction.customId === "rejectCandidature") {
-        await interaction.update({
-          content: "❌ Candidature refusée.",
-          components: [],
-        });
-      } else {
-        await handleInteraction(interaction);
+        await handleCandidatureDecision(interaction, false);
       }
     }
   },
 };
+
+// ✅ Fonction pour envoyer un MP au candidat
+async function sendMP(user, status) {
+  try {
+    const message =
+      status === true
+        ? "🎉 Félicitations ! Votre candidature a été **acceptée** ! Un membre du staff vous contactera bientôt."
+        : "❌ Votre candidature a été **refusée**. Vous pouvez retenter plus tard.";
+
+    await user.send(message);
+  } catch (error) {
+    console.error(`❌ Impossible d'envoyer un MP à ${user.tag}:`, error);
+  }
+}
+
+// ✅ Fonction pour gérer l'acceptation/refus d'une candidature
+async function handleCandidatureDecision(interaction, status) {
+  try {
+    const user = interaction.message.mentions.users.first(); // Récupérer l'utilisateur de la candidature
+
+    if (user) {
+      await sendMP(user, status);
+    } else {
+      console.warn("⚠️ Impossible de trouver l'utilisateur de la candidature.");
+    }
+
+    await interaction.update({
+      content: status ? "✅ Candidature acceptée." : "❌ Candidature refusée.",
+      components: [],
+    });
+  } catch (error) {
+    console.error("❌ Erreur lors du traitement de la décision:", error);
+  }
+}
 
 async function handleModalSubmit(interaction) {
   try {
@@ -67,41 +82,57 @@ async function handleModalSubmit(interaction) {
     const experience = interaction.fields.getTextInputValue("experienceInput");
     const motivation = interaction.fields.getTextInputValue("motivationInput");
 
+    // 📏 Définition des tailles de base
     const width = 800;
-    const height = 550;
+    let height = 300;
+
+    const lineHeight = 28;
+    const ctx = createCanvas(width, height).getContext("2d");
+    ctx.font = "20px Arial";
+
+    const expHeight =
+      wrapText(ctx, experience, 0, 0, width - 100, lineHeight) - 0;
+    const motHeight =
+      wrapText(ctx, motivation, 0, 0, width - 100, lineHeight) - 0;
+
+    height += expHeight + motHeight;
+
     const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext("2d");
+    const ctxFinal = canvas.getContext("2d");
 
-    // Background with gradient
-    const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, "#0A192F");
-    gradient.addColorStop(1, "#001F3F");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
+    ctxFinal.fillStyle = "#0A192F";
+    ctxFinal.fillRect(0, 0, width, height);
+    ctxFinal.fillStyle = "#001F3F";
+    ctxFinal.fillRect(40, 40, width - 80, height - 80);
+    ctxFinal.strokeStyle = "#00A2FF";
+    ctxFinal.lineWidth = 6;
+    ctxFinal.roundRect(20, 20, width - 40, height - 40, 15);
+    ctxFinal.stroke();
 
-    // Border with rounded corners
-    ctx.strokeStyle = "#00A2FF";
-    ctx.lineWidth = 8;
-    ctx.roundRect(15, 15, width - 30, height - 30, 20);
-    ctx.stroke();
+    ctxFinal.font = "bold 28px Arial";
+    ctxFinal.fillStyle = "#00A2FF";
+    ctxFinal.fillText("📩 Candidature de Staff", width / 2 - 120, 60);
 
-    // Title
-    ctx.font = "bold 36px Arial"; // Use a default font
-    ctx.fillStyle = "#00A2FF";
-    ctx.fillText("📝 Candidature de Staff", 50, 70);
+    ctxFinal.font = "bold 20px Arial";
+    ctxFinal.fillStyle = "#FFFFFF";
+    ctxFinal.fillText("Pseudo:", 40, 110);
+    ctxFinal.font = "18px Arial";
+    ctxFinal.fillStyle = "#DDDDDD";
+    ctxFinal.fillText(pseudo, 140, 110);
 
-    // Text Formatting
-    ctx.font = "bold 24px Arial"; // Use a default font
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText("Pseudo:", 50, 140);
-    ctx.fillText("Expérience en modération:", 50, 210);
-    ctx.fillText("Motivation:", 50, 280);
+    ctxFinal.font = "bold 20px Arial";
+    ctxFinal.fillStyle = "#FFFFFF";
+    ctxFinal.fillText("Expérience en modération:", 40, 160);
+    ctxFinal.font = "18px Arial";
+    ctxFinal.fillStyle = "#DDDDDD";
+    let newY = wrapText(ctxFinal, experience, 40, 190, width - 80, lineHeight);
 
-    ctx.font = "22px Arial"; // Use a default font
-    ctx.fillStyle = "#DDDDDD";
-    ctx.fillText(pseudo, 200, 140, 550);
-    ctx.fillText(experience, 50, 240, 700);
-    ctx.fillText(motivation, 50, 310, 700);
+    ctxFinal.font = "bold 20px Arial";
+    ctxFinal.fillStyle = "#FFFFFF";
+    ctxFinal.fillText("Motivation:", 40, newY + 20);
+    ctxFinal.font = "18px Arial";
+    ctxFinal.fillStyle = "#DDDDDD";
+    wrapText(ctxFinal, motivation, 40, newY + 50, width - 80, lineHeight);
 
     const buffer = canvas.toBuffer();
     const attachment = new AttachmentBuilder(buffer, {
@@ -123,141 +154,57 @@ async function handleModalSubmit(interaction) {
       "1340014452451315722"
     );
     if (channel) {
-      await channel.send({ files: [attachment], components: [row] });
-      await interaction.reply({
-        content: "Votre candidature a été soumise avec succès.",
-        flags: 64,
+      const message = await channel.send({
+        content: `<@${interaction.user.id}>`,
+        files: [attachment],
+        components: [row],
       });
+
+      await interaction.reply({
+        content: "✅ Votre candidature a été envoyée avec succès.",
+        ephemeral: true,
+      });
+
+      // ✅ Stocker l'ID du message pour retrouver l'utilisateur plus tard
+      await db.set(`candidature_${message.id}`, interaction.user.id);
     } else {
       await interaction.reply({
-        content: "Erreur : Le salon de candidature n'a pas été trouvé.",
-        flags: 64,
+        content: "❌ Erreur: Salon introuvable.",
+        ephemeral: true,
       });
     }
   } catch (error) {
-    console.error("❌ Erreur lors de la soumission de la candidature :", error);
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content:
-          "Une erreur s'est produite lors de la soumission de votre candidature.",
-        flags: 64,
-      });
-    }
+    console.error("❌ Erreur lors de l'envoi de la candidature:", error);
+    await interaction.reply({
+      content:
+        "❌ Une erreur est survenue lors de l'envoi de votre candidature.",
+      ephemeral: true,
+    });
   }
 }
 
-export async function handleInteraction(interaction) {
-  if (!interaction.isButton()) return;
+// ✅ Fonction pour couper le texte proprement
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(" ");
+  let line = "";
+  let lines = [];
 
-  if (interaction.customId === "participate") {
-    const giveawayData = await db.get(`giveaway_${interaction.channel.id}`);
-    if (!giveawayData) {
-      if (!interaction.replied && !interaction.deferred) {
-        return interaction.reply({
-          content: "❌ Giveaway non trouvé.",
-          flags: 64,
-        });
-      }
-      return;
-    }
+  for (let n = 0; n < words.length; n++) {
+    let testLine = line + words[n] + " ";
+    let testWidth = ctx.measureText(testLine).width;
 
-    // Ensure participants is always an array
-    if (!Array.isArray(giveawayData.participants)) {
-      giveawayData.participants = [];
-    }
-
-    if (giveawayData.participants.includes(interaction.user.id)) {
-      if (!interaction.replied && !interaction.deferred) {
-        try {
-          await interaction.reply({
-            content: "❌ Vous êtes déjà inscrit à ce giveaway.",
-            flags: 64,
-          });
-        } catch (error) {
-          console.error(
-            "❌ Erreur lors de la réponse à l'interaction :",
-            error
-          );
-        }
-      }
-      return;
-    }
-
-    giveawayData.participants.push(interaction.user.id);
-    await db.set(`giveaway_${interaction.channel.id}`, giveawayData);
-
-    // Trigger canvas update
-    const updateCanvas = async () => {
-      const remainingTime = giveawayData.endTime - Date.now();
-      if (remainingTime <= 0) {
-        // Handle giveaway end logic here
-        return;
-      }
-
-      const width = 800;
-      const height = 300;
-      const canvas = createCanvas(width, height);
-      const ctx = canvas.getContext("2d");
-
-      // Fond avec un dégradé bleu foncé
-      const gradient = ctx.createLinearGradient(0, 0, width, height);
-      gradient.addColorStop(0, "#0A192F");
-      gradient.addColorStop(1, "#001F3F");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
-
-      // Bordure stylisée
-      ctx.strokeStyle = "#FFD700";
-      ctx.lineWidth = 8;
-      ctx.roundRect(10, 10, width - 20, height - 20, 20);
-      ctx.stroke();
-
-      // Texte principal
-      ctx.font = "bold 32px Arial"; // Use a default font
-      ctx.fillStyle = "#FFD700";
-      ctx.fillText(`🎉 Giveaway Démarré`, 50, 60);
-
-      ctx.font = "bold 26px Arial"; // Use a default font
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(
-        `⏳ Temps restant: ${ms(remainingTime, { long: true })}`,
-        50,
-        120
-      );
-      ctx.fillText(
-        `👥 Participants: ${giveawayData.participants.length}`,
-        50,
-        160
-      );
-
-      const buffer = canvas.toBuffer();
-      const attachment = new AttachmentBuilder(buffer, {
-        name: "giveaway.png",
-      });
-
-      const message = await interaction.channel.messages.fetch(
-        giveawayData.messageId
-      );
-      await message.edit({ files: [attachment] });
-    };
-
-    try {
-      await updateCanvas();
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({
-          content: "✅ Vous avez été inscrit au giveaway avec succès !",
-          flags: 64,
-        });
-      }
-    } catch (error) {
-      console.error("❌ Erreur lors de la mise à jour du canvas :", error);
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({
-          content:
-            "❌ Une erreur s'est produite lors de la mise à jour du canvas.",
-          flags: 64,
-        });
-      }
+    if (testWidth > maxWidth && line !== "") {
+      lines.push(line);
+      line = words[n] + " ";
+    } else {
+      line = testLine;
     }
   }
+  lines.push(line);
+
+  lines.forEach((line, i) => {
+    ctx.fillText(line, x, y + i * lineHeight);
+  });
+
+  return y + lines.length * lineHeight;
 }

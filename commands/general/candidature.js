@@ -6,9 +6,8 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  AttachmentBuilder,
+  EmbedBuilder,
 } from "discord.js";
-import { createCanvas } from "canvas";
 
 const activeInteractions = new Set();
 
@@ -23,7 +22,7 @@ export async function execute(interaction) {
   try {
     const modal = new ModalBuilder()
       .setCustomId("candidatureModal")
-      .setTitle("📩 Candidature de Staff ");
+      .setTitle("📩 Candidature de Staff");
 
     const pseudoInput = new TextInputBuilder()
       .setCustomId("pseudoInput")
@@ -57,26 +56,6 @@ export async function execute(interaction) {
   }
 }
 
-function wrapText(context, text, x, y, maxWidth, lineHeight) {
-  const words = text.split(" ");
-  let line = "";
-  const margin = 10; // Marge de 10 pixels
-
-  for (let i = 0; i < words.length; i++) {
-    let testLine = line + words[i] + " ";
-    let metrics = context.measureText(testLine);
-    let testWidth = metrics.width;
-    if (testWidth > maxWidth - margin && i > 0) {
-      context.fillText(line, x, y);
-      line = words[i] + " ";
-      y += lineHeight;
-    } else {
-      line = testLine;
-    }
-  }
-  context.fillText(line, x, y);
-}
-
 export async function handleModalSubmit(interaction) {
   try {
     let pseudo = interaction.fields.getTextInputValue("pseudoInput");
@@ -85,45 +64,26 @@ export async function handleModalSubmit(interaction) {
 
     if (pseudo.length > 20) pseudo = pseudo.slice(0, 17) + "...";
 
-    const width = 900,
-      height = 600;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext("2d");
+    // 📌 Création de l'embed
+    const embed = new EmbedBuilder()
+      .setColor("#00A2FF")
+      .setTitle("📩 Nouvelle Candidature de Staff")
+      .addFields(
+        { name: "👤 Pseudo", value: pseudo, inline: false },
+        {
+          name: "📌 Expérience en modération",
+          value: experience,
+          inline: false,
+        },
+        { name: "🔥 Motivation", value: motivation, inline: false }
+      )
+      .setFooter({
+        text: `Candidature envoyée par ${interaction.user.tag}`,
+        iconURL: interaction.user.displayAvatarURL(),
+      })
+      .setTimestamp();
 
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(0, 0, width, height);
-    ctx.fillStyle = "#1a1a1a";
-    ctx.fillRect(50, 50, width - 100, height - 100);
-    ctx.strokeStyle = "#00BFFF";
-    ctx.lineWidth = 5;
-    ctx.strokeRect(50, 50, width - 100, height - 100);
-
-    ctx.font = "bold 40px Arial";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "center";
-    ctx.fillText("📩 Candidature de Staff", width / 2, 100);
-
-    ctx.textAlign = "left";
-    ctx.font = "bold 28px Arial";
-    ctx.fillText("Pseudo:", 80, 180);
-    ctx.font = "24px Arial";
-    ctx.fillText(pseudo, 300, 180);
-
-    ctx.font = "bold 28px Arial";
-    ctx.fillText("Expérience:", 80, 260);
-    ctx.font = "24px Arial";
-    wrapText(ctx, experience, 80, 300, 720, 30);
-
-    ctx.font = "bold 28px Arial";
-    ctx.fillText("Motivation:", 80, 380);
-    ctx.font = "24px Arial";
-    wrapText(ctx, motivation, 80, 420, 720, 30);
-
-    const buffer = canvas.toBuffer();
-    const attachment = new AttachmentBuilder(buffer, {
-      name: "candidature.png",
-    });
-
+    // 🔘 Boutons d'acceptation/refus
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId("acceptCandidature")
@@ -135,25 +95,25 @@ export async function handleModalSubmit(interaction) {
         .setStyle(ButtonStyle.Danger)
     );
 
-    const channel = interaction.client.channels.cache.get(
-      "1340014452451315722"
-    );
+    // 📢 Envoi de l'embed dans le bon canal
+    const channel = interaction.client.channels.cache.get("659699739532460042");
     if (channel) {
-      await channel.send({ files: [attachment], components: [row] });
+      await channel.send({ embeds: [embed], components: [row] });
       await interaction.reply({
-        content: "Votre candidature a été envoyée avec succès.",
+        content: "✅ Votre candidature a été envoyée avec succès.",
         ephemeral: true,
       });
     } else {
       await interaction.reply({
-        content: "Erreur: Salon introuvable.",
+        content: "❌ Erreur: Salon introuvable.",
         ephemeral: true,
       });
     }
   } catch (error) {
-    console.error("Erreur soumission candidature:", error);
+    console.error("❌ Erreur lors de l'envoi de la candidature:", error);
     await interaction.reply({
-      content: "Erreur lors de l'envoi de votre candidature.",
+      content:
+        "❌ Une erreur est survenue lors de l'envoi de votre candidature.",
       ephemeral: true,
     });
   }
