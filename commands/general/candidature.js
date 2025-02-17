@@ -58,16 +58,18 @@ export async function execute(interaction) {
 }
 
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
-  const words = text.split(" ");
+  const words = text
+    .split(/(\s+)/)
+    .filter((e) => e.trim().length > 0 || e === " ");
   let line = "";
 
   for (let i = 0; i < words.length; i++) {
-    let testLine = line + words[i] + " ";
+    let testLine = line + words[i];
     let metrics = context.measureText(testLine);
     let testWidth = metrics.width;
     if (testWidth > maxWidth && i > 0) {
       context.fillText(line, x, y);
-      line = words[i] + " ";
+      line = words[i];
       y += lineHeight;
     } else {
       line = testLine;
@@ -78,9 +80,11 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
 
 export async function handleModalSubmit(interaction) {
   try {
-    const pseudo = interaction.fields.getTextInputValue("pseudoInput");
+    let pseudo = interaction.fields.getTextInputValue("pseudoInput");
     const experience = interaction.fields.getTextInputValue("experienceInput");
     const motivation = interaction.fields.getTextInputValue("motivationInput");
+
+    if (pseudo.length > 20) pseudo = pseudo.slice(0, 17) + "...";
 
     const width = 900,
       height = 600;
