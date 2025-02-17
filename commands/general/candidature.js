@@ -58,18 +58,16 @@ export async function execute(interaction) {
 }
 
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
-  const words = text
-    .split(/(\s+)/)
-    .filter((e) => e.trim().length > 0 || e === " ");
+  const words = text.match(/.{1,30}/g) || [];
   let line = "";
 
   for (let i = 0; i < words.length; i++) {
-    let testLine = line + words[i];
+    let testLine = line + words[i] + " ";
     let metrics = context.measureText(testLine);
     let testWidth = metrics.width;
     if (testWidth > maxWidth && i > 0) {
       context.fillText(line, x, y);
-      line = words[i];
+      line = words[i] + " ";
       y += lineHeight;
     } else {
       line = testLine;
