@@ -1,6 +1,9 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { getTopVoiceUsers, getUserLevel } from "../../config/levels.js";
 import { createCanvas } from "canvas";
+import { QuickDB } from "quick.db";
+
+const db = new QuickDB();
 
 export const data = new SlashCommandBuilder()
   .setName("top-voice")
