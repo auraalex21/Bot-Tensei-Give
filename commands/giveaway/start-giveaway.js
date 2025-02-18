@@ -122,7 +122,11 @@ export async function execute(interaction) {
       ctx.fillStyle = "#FFFFFF";
       if (finished) {
         ctx.fillText(`🎉 Giveaway Terminé`, 50, 120);
-        ctx.fillText(`🏆 Gagnants: ${winners.join(", ")}`, 50, 160);
+        ctx.fillText(
+          `🏆 Gagnants: ${winners.map((w) => w.username).join(", ")}`,
+          50,
+          160
+        );
         ctx.fillText(`⏰ Fin: ${new Date(endTime).toLocaleString()}`, 50, 200);
       } else {
         ctx.fillText(
@@ -229,17 +233,23 @@ export async function execute(interaction) {
           Math.random() * weightedParticipants.length
         );
         const winnerId = weightedParticipants.splice(winnerIndex, 1)[0];
-        winners.push(`<@${winnerId}>`);
+        const winner = await interaction.guild.members.fetch(winnerId);
+        winners.push(winner);
       }
 
       try {
         await message.edit({ files: [await updateCanvas(winners, true)] });
+        await giveawayChannel.send({
+          content: `🎉 Félicitations aux gagnants: ${winners
+            .map((w) => `<@${w.id}>`)
+            .join(", ")} !`,
+        });
       } catch (error) {
         console.error("❌ Erreur lors de la modification du message :", error);
       }
 
       // Save the winners to the database
-      giveawayData.winners = winners;
+      giveawayData.winners = winners.map((w) => w.id);
       await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
     });
 
