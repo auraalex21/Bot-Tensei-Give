@@ -78,7 +78,7 @@ export async function execute(interaction) {
 
     ctx.fillStyle = "#FFD700";
     ctx.font = "bold 28px sans-serif";
-    ctx.fillText(`LVL ${userData.level} (${userData.rank})`, width - 200, 80);
+    ctx.fillText(`LVL ${userData.level} (${userData.rank})`, width - 100, 100);
 
     ctx.font = "22px sans-serif";
     ctx.fillStyle = "#A9A9A9";
