@@ -17,11 +17,16 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
   try {
-    await interaction.deferReply(); // ✅ Prévenir Discord d'un délai dans la réponse
+    if (!interaction.isChatInputCommand()) return;
+
+    await interaction.deferReply(); // ✅ Évite l'erreur "Unknown Interaction"
 
     const user = interaction.options.getUser("target") || interaction.user;
     const guildId = interaction.guild.id;
     const userData = await getUserDataFromDB(user.id, guildId);
+
+    // Vérifier si l'interaction est toujours valide
+    if (!interaction.isRepliable()) return;
 
     // 🖼️ Configuration du canvas
     const width = 900,
@@ -37,22 +42,23 @@ export async function execute(interaction) {
     ctx.fillRect(0, 0, width, height);
 
     // 🖼️ Avatar avec effet lumineux
-    const avatarURL = user.displayAvatarURL({ format: "png", size: 256 });
+    const avatarURL = user.displayAvatarURL({
+      format: "png",
+      dynamic: false,
+      size: 256,
+    });
     let avatar;
 
     try {
-      avatar = await loadImage(avatarURL); // Charger l'avatar
+      avatar = await loadImage(avatarURL);
     } catch (err) {
-      console.error("Erreur de chargement de l'avatar : ", err);
-      avatar = await loadImage(
-        "https://media.discordapp.net/attachments/1339309785400737853/1341659383326838845/Tensei.png?ex=67b6cd2b&is=67b57bab&hm=c280002d08d57a501506ca3656fe98409aad99b21ae628cb15af33779b6dd92c&=&format=webp&quality=lossless&width=534&height=519"
-      );
+      console.error("❌ Erreur de chargement de l'avatar :", err);
+      avatar = await loadImage("https://example.com/default-avatar.png"); // URL d'un avatar de secours
     }
 
     const avatarX = 50,
       avatarY = 50,
       avatarSize = 130;
-
     ctx.save();
     ctx.beginPath();
     ctx.arc(
@@ -67,7 +73,7 @@ export async function execute(interaction) {
     ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize);
     ctx.restore();
 
-    // 🔵 Aura bleue autour de l'avatar
+    // 🔵 Aura autour de l'avatar
     ctx.beginPath();
     ctx.arc(
       avatarX + avatarSize / 2,
@@ -105,63 +111,25 @@ export async function execute(interaction) {
       190
     );
 
-    // 📜 Séparation lumineuse
-    ctx.strokeStyle = "#1E90FF";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(50, 220);
-    ctx.lineTo(850, 220);
-    ctx.stroke();
-
-    // 🏆 Niveau et rang sous la barre séparatrice
-    ctx.fillStyle = "#1E90FF";
-    ctx.font = "bold 30px 'Arial'";
-    ctx.fillText(`LVL ${userData.level} (${userData.rank})`, 220, 270);
-
-    // 🔵 Barre d'XP stylisée
-    const xpX = 220,
-      xpY = 320,
-      xpWidth = 500,
-      xpHeight = 25;
-    const progress = userData.exp / userData.expToNext;
-
-    ctx.fillStyle = "#0A192F";
-    ctx.fillRect(xpX, xpY, xpWidth, xpHeight);
-
-    const xpGradient = ctx.createLinearGradient(xpX, xpY, xpX + xpWidth, xpY);
-    xpGradient.addColorStop(0, "#00A6FB");
-    xpGradient.addColorStop(1, "#0582CA");
-    ctx.fillStyle = xpGradient;
-    ctx.fillRect(xpX, xpY, xpWidth * progress, xpHeight);
-
-    ctx.strokeStyle = "#1E90FF";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(xpX, xpY, xpWidth, xpHeight);
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 18px 'Arial'";
-    ctx.fillText(
-      `XP: ${userData.exp} / ${userData.expToNext}`,
-      xpX + xpWidth / 2 - 50,
-      xpY + 18
-    );
-
     // 📤 Envoi de l'image générée
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {
       name: "user-info.png",
     });
 
-    await interaction.editReply({ files: [attachment] }); // ✅ Modification du message après deferReply()
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({ files: [attachment] });
+    } else {
+      await interaction.editReply({ files: [attachment] });
+    }
   } catch (error) {
     console.error("❌ Erreur lors de l'affichage du user-info :", error);
 
-    // Fallback image pour les erreurs
+    // Gestion d'erreur : Image de secours
     const fallbackCanvas = createCanvas(900, 550);
     const fallbackCtx = fallbackCanvas.getContext("2d");
 
     fallbackCtx.fillStyle = "#FF0000";
     fallbackCtx.fillRect(0, 0, 900, 550);
-
     fallbackCtx.fillStyle = "#FFFFFF";
     fallbackCtx.font = "bold 36px 'Arial'";
     fallbackCtx.fillText("❌ Erreur lors de la génération de l'image", 50, 275);
@@ -173,22 +141,19 @@ export async function execute(interaction) {
 
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply({
-        content:
-          "❌ Une erreur s'est produite lors de la génération de l'image.",
+        content: "❌ Une erreur est survenue.",
         files: [fallbackAttachment],
-        flags: 64,
       });
     } else {
       await interaction.reply({
-        content: "❌ Une erreur s'est produite.",
+        content: "❌ Une erreur est survenue.",
         files: [fallbackAttachment],
-        flags: 64,
       });
     }
   }
 }
 
-// ✅ Fonction de récupération des données utilisateur
+// ✅ Récupération des données utilisateur
 async function getUserDataFromDB(userId, guildId) {
   const money = (await economyTable.get(`balance_${userId}`)) || 0;
   const badges = (await db.get(`badges_${guildId}_${userId}`)) || [];

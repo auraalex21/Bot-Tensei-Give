@@ -16,33 +16,42 @@ const db = new QuickDB();
 export default {
   name: Events.InteractionCreate,
   async execute(client, interaction) {
-    if (interaction.isCommand()) {
-      const command = client.commands.get(interaction.commandName);
-      if (!command) return;
+    try {
+      if (interaction.isCommand()) {
+        const command = client.commands.get(interaction.commandName);
+        if (!command) return;
 
-      try {
-        await command.execute(interaction);
-      } catch (error) {
-        console.error("Error handling interaction:", error);
-        if (!interaction.replied && !interaction.deferred) {
-          await interaction.reply({
-            content: "There was an error while executing this command!",
-            flags: 64,
-          });
+        try {
+          await interaction.deferReply({ ephemeral: false }); // ✅ Évite l'erreur "Unknown Interaction"
+          await command.execute(interaction);
+        } catch (error) {
+          console.error(
+            "❌ Erreur lors de l'exécution de la commande :",
+            error
+          );
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({
+              content:
+                "❌ Une erreur est survenue lors de l'exécution de cette commande.",
+              ephemeral: true,
+            });
+          }
+        }
+      } else if (interaction.isModalSubmit()) {
+        if (interaction.customId === "candidatureModal") {
+          await handleModalSubmit(interaction);
+        } else if (interaction.customId === "rejectionReasonModal") {
+          await handleRejectionReason(interaction);
+        }
+      } else if (interaction.isButton()) {
+        if (interaction.customId === "acceptCandidature") {
+          await handleCandidatureDecision(interaction, true);
+        } else if (interaction.customId === "rejectCandidature") {
+          await showRejectionModal(interaction);
         }
       }
-    } else if (interaction.isModalSubmit()) {
-      if (interaction.customId === "candidatureModal") {
-        await handleModalSubmit(interaction);
-      } else if (interaction.customId === "rejectionReasonModal") {
-        await handleRejectionReason(interaction);
-      }
-    } else if (interaction.isButton()) {
-      if (interaction.customId === "acceptCandidature") {
-        await handleCandidatureDecision(interaction, true);
-      } else if (interaction.customId === "rejectCandidature") {
-        await showRejectionModal(interaction);
-      }
+    } catch (error) {
+      console.error("❌ Erreur lors du traitement de l'interaction :", error);
     }
   },
 };
