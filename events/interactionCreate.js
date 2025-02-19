@@ -80,6 +80,37 @@ async function handleCandidatureDecision(interaction, status) {
         components: [],
       });
     }
+
+    if (status) {
+      const canvas = createCanvas(800, 300);
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#0A192F";
+      ctx.fillRect(0, 0, 800, 300);
+      ctx.fillStyle = "#001F3F";
+      ctx.fillRect(40, 40, 720, 220);
+      ctx.strokeStyle = "#00A2FF";
+      ctx.lineWidth = 6;
+      ctx.roundRect(20, 20, 760, 260, 15);
+      ctx.stroke();
+
+      ctx.font = "bold 28px Arial";
+      ctx.fillStyle = "#00A2FF";
+      ctx.fillText("📩 Candidature de Staff", 340, 60);
+
+      ctx.font = "bold 20px Arial";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText("✅ Candidature acceptée.", 40, 110);
+
+      const buffer = canvas.toBuffer();
+      const attachment = new AttachmentBuilder(buffer, {
+        name: "candidature_accepted.png",
+      });
+
+      await interaction.followUp({
+        files: [attachment],
+      });
+    }
   } catch (error) {
     console.error("❌ Erreur lors du traitement de la décision:", error);
   }

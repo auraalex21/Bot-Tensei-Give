@@ -38,7 +38,7 @@ export async function execute(interaction) {
 
     // 🖼️ Avatar avec effet lumineux
     const avatar = await loadImage(
-      user.displayAvatarURL({ format: "jpg", size: 256 })
+      user.displayAvatarURL({ format: "png", size: 256 })
     );
     const avatarX = 50,
       avatarY = 50,
