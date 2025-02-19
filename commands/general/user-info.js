@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
-import { createCanvas, loadImage, registerFont } from "canvas";
+import { createCanvas, loadImage } from "canvas";
 import { QuickDB } from "quick.db";
-import { getUserLevel } from "../../config/levels.js"; // Import du système de niveau
+import { getUserLevel, roleRewards } from "../../config/levels.js"; // ✅ Importation des récompenses de rôle
 
 // Initialisation des bases de données
 const db = new QuickDB();
@@ -81,7 +81,7 @@ export async function execute(interaction) {
 
     // ✍️ Texte : Nom de l'utilisateur et ID
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 34px SoloLeveling, sans-serif";
+    ctx.font = "bold 34px sans-serif";
     ctx.fillText(user.username, 200, 70);
 
     ctx.font = "20px sans-serif";
@@ -89,7 +89,7 @@ export async function execute(interaction) {
     ctx.fillText(`🆔 ID: ${user.id}`, 200, 100);
 
     // 📈 Affichage du niveau
-    ctx.font = "28px SoloLeveling, sans-serif";
+    ctx.font = "28px sans-serif";
     ctx.fillStyle = "#FFD700";
     ctx.fillText(`LVL ${userData.level}`, 750, 70);
 
