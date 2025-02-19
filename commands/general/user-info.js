@@ -151,7 +151,7 @@ export async function execute(interaction) {
 // ✅ Ajout de la fonction manquante pour récupérer les données utilisateur
 async function getUserDataFromDB(userId, guildId) {
   const money = (await economyTable.get(`balance_${userId}`)) || 0;
-  const badges = (await db.get(`badges_${userId}`)) || [];
+  const badges = (await db.get(`badges_${guildId}_${userId}`)) || []; // Assurez-vous que la clé est correcte
   const levelData = await getUserLevel(userId, guildId);
 
   let rank = "Débutant";

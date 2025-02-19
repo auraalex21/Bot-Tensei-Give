@@ -124,3 +124,13 @@ export async function incrementMessageCount(userId, guildId) {
   const count = (await db.get(key)) || 0;
   await db.set(key, count + 1);
 }
+
+// ✅ Attribuer un badge à un utilisateur
+export async function addBadge(userId, guildId, badge) {
+  const key = `badges_${guildId}_${userId}`;
+  let badges = (await db.get(key)) || [];
+  if (!badges.includes(badge)) {
+    badges.push(badge);
+    await db.set(key, badges);
+  }
+}
