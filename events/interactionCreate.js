@@ -72,10 +72,14 @@ async function handleCandidatureDecision(interaction, status) {
       console.warn("⚠️ Impossible de trouver l'utilisateur de la candidature.");
     }
 
-    await interaction.update({
-      content: status ? "✅ Candidature acceptée." : "❌ Candidature refusée.",
-      components: [],
-    });
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.update({
+        content: status
+          ? "✅ Candidature acceptée."
+          : "❌ Candidature refusée.",
+        components: [],
+      });
+    }
   } catch (error) {
     console.error("❌ Erreur lors du traitement de la décision:", error);
   }
