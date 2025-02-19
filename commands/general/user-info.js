@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
-import { createCanvas, loadImage, registerFont } from "canvas";
+import { createCanvas, loadImage } from "canvas";
 import { QuickDB } from "quick.db";
 import { getUserLevel, roleRewards } from "../../config/levels.js";
 
@@ -8,14 +8,16 @@ const economyTable = db.table("economy");
 
 export const data = new SlashCommandBuilder()
   .setName("user-info")
-  .setDescription("Affiche un profil stylisé à la Solo Leveling")
+  .setDescription(
+    "Affiche les informations de l'utilisateur dans un style Solo Leveling"
+  )
   .addUserOption((option) =>
     option.setName("target").setDescription("L'utilisateur ciblé")
   );
 
 export async function execute(interaction) {
   try {
-    await interaction.deferReply(); // Prévenir Discord d'un délai dans la réponse
+    await interaction.deferReply(); // ✅ Prévenir Discord d'un délai dans la réponse
 
     const user = interaction.options.getUser("target") || interaction.user;
     const guildId = interaction.guild.id;
@@ -148,32 +150,28 @@ export async function execute(interaction) {
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {
       name: "user-info.png",
     });
-    await interaction.editReply({ files: [attachment] });
+
+    await interaction.editReply({ files: [attachment] }); // ✅ Modification du message après deferReply()
   } catch (error) {
     console.error("❌ Erreur lors de l'affichage du user-info :", error);
 
-    // Gérer les erreurs
-    if (error.message === "Unsupported image type") {
-      // Fallback image pour les erreurs
-      const fallbackCanvas = createCanvas(900, 550);
-      const fallbackCtx = fallbackCanvas.getContext("2d");
+    // Fallback image pour les erreurs
+    const fallbackCanvas = createCanvas(900, 550);
+    const fallbackCtx = fallbackCanvas.getContext("2d");
 
-      fallbackCtx.fillStyle = "#FF0000";
-      fallbackCtx.fillRect(0, 0, 900, 550);
+    fallbackCtx.fillStyle = "#FF0000";
+    fallbackCtx.fillRect(0, 0, 900, 550);
 
-      fallbackCtx.fillStyle = "#FFFFFF";
-      fallbackCtx.font = "bold 36px 'Arial'";
-      fallbackCtx.fillText(
-        "❌ Erreur lors de la génération de l'image",
-        50,
-        275
-      );
+    fallbackCtx.fillStyle = "#FFFFFF";
+    fallbackCtx.font = "bold 36px 'Arial'";
+    fallbackCtx.fillText("❌ Erreur lors de la génération de l'image", 50, 275);
 
-      const fallbackBuffer = fallbackCanvas.toBuffer();
-      const fallbackAttachment = new AttachmentBuilder(fallbackBuffer, {
-        name: "error.png",
-      });
+    const fallbackBuffer = fallbackCanvas.toBuffer();
+    const fallbackAttachment = new AttachmentBuilder(fallbackBuffer, {
+      name: "error.png",
+    });
 
+    if (interaction.deferred || interaction.replied) {
       await interaction.editReply({
         content:
           "❌ Une erreur s'est produite lors de la génération de l'image.",
@@ -183,7 +181,8 @@ export async function execute(interaction) {
     } else {
       await interaction.reply({
         content: "❌ Une erreur s'est produite.",
-        ephemeral: true,
+        files: [fallbackAttachment],
+        flags: 64,
       });
     }
   }
