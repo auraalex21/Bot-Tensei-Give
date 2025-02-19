@@ -14,10 +14,11 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction) {
+  if (interaction.replied || interaction.deferred) {
+    return;
+  }
+
   try {
-    if (interaction.replied || interaction.deferred) {
-      return;
-    }
     await interaction.deferReply({ ephemeral: true });
 
     if (
