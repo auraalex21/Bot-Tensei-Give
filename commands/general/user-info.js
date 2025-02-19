@@ -17,10 +17,6 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
   try {
-    if (interaction.deferred || interaction.replied) {
-      return;
-    }
-
     await interaction.deferReply(); // ✅ Prévenir Discord d'un délai dans la réponse
 
     const user = interaction.options.getUser("target") || interaction.user;
