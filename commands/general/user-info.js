@@ -19,13 +19,14 @@ export async function execute(interaction) {
   try {
     if (!interaction.isChatInputCommand()) return;
 
-    await interaction.deferReply(); // ✅ Évite l'erreur "Unknown Interaction"
+    // ✅ Éviter l'erreur Unknown interaction en différant immédiatement
+    await interaction.deferReply();
 
     const user = interaction.options.getUser("target") || interaction.user;
     const guildId = interaction.guild.id;
     const userData = await getUserDataFromDB(user.id, guildId);
 
-    // Vérifier si l'interaction est toujours valide
+    // 🔄 Vérifier que l'interaction est toujours active avant de répondre
     if (!interaction.isRepliable()) return;
 
     // 🖼️ Configuration du canvas
@@ -41,7 +42,7 @@ export async function execute(interaction) {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
-    // 🖼️ Avatar avec effet lumineux
+    // 🖼️ Avatar avec gestion des erreurs
     const avatarURL = user.displayAvatarURL({
       format: "png",
       dynamic: false,
@@ -53,7 +54,7 @@ export async function execute(interaction) {
       avatar = await loadImage(avatarURL);
     } catch (err) {
       console.error("❌ Erreur de chargement de l'avatar :", err);
-      avatar = await loadImage("https://example.com/default-avatar.png"); // URL d'un avatar de secours
+      avatar = await loadImage("https://example.com/default-avatar.png"); // 🔄 Image par défaut
     }
 
     const avatarX = 50,
@@ -124,7 +125,7 @@ export async function execute(interaction) {
   } catch (error) {
     console.error("❌ Erreur lors de l'affichage du user-info :", error);
 
-    // Gestion d'erreur : Image de secours
+    // 🔄 Gestion d'erreur : Image de secours
     const fallbackCanvas = createCanvas(900, 550);
     const fallbackCtx = fallbackCanvas.getContext("2d");
 
