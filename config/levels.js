@@ -3,10 +3,10 @@ const db = new QuickDB();
 
 export const roleRewards = [
   // 🔥 Ajout de export ici
-  { level: 5, roleId: "1339902720546439189", bonus: 0.05 },
-  { level: 15, roleId: "1339902718088577074", bonus: 0.1 },
-  { level: 25, roleId: "1339902715165147166", bonus: 0.15 },
-  { level: 40, roleId: "1339902712724066406", bonus: 0.25 },
+  { level: 5, roleId: "1339902720546439189", bonus: 0.05, nom: "Bronze" },
+  { level: 15, roleId: "1339902718088577074", bonus: 0.1, nom: "Argent" },
+  { level: 25, roleId: "1339902715165147166", bonus: 0.15, nom: "Or" },
+  { level: 40, roleId: "1339902712724066406", bonus: 0.25, nom: "Diamant" },
 ];
 
 // ✅ Ajouter de l'expérience à un utilisateur

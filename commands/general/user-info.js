@@ -1,54 +1,46 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { createCanvas, loadImage } from "canvas";
 import { QuickDB } from "quick.db";
-import { getUserLevel, roleRewards } from "../../config/levels.js"; // ✅ Importation des récompenses de rôle
+import { getUserLevel, roleRewards } from "../../config/levels.js"; // ✅ Import du système de niveaux
 
-// Initialisation des bases de données
+// Initialisation de la base de données
 const db = new QuickDB();
 const economyTable = db.table("economy");
 
 export const data = new SlashCommandBuilder()
   .setName("user-info")
-  .setDescription(
-    "Affiche les informations de l'utilisateur sous forme de carte"
-  )
+  .setDescription("Affiche les informations de l'utilisateur sur un canvas")
   .addUserOption((option) =>
     option
       .setName("target")
-      .setDescription("L'utilisateur dont vous voulez voir les infos")
+      .setDescription("L'utilisateur dont vous voulez voir les informations")
   );
 
 export async function execute(interaction) {
   try {
     const user = interaction.options.getUser("target") || interaction.user;
-    const userData = await getUserDataFromDB(user.id, interaction.guild.id);
+    const guildId = interaction.guild.id;
+    const userData = await getUserDataFromDB(user.id, guildId);
 
     // 📏 Dimensions du canvas
-    const width = 900;
-    const height = 400;
+    const width = 850;
+    const height = 450;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
-    // 🎨 Dégradé de fond inspiré de Solo Leveling
+    // 🎨 Dégradé de fond
     const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, "#0A0F2C");
-    gradient.addColorStop(0.5, "#161D4E");
-    gradient.addColorStop(1, "#1A1F4A");
+    gradient.addColorStop(0, "#090D22");
+    gradient.addColorStop(1, "#12193C");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
-    // 🔵 Effet de glow autour du cadre
-    ctx.shadowColor = "rgba(50, 100, 255, 0.7)";
-    ctx.shadowBlur = 25;
-    ctx.strokeStyle = "rgba(50, 100, 255, 0.9)";
-    ctx.lineWidth = 4;
-    ctx.strokeRect(20, 20, width - 40, height - 40);
-    ctx.shadowBlur = 0;
-
-    // 🖼️ Charger et afficher l'avatar de l'utilisateur
+    // 🖼️ Charger l'avatar
     const avatar = await loadImage(
       user.displayAvatarURL({ format: "jpg", size: 256 })
     );
+
+    // 🔵 Avatar avec effet lumineux
     const avatarX = 50,
       avatarY = 50,
       avatarSize = 120;
@@ -66,7 +58,7 @@ export async function execute(interaction) {
     ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize);
     ctx.restore();
 
-    // 🏆 Bordure dorée autour de l'avatar
+    // 🏆 Effet de bordure lumineuse dorée
     ctx.beginPath();
     ctx.arc(
       avatarX + avatarSize / 2,
@@ -76,70 +68,63 @@ export async function execute(interaction) {
       Math.PI * 2
     );
     ctx.strokeStyle = "#FFD700";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4;
     ctx.stroke();
 
-    // ✍️ Texte : Nom de l'utilisateur et ID
+    // ✍️ Texte Stylisé (Nom d'utilisateur & Level)
     ctx.fillStyle = "#FFFFFF";
     ctx.font = "bold 34px sans-serif";
-    ctx.fillText(user.username, 200, 70);
+    ctx.fillText(user.username, 200, 80);
 
-    ctx.font = "20px sans-serif";
-    ctx.fillStyle = "#A9A9A9";
-    ctx.fillText(`🆔 ID: ${user.id}`, 200, 100);
-
-    // 📈 Affichage du niveau
-    ctx.font = "28px sans-serif";
     ctx.fillStyle = "#FFD700";
-    ctx.fillText(`LVL ${userData.level}`, 750, 70);
+    ctx.font = "bold 28px sans-serif";
+    ctx.fillText(`LVL ${userData.level} (${userData.rank})`, width - 200, 80);
 
-    // 🔷 Barre d'XP stylisée
-    const xpBarWidth = 500;
-    const xpBarHeight = 18;
-    const xpProgress = userData.xp / userData.xpNeeded;
-    const filledWidth = xpBarWidth * xpProgress;
+    ctx.font = "22px sans-serif";
+    ctx.fillStyle = "#A9A9A9";
+    ctx.fillText(`🆔 ID: ${user.id}`, 200, 120);
 
-    ctx.fillStyle = "#222"; // Fond de la barre d'XP
-    ctx.fillRect(200, 120, xpBarWidth, xpBarHeight);
+    // 🔵 Barre d'XP
+    const xpWidth = 500;
+    const xpHeight = 15;
+    const xpX = 200,
+      xpY = 140;
+    const progress = userData.exp / userData.expToNext;
 
-    ctx.fillStyle = "#FFD700"; // Barre remplie (dorée)
-    ctx.fillRect(200, 120, filledWidth, xpBarHeight);
+    ctx.fillStyle = "#222A56";
+    ctx.fillRect(xpX, xpY, xpWidth, xpHeight);
 
-    ctx.font = "18px sans-serif";
+    ctx.fillStyle = "#FFD700";
+    ctx.fillRect(xpX, xpY, xpWidth * progress, xpHeight);
+
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(`XP: ${userData.xp} / ${userData.xpNeeded}`, 220, 135);
+    ctx.font = "bold 16px sans-serif";
+    ctx.fillText(
+      `XP: ${userData.exp} / ${userData.expToNext}`,
+      xpX + 10,
+      xpY + 12
+    );
 
     // 💰 Argent de l'utilisateur
     ctx.font = "24px sans-serif";
     ctx.fillStyle = "#FFD700";
-    ctx.fillText(`💰 Argent: ${userData.money} Coins`, 200, 180);
+    ctx.fillText(`💰 Argent: ${userData.money} Coins`, 200, 190);
 
-    // 🏅 Badges et récompenses
+    // 🏅 Badges
     ctx.fillStyle = "#87CEEB";
     ctx.fillText(
       `🏆 Badges: ${userData.badges.join(", ") || "Aucun"}`,
       200,
-      220
+      230
     );
 
-    // 🎖️ Rôle Gagné (si applicable)
-    if (userData.role) {
-      ctx.fillStyle = "#FFD700";
-      ctx.fillText(`🎖️ Rôle Débloqué: ${userData.role}`, 200, 260);
-    }
-
-    // 📜 Ligne de séparation lumineuse
+    // 📜 Ligne de séparation
     ctx.strokeStyle = "#FFD700";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(50, 290);
-    ctx.lineTo(850, 290);
+    ctx.moveTo(50, 270);
+    ctx.lineTo(800, 270);
     ctx.stroke();
-
-    // 📌 Footer
-    ctx.font = "italic 18px sans-serif";
-    ctx.fillStyle = "#A9A9A9";
-    ctx.fillText("Informations générées automatiquement", 50, height - 30);
 
     // 📤 Envoi de l'image générée
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {
@@ -160,16 +145,21 @@ async function getUserDataFromDB(userId, guildId) {
   const money = (await economyTable.get(`balance_${userId}`)) || 0;
   const badges = (await db.get(`badges_${userId}`)) || [];
   const levelData = await getUserLevel(userId, guildId);
-  const { level, exp } = levelData;
-  const xpNeeded = level * 1000; // Progression d'XP
 
-  // 🎖️ Vérification des rôles débloqués
-  let role = null;
+  // 🔥 Trouver le rang basé sur le niveau
+  let rank = "Débutant";
   for (const reward of roleRewards) {
-    if (level >= reward.level) {
-      role = `Niveau ${reward.level}`;
+    if (levelData.level >= reward.level) {
+      rank = reward.nom;
     }
   }
 
-  return { money, badges, level, xp: exp, xpNeeded, role };
+  return {
+    money,
+    badges,
+    level: levelData.level,
+    exp: levelData.exp,
+    expToNext: levelData.level * 100,
+    rank,
+  };
 }
