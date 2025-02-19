@@ -1,11 +1,11 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { createCanvas, loadImage, registerFont } from "canvas";
 import { QuickDB } from "quick.db";
+import { getUserLevel } from "../../config/levels.js"; // Import du système de niveau
 
 // Initialisation des bases de données
 const db = new QuickDB();
 const economyTable = db.table("economy");
-const levelTable = db.table("levels_");
 
 export const data = new SlashCommandBuilder()
   .setName("user-info")
@@ -21,10 +21,10 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction) {
   try {
     const user = interaction.options.getUser("target") || interaction.user;
-    const userData = await getUserDataFromDB(user.id);
+    const userData = await getUserDataFromDB(user.id, interaction.guild.id);
 
     // 📏 Dimensions du canvas
-    const width = 800;
+    const width = 900;
     const height = 400;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
@@ -49,8 +49,8 @@ export async function execute(interaction) {
     const avatar = await loadImage(
       user.displayAvatarURL({ format: "jpg", size: 256 })
     );
-    const avatarX = 40,
-      avatarY = 40,
+    const avatarX = 50,
+      avatarY = 50,
       avatarSize = 120;
     ctx.save();
     ctx.beginPath();
@@ -91,10 +91,10 @@ export async function execute(interaction) {
     // 📈 Affichage du niveau
     ctx.font = "28px SoloLeveling, sans-serif";
     ctx.fillStyle = "#FFD700";
-    ctx.fillText(`LVL ${userData.level}`, 650, 70);
+    ctx.fillText(`LVL ${userData.level}`, 750, 70);
 
     // 🔷 Barre d'XP stylisée
-    const xpBarWidth = 450;
+    const xpBarWidth = 500;
     const xpBarHeight = 18;
     const xpProgress = userData.xp / userData.xpNeeded;
     const filledWidth = xpBarWidth * xpProgress;
@@ -114,7 +114,7 @@ export async function execute(interaction) {
     ctx.fillStyle = "#FFD700";
     ctx.fillText(`💰 Argent: ${userData.money} Coins`, 200, 180);
 
-    // 🏅 Badges
+    // 🏅 Badges et récompenses
     ctx.fillStyle = "#87CEEB";
     ctx.fillText(
       `🏆 Badges: ${userData.badges.join(", ") || "Aucun"}`,
@@ -122,13 +122,24 @@ export async function execute(interaction) {
       220
     );
 
+    // 🎖️ Rôle Gagné (si applicable)
+    if (userData.role) {
+      ctx.fillStyle = "#FFD700";
+      ctx.fillText(`🎖️ Rôle Débloqué: ${userData.role}`, 200, 260);
+    }
+
     // 📜 Ligne de séparation lumineuse
     ctx.strokeStyle = "#FFD700";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(50, 260);
-    ctx.lineTo(750, 260);
+    ctx.moveTo(50, 290);
+    ctx.lineTo(850, 290);
     ctx.stroke();
+
+    // 📌 Footer
+    ctx.font = "italic 18px sans-serif";
+    ctx.fillStyle = "#A9A9A9";
+    ctx.fillText("Informations générées automatiquement", 50, height - 30);
 
     // 📤 Envoi de l'image générée
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {
@@ -145,14 +156,20 @@ export async function execute(interaction) {
 }
 
 // 📌 Fonction pour récupérer les données utilisateur depuis la BDD
-async function getUserDataFromDB(userId) {
+async function getUserDataFromDB(userId, guildId) {
   const money = (await economyTable.get(`balance_${userId}`)) || 0;
   const badges = (await db.get(`badges_${userId}`)) || [];
-  const levelData = (await levelTable.get(`levels_${userId}`)) || {
-    level: 1,
-    xp: 0,
-  };
-  const xpNeeded = levelData.level * 100; // Progression d'XP
+  const levelData = await getUserLevel(userId, guildId);
+  const { level, exp } = levelData;
+  const xpNeeded = level * 1000; // Progression d'XP
 
-  return { money, badges, level: levelData.level, xp: levelData.xp, xpNeeded };
+  // 🎖️ Vérification des rôles débloqués
+  let role = null;
+  for (const reward of roleRewards) {
+    if (level >= reward.level) {
+      role = `Niveau ${reward.level}`;
+    }
+  }
+
+  return { money, badges, level, xp: exp, xpNeeded, role };
 }
