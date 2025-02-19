@@ -17,6 +17,10 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
   try {
+    if (interaction.deferred || interaction.replied) {
+      return;
+    }
+
     await interaction.deferReply(); // ✅ Prévenir Discord d'un délai dans la réponse
 
     const user = interaction.options.getUser("target") || interaction.user;
@@ -150,12 +154,12 @@ export async function execute(interaction) {
       await interaction.editReply({
         content:
           "❌ Une erreur s'est produite lors de la génération de l'image.",
-        ephemeral: true,
+        flags: 64,
       });
     } else {
       await interaction.reply({
         content: "❌ Une erreur s'est produite.",
-        ephemeral: true,
+        flags: 64,
       });
     }
   }
