@@ -14,44 +14,44 @@ const economyTable = db.table("economy");
 const items = [
   {
     name: "Nitro Classique",
-    price: 13000,
+    price: 100000,
     description: "Profitez de Discord Nitro avec des avantages exclusifs.",
     emoji: "✨",
   },
   {
     name: "Nitro Booste",
-    price: 40000,
+    price: 180000,
     description:
       "Obtenez Discord Nitro avec des boosts de serveur supplémentaires.",
     emoji: "🚀",
   },
   {
     name: "500 Robux",
-    price: 7000,
+    price: 80000,
     description: "Achetez 500 Robux pour vos jeux préférés sur Roblox.",
     emoji: "💎",
   },
   {
     name: "1.000 Robux",
-    price: 14000,
+    price: 140000,
     description: "Achetez 1.000 Robux pour vos jeux préférés sur Roblox.",
     emoji: "💎",
   },
   {
     name: "2.000 Robux",
-    price: 28000,
+    price: 280000,
     description: "Achetez 2.000 Robux pour vos jeux préférés sur Roblox.",
     emoji: "💎",
   },
   {
     name: "5.000 Robux",
-    price: 70000,
+    price: 700000,
     description: "Achetez 5.000 Robux pour vos jeux préférés sur Roblox.",
     emoji: "💎",
   },
   {
     name: "10.000 Robux",
-    price: 140000,
+    price: 1400000,
     description: "Achetez 10.000 Robux pour vos jeux préférés sur Roblox.",
     emoji: "💎",
   },

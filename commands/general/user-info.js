@@ -17,10 +17,13 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
   try {
+    await interaction.deferReply(); // ✅ Prévenir Discord d'un délai dans la réponse
+
     const user = interaction.options.getUser("target") || interaction.user;
     const guildId = interaction.guild.id;
     const userData = await getUserDataFromDB(user.id, guildId);
 
+    // 🖼️ Configuration du canvas
     const width = 900,
       height = 550;
     const canvas = createCanvas(width, height);
@@ -138,20 +141,30 @@ export async function execute(interaction) {
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {
       name: "user-info.png",
     });
-    await interaction.reply({ files: [attachment] });
+
+    await interaction.editReply({ files: [attachment] }); // ✅ Modification du message après deferReply()
   } catch (error) {
     console.error("❌ Erreur lors de l'affichage du user-info :", error);
-    await interaction.reply({
-      content: "❌ Une erreur s'est produite.",
-      ephemeral: true,
-    });
+
+    if (interaction.deferred || interaction.replied) {
+      await interaction.editReply({
+        content:
+          "❌ Une erreur s'est produite lors de la génération de l'image.",
+        ephemeral: true,
+      });
+    } else {
+      await interaction.reply({
+        content: "❌ Une erreur s'est produite.",
+        ephemeral: true,
+      });
+    }
   }
 }
 
-// ✅ Ajout de la fonction manquante pour récupérer les données utilisateur
+// ✅ Fonction de récupération des données utilisateur
 async function getUserDataFromDB(userId, guildId) {
   const money = (await economyTable.get(`balance_${userId}`)) || 0;
-  const badges = (await db.get(`badges_${guildId}_${userId}`)) || []; // Assurez-vous que la clé est correcte
+  const badges = (await db.get(`badges_${guildId}_${userId}`)) || [];
   const levelData = await getUserLevel(userId, guildId);
 
   let rank = "Débutant";
