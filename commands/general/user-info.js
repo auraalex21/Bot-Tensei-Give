@@ -83,7 +83,7 @@ export async function execute(interaction) {
     // 💰 Argent
     ctx.fillStyle = "#1E90FF";
     ctx.font = "24px 'Arial'";
-    ctx.fillText(`💰 Argent: ${userData.money} Coins`, 220, 160);
+    ctx.fillText(`💰 Argent: ${userData.money}€`, 220, 160);
 
     // 🏅 Badges
     ctx.fillStyle = "#A0C4FF";
