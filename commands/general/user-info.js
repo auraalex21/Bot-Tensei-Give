@@ -80,22 +80,35 @@ export async function execute(interaction) {
     ctx.font = "22px 'Arial'";
     ctx.fillText(`🆔 ID: ${user.id}`, 220, 125);
 
+    // 💰 Argent
+    ctx.fillStyle = "#1E90FF";
+    ctx.font = "24px 'Arial'";
+    ctx.fillText(`💰 Argent: ${userData.money} Coins`, 220, 160);
+
+    // 🏅 Badges
+    ctx.fillStyle = "#A0C4FF";
+    ctx.fillText(
+      `🏆 Badges: ${userData.badges.join(", ") || "Aucun"}`,
+      220,
+      190
+    );
+
     // 📜 Séparation lumineuse
     ctx.strokeStyle = "#1E90FF";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(50, 180);
-    ctx.lineTo(850, 180);
+    ctx.moveTo(50, 220);
+    ctx.lineTo(850, 220);
     ctx.stroke();
 
     // 🏆 Niveau et rang sous la barre séparatrice
     ctx.fillStyle = "#1E90FF";
     ctx.font = "bold 30px 'Arial'";
-    ctx.fillText(`LVL ${userData.level} (${userData.rank})`, 220, 220);
+    ctx.fillText(`LVL ${userData.level} (${userData.rank})`, 220, 270);
 
     // 🔵 Barre d'XP stylisée
     const xpX = 220,
-      xpY = 270,
+      xpY = 320,
       xpWidth = 500,
       xpHeight = 25;
     const progress = userData.exp / userData.expToNext;
@@ -119,19 +132,6 @@ export async function execute(interaction) {
       `XP: ${userData.exp} / ${userData.expToNext}`,
       xpX + xpWidth / 2 - 50,
       xpY + 18
-    );
-
-    // 💰 Argent
-    ctx.fillStyle = "#1E90FF";
-    ctx.font = "24px 'Arial'";
-    ctx.fillText(`💰 Argent: ${userData.money} Coins`, 220, 330);
-
-    // 🏅 Badges
-    ctx.fillStyle = "#A0C4FF";
-    ctx.fillText(
-      `🏆 Badges: ${userData.badges.join(", ") || "Aucun"}`,
-      220,
-      370
     );
 
     // 📤 Envoi de l'image générée
