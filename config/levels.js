@@ -1,7 +1,8 @@
 import { QuickDB } from "quick.db";
 const db = new QuickDB();
 
-const roleRewards = [
+export const roleRewards = [
+  // 🔥 Ajout de export ici
   { level: 5, roleId: "1339902720546439189", bonus: 0.05 },
   { level: 15, roleId: "1339902718088577074", bonus: 0.1 },
   { level: 25, roleId: "1339902715165147166", bonus: 0.15 },
