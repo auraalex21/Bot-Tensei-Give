@@ -127,13 +127,8 @@ export async function execute(interaction) {
           50,
           160
         );
-        ctx.fillText(`⏰ Fin: ${new Date(endTime).toLocaleString()}`, 50, 200);
       } else {
-        ctx.fillText(
-          `⏳ Temps restant: ${ms(remainingTime, { long: true })}`,
-          50,
-          120
-        );
+        ctx.fillText(`⏰ Fin: ${new Date(endTime).toLocaleString()}`, 50, 120);
         ctx.fillText(
           `👥 Participants: ${giveawayData.participants.length}`,
           50,
