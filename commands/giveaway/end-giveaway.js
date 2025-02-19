@@ -1,81 +1,65 @@
-import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
+import { SlashCommandBuilder, PermissionsBitField } from "discord.js";
 import { QuickDB } from "quick.db";
-import { createCanvas } from "canvas";
 
 const db = new QuickDB();
 
 export const data = new SlashCommandBuilder()
   .setName("end-giveaway")
   .setDescription("Terminer un giveaway")
-  .addStringOption((option) =>
+  .addChannelOption((option) =>
     option
-      .setName("giveaway_id")
-      .setDescription("L'ID du giveaway à terminer")
+      .setName("canal")
+      .setDescription("Salon du giveaway à terminer")
       .setRequired(true)
   );
 
 export async function execute(interaction) {
   try {
+    if (interaction.replied || interaction.deferred) {
+      return;
+    }
     await interaction.deferReply({ ephemeral: true });
 
-    const giveawayId = interaction.options.getString("giveaway_id");
-    const giveaway = await db.get(`giveaways.${giveawayId}`);
-
-    if (!giveaway) {
+    if (
+      !interaction.member.permissions.has(
+        PermissionsBitField.Flags.ManageMessages
+      )
+    ) {
       return interaction.editReply({
-        content: "❌ Giveaway non trouvé.",
+        content:
+          "❌ Vous devez avoir la permission `Gérer les messages` pour terminer un giveaway.",
         ephemeral: true,
       });
     }
 
-    interaction.client.giveawaysManager.end(giveawayId);
+    const giveawayChannel = interaction.options.getChannel("canal");
+    const giveawayData = await db.get(`giveaway_${giveawayChannel.id}`);
 
-    const width = 700;
-    const height = 250;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext("2d");
+    if (!giveawayData) {
+      return interaction.editReply({
+        content: "❌ Aucun giveaway en cours dans ce canal.",
+        ephemeral: true,
+      });
+    }
 
-    // Fond avec un dégradé bleu foncé
-    const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, "#0A192F");
-    gradient.addColorStop(1, "#001F3F");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
+    giveawayData.endTime = Date.now();
+    await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
 
-    // Bordure stylisée
-    ctx.strokeStyle = "#FF0000";
-    ctx.lineWidth = 8;
-    ctx.roundRect(10, 10, width - 20, height - 20, 20);
-    ctx.stroke();
-
-    // Texte principal
-    ctx.font = "bold 32px Poppins";
-    ctx.fillStyle = "#FF0000";
-    ctx.fillText(`🎁 Giveaway Terminé`, 50, 60);
-
-    ctx.font = "bold 26px Poppins";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(`🏆 ID: ${giveawayId}`, 50, 120);
-    ctx.fillText(`🎁 Prix: ${giveaway.prize}`, 50, 160);
-    ctx.fillText(`📢 Canal: ${giveaway.channel}`, 50, 200);
-
-    const buffer = canvas.toBuffer();
-    const attachment = new AttachmentBuilder(buffer, {
-      name: "end-giveaway.png",
+    await interaction.editReply({
+      content: "✅ Giveaway terminé avec succès !",
+      ephemeral: true,
     });
-
-    await interaction.editReply({ files: [attachment] });
-
-    console.log(`✅ Giveaway avec l'ID ${giveawayId} terminé.`);
   } catch (error) {
     console.error(
       "❌ Erreur lors de l'exécution de la commande end-giveaway :",
       error
     );
-    await interaction.editReply({
-      content:
-        "❌ Une erreur s'est produite lors de l'exécution de cette commande.",
-      ephemeral: true,
-    });
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content:
+          "❌ Une erreur s'est produite lors de l'exécution de cette commande.",
+        ephemeral: true,
+      });
+    }
   }
 }
