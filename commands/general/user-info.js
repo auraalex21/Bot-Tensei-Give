@@ -42,7 +42,9 @@ export async function execute(interaction) {
       avatar = await loadImage(avatarURL); // Charger l'avatar
     } catch (err) {
       console.error("Erreur de chargement de l'avatar : ", err);
-      throw new Error("Unsupported image type"); // Gérer l'erreur d'image non supportée
+      avatar = await loadImage(
+        "https://media.discordapp.net/attachments/1339309785400737853/1341659383326838845/Tensei.png?ex=67b6cd2b&is=67b57bab&hm=c280002d08d57a501506ca3656fe98409aad99b21ae628cb15af33779b6dd92c&=&format=webp&quality=lossless&width=534&height=519"
+      );
     }
 
     const avatarX = 50,
