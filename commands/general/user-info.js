@@ -150,15 +150,35 @@ export async function execute(interaction) {
   } catch (error) {
     console.error("❌ Erreur lors de l'affichage du user-info :", error);
 
+    // Generate a fallback image with an error message
+    const width = 900,
+      height = 550;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = "#FF0000";
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 36px 'Arial'";
+    ctx.fillText("❌ Erreur lors de la génération de l'image", 50, 275);
+
+    const buffer = canvas.toBuffer();
+    const attachment = new AttachmentBuilder(buffer, {
+      name: "error.png",
+    });
+
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply({
         content:
           "❌ Une erreur s'est produite lors de la génération de l'image.",
+        files: [attachment],
         flags: 64,
       });
     } else {
       await interaction.reply({
         content: "❌ Une erreur s'est produite.",
+        files: [attachment],
         flags: 64,
       });
     }
