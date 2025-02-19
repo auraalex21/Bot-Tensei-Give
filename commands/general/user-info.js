@@ -19,30 +19,31 @@ export async function execute(interaction) {
   try {
     if (!interaction.isChatInputCommand()) return;
 
+    // ✅ Éviter l'erreur Unknown interaction en différant immédiatement
     await interaction.deferReply();
 
     const user = interaction.options.getUser("target") || interaction.user;
     const guildId = interaction.guild.id;
     const userData = await getUserDataFromDB(user.id, guildId);
 
+    // Vérification avant de répondre
     if (!interaction.isRepliable()) return;
 
+    // 🖼️ Configuration du canvas
     const width = 900,
       height = 550;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
+    // 🎨 Arrière-plan style Solo Leveling
     const gradient = ctx.createLinearGradient(0, 0, width, height);
     gradient.addColorStop(0, "#000814");
     gradient.addColorStop(1, "#001D3D");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
-    const avatarURL = user.displayAvatarURL({
-      format: "png",
-      dynamic: false,
-      size: 256,
-    });
+    // 🖼️ Avatar avec gestion des erreurs
+    const avatarURL = user.displayAvatarURL({ format: "png", size: 256 });
     let avatar;
 
     try {
@@ -50,7 +51,7 @@ export async function execute(interaction) {
     } catch (err) {
       console.error("❌ Erreur de chargement de l'avatar :", err);
       avatar = await loadImage(
-        "https://media.discordapp.net/attachments/1339309785400737853/1341659383326838845/Tensei.png?ex=67b6cd2b&is=67b57bab&hm=c280002d08d57a501506ca3656fe98409aad99b21ae628cb15af33779b6dd92c&=&format=webp&quality=lossless&width=534&height=519"
+        "https://media.discordapp.net/attachments/1339309785400737853/1341659383326838845/Tensei.png?format=png"
       );
     }
 
@@ -71,6 +72,7 @@ export async function execute(interaction) {
     ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize);
     ctx.restore();
 
+    // 🔵 Aura autour de l'avatar
     ctx.beginPath();
     ctx.arc(
       avatarX + avatarSize / 2,
@@ -86,6 +88,7 @@ export async function execute(interaction) {
     ctx.stroke();
     ctx.shadowBlur = 0;
 
+    // 📝 Texte stylisé
     ctx.fillStyle = "#E2E8F0";
     ctx.font = "bold 36px 'Arial'";
     ctx.fillText(user.username, 220, 90);
@@ -94,10 +97,12 @@ export async function execute(interaction) {
     ctx.font = "22px 'Arial'";
     ctx.fillText(`🆔 ID: ${user.id}`, 220, 125);
 
+    // 💰 Argent
     ctx.fillStyle = "#1E90FF";
     ctx.font = "24px 'Arial'";
     ctx.fillText(`💰 Argent: ${userData.money}€`, 220, 160);
 
+    // 🏅 Badges
     ctx.fillStyle = "#A0C4FF";
     ctx.fillText(
       `🏆 Badges: ${userData.badges.join(", ") || "Aucun"}`,
@@ -105,10 +110,12 @@ export async function execute(interaction) {
       190
     );
 
+    // 📤 Envoi de l'image générée
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {
       name: "user-info.png",
     });
 
+    // Vérification avant d'envoyer la réponse
     if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ files: [attachment] });
     } else {
@@ -129,6 +136,7 @@ export async function execute(interaction) {
   }
 }
 
+// ✅ Récupération des données utilisateur
 async function getUserDataFromDB(userId, guildId) {
   const money = (await economyTable.get(`balance_${userId}`)) || 0;
   const badges = (await db.get(`badges_${guildId}_${userId}`)) || [];
