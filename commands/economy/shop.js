@@ -19,7 +19,7 @@ const items = [
     emoji: "✨",
   },
   {
-    name: "Nitro Boosté",
+    name: "Nitro Booste",
     price: 40000,
     description:
       "Obtenez Discord Nitro avec des boosts de serveur supplémentaires.",
@@ -154,6 +154,27 @@ export async function handleButtonInteraction(interaction) {
         });
       }
 
+      // Demande de confirmation
+      const confirmRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`confirm_${itemIndex}`)
+          .setLabel(`Confirmer l'achat de ${item.name}`)
+          .setStyle(ButtonStyle.Danger),
+        new ButtonBuilder()
+          .setCustomId(`cancel_${itemIndex}`)
+          .setLabel("Annuler")
+          .setStyle(ButtonStyle.Secondary)
+      );
+
+      await interaction.followUp({
+        content: `Voulez-vous vraiment acheter **${item.name}** pour **${item.price}💸** ?`,
+        components: [confirmRow],
+        ephemeral: true,
+      });
+    } else if (customId.startsWith("confirm_")) {
+      const itemIndex = parseInt(customId.split("_")[1]);
+      const item = items[itemIndex];
+
       const userId = interaction.user.id;
       let userBalance = (await economyTable.get(`balance_${userId}`)) || 0;
 
@@ -179,6 +200,11 @@ export async function handleButtonInteraction(interaction) {
           ephemeral: true,
         });
       }
+    } else if (customId.startsWith("cancel_")) {
+      await interaction.followUp({
+        content: "❌ Achat annulé.",
+        ephemeral: true,
+      });
     }
   } catch (error) {
     console.error("❌ Erreur lors de l'achat :", error);
