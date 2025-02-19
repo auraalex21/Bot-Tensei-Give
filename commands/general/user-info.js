@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
-import { createCanvas, loadImage } from "canvas";
+import { createCanvas, loadImage, registerFont } from "canvas";
 import { QuickDB } from "quick.db";
 import { getUserLevel, roleRewards } from "../../config/levels.js";
 
@@ -8,16 +8,14 @@ const economyTable = db.table("economy");
 
 export const data = new SlashCommandBuilder()
   .setName("user-info")
-  .setDescription(
-    "Affiche les informations de l'utilisateur dans un style Solo Leveling"
-  )
+  .setDescription("Affiche un profil stylisé à la Solo Leveling")
   .addUserOption((option) =>
     option.setName("target").setDescription("L'utilisateur ciblé")
   );
 
 export async function execute(interaction) {
   try {
-    await interaction.deferReply(); // ✅ Prévenir Discord d'un délai dans la réponse
+    await interaction.deferReply(); // Prévenir Discord d'un délai dans la réponse
 
     const user = interaction.options.getUser("target") || interaction.user;
     const guildId = interaction.guild.id;
@@ -37,9 +35,16 @@ export async function execute(interaction) {
     ctx.fillRect(0, 0, width, height);
 
     // 🖼️ Avatar avec effet lumineux
-    const avatar = await loadImage(
-      user.displayAvatarURL({ format: "png", size: 256 })
-    );
+    const avatarURL = user.displayAvatarURL({ format: "png", size: 256 });
+    let avatar;
+
+    try {
+      avatar = await loadImage(avatarURL); // Charger l'avatar
+    } catch (err) {
+      console.error("Erreur de chargement de l'avatar : ", err);
+      throw new Error("Unsupported image type"); // Gérer l'erreur d'image non supportée
+    }
+
     const avatarX = 50,
       avatarY = 50,
       avatarSize = 130;
@@ -141,41 +146,42 @@ export async function execute(interaction) {
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {
       name: "user-info.png",
     });
-
-    await interaction.editReply({ files: [attachment] }); // ✅ Modification du message après deferReply()
+    await interaction.editReply({ files: [attachment] });
   } catch (error) {
     console.error("❌ Erreur lors de l'affichage du user-info :", error);
 
-    // Generate a fallback image with an error message
-    const width = 900,
-      height = 550;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext("2d");
+    // Gérer les erreurs
+    if (error.message === "Unsupported image type") {
+      // Fallback image pour les erreurs
+      const fallbackCanvas = createCanvas(900, 550);
+      const fallbackCtx = fallbackCanvas.getContext("2d");
 
-    ctx.fillStyle = "#FF0000";
-    ctx.fillRect(0, 0, width, height);
+      fallbackCtx.fillStyle = "#FF0000";
+      fallbackCtx.fillRect(0, 0, 900, 550);
 
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 36px 'Arial'";
-    ctx.fillText("❌ Erreur lors de la génération de l'image", 50, 275);
+      fallbackCtx.fillStyle = "#FFFFFF";
+      fallbackCtx.font = "bold 36px 'Arial'";
+      fallbackCtx.fillText(
+        "❌ Erreur lors de la génération de l'image",
+        50,
+        275
+      );
 
-    const buffer = canvas.toBuffer();
-    const attachment = new AttachmentBuilder(buffer, {
-      name: "error.png",
-    });
+      const fallbackBuffer = fallbackCanvas.toBuffer();
+      const fallbackAttachment = new AttachmentBuilder(fallbackBuffer, {
+        name: "error.png",
+      });
 
-    if (interaction.deferred || interaction.replied) {
       await interaction.editReply({
         content:
           "❌ Une erreur s'est produite lors de la génération de l'image.",
-        files: [attachment],
+        files: [fallbackAttachment],
         flags: 64,
       });
     } else {
       await interaction.reply({
         content: "❌ Une erreur s'est produite.",
-        files: [attachment],
-        flags: 64,
+        ephemeral: true,
       });
     }
   }
