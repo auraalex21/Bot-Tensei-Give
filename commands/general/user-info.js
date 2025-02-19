@@ -22,7 +22,7 @@ export async function execute(interaction) {
     const userData = await getUserDataFromDB(user.id, guildId);
 
     const width = 900,
-      height = 500;
+      height = 550;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
@@ -80,14 +80,22 @@ export async function execute(interaction) {
     ctx.font = "22px 'Arial'";
     ctx.fillText(`🆔 ID: ${user.id}`, 220, 125);
 
-    // 🏆 Niveau et rang
+    // 📜 Séparation lumineuse
+    ctx.strokeStyle = "#1E90FF";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(50, 180);
+    ctx.lineTo(850, 180);
+    ctx.stroke();
+
+    // 🏆 Niveau et rang sous la barre séparatrice
     ctx.fillStyle = "#1E90FF";
     ctx.font = "bold 30px 'Arial'";
-    ctx.fillText(`LVL ${userData.level} (${userData.rank})`, 220, 200);
+    ctx.fillText(`LVL ${userData.level} (${userData.rank})`, 220, 220);
 
     // 🔵 Barre d'XP stylisée
     const xpX = 220,
-      xpY = 250,
+      xpY = 270,
       xpWidth = 500,
       xpHeight = 25;
     const progress = userData.exp / userData.expToNext;
@@ -116,23 +124,15 @@ export async function execute(interaction) {
     // 💰 Argent
     ctx.fillStyle = "#1E90FF";
     ctx.font = "24px 'Arial'";
-    ctx.fillText(`💰 Argent: ${userData.money} Coins`, 220, 300);
+    ctx.fillText(`💰 Argent: ${userData.money} Coins`, 220, 330);
 
     // 🏅 Badges
     ctx.fillStyle = "#A0C4FF";
     ctx.fillText(
       `🏆 Badges: ${userData.badges.join(", ") || "Aucun"}`,
       220,
-      340
+      370
     );
-
-    // 📜 Séparation lumineuse
-    ctx.strokeStyle = "#1E90FF";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(50, 380);
-    ctx.lineTo(850, 380);
-    ctx.stroke();
 
     // 📤 Envoi de l'image générée
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {
