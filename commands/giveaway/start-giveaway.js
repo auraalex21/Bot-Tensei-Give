@@ -172,6 +172,7 @@ export async function execute(interaction) {
           if (!giveawayData.participants.includes(i.user.id)) {
             giveawayData.participants.push(i.user.id);
             await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
+            // Assurez-vous de répondre à l'interaction ici
             if (!i.replied && !i.deferred) {
               try {
                 await i.reply({

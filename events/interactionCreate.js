@@ -25,10 +25,12 @@ export default {
       } catch (error) {
         console.error("Error handling interaction:", error);
         if (!interaction.replied && !interaction.deferred) {
-          await interaction.reply({
-            content: "There was an error while executing this command!",
-            flags: 64,
-          });
+          if (interaction.isRepliable()) {
+            await interaction.reply({
+              content: "There was an error while executing this command!",
+              flags: 64,
+            });
+          }
         }
       }
     } else if (interaction.isModalSubmit()) {
@@ -42,6 +44,13 @@ export default {
         await handleCandidatureDecision(interaction, true);
       } else if (interaction.customId === "rejectCandidature") {
         await showRejectionModal(interaction);
+      } else if (interaction.customId === "participer") {
+        if (interaction.isRepliable()) {
+          await interaction.reply({
+            content: "Vous avez été ajouté au giveaway!",
+            ephemeral: true,
+          });
+        }
       }
     }
   },
