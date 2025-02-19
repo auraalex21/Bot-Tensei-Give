@@ -85,24 +85,36 @@ export async function execute(interaction) {
     ctx.font = "bold 30px 'Arial'";
     ctx.fillText(`LVL ${userData.level} (${userData.rank})`, 220, 200);
 
-    // 🔵 Barre d'XP stylisée
+    // 🔵 Barre d'XP améliorée
     const xpX = 220,
       xpY = 250,
       xpWidth = 500,
-      xpHeight = 20;
+      xpHeight = 25;
     const progress = userData.exp / userData.expToNext;
 
+    // Arrière-plan de la barre
     ctx.fillStyle = "#1E40AF";
     ctx.fillRect(xpX, xpY, xpWidth, xpHeight);
-    ctx.fillStyle = "#FACC15";
+
+    // Barre de progression avec effet gradient
+    const xpGradient = ctx.createLinearGradient(xpX, xpY, xpX + xpWidth, xpY);
+    xpGradient.addColorStop(0, "#FFD700");
+    xpGradient.addColorStop(1, "#FF5733");
+    ctx.fillStyle = xpGradient;
     ctx.fillRect(xpX, xpY, xpWidth * progress, xpHeight);
 
-    ctx.fillStyle = "#E2E8F0";
-    ctx.font = "bold 20px 'Arial'";
+    // Bordure lumineuse
+    ctx.strokeStyle = "#FACC15";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(xpX, xpY, xpWidth, xpHeight);
+
+    // Affichage de l'XP
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 18px 'Arial'";
     ctx.fillText(
       `XP: ${userData.exp} / ${userData.expToNext}`,
-      xpX + 10,
-      xpY + 15
+      xpX + xpWidth / 2 - 50,
+      xpY + 18
     );
 
     // 💰 Affichage des pièces
@@ -138,27 +150,4 @@ export async function execute(interaction) {
       ephemeral: true,
     });
   }
-}
-
-// 📌 Fonction pour récupérer les données utilisateur depuis la BDD
-async function getUserDataFromDB(userId, guildId) {
-  const money = (await economyTable.get(`balance_${userId}`)) || 0;
-  const badges = (await db.get(`badges_${userId}`)) || [];
-  const levelData = await getUserLevel(userId, guildId);
-
-  let rank = "Débutant";
-  for (const reward of roleRewards) {
-    if (levelData.level >= reward.level) {
-      rank = reward.nom;
-    }
-  }
-
-  return {
-    money,
-    badges,
-    level: levelData.level,
-    exp: levelData.exp,
-    expToNext: levelData.level * 100,
-    rank,
-  };
 }
