@@ -88,7 +88,7 @@ export async function execute(interaction) {
     const xpWidth = 500;
     const xpHeight = 15;
     const xpX = 200,
-      xpY = 380;
+      xpY = 400;
     const progress = userData.exp / userData.expToNext;
 
     ctx.fillStyle = "#222A56";
@@ -98,7 +98,7 @@ export async function execute(interaction) {
     ctx.fillRect(xpX, xpY, xpWidth * progress, xpHeight);
 
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 16px sans-serif";
+    ctx.font = "bold 20px sans-serif";
     ctx.fillText(
       `XP: ${userData.exp} / ${userData.expToNext}`,
       xpX + 10,
