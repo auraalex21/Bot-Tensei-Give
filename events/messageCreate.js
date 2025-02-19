@@ -7,6 +7,14 @@ import {
 } from "../config/levels.js";
 import { createCanvas, loadImage } from "canvas";
 import { AttachmentBuilder, Events } from "discord.js";
+import { QuickDB } from "quick.db";
+
+const db = new QuickDB();
+const economyTable = db.table("economy");
+
+const rewardChannelId = "659699739532460042";
+const minMessageReward = 5;
+const maxMessageReward = 15;
 
 export default {
   name: Events.MessageCreate,
@@ -145,6 +153,19 @@ export default {
           files: [attachment],
         });
       }
+    }
+
+    if (message.channel.id === rewardChannelId && !message.author.bot) {
+      const reward =
+        Math.floor(Math.random() * (maxMessageReward - minMessageReward + 1)) +
+        minMessageReward;
+      let balance = (await economyTable.get(`balance_${userId}`)) || 0;
+      balance += reward;
+      await economyTable.set(`balance_${userId}`, balance);
+
+      console.log(
+        `💸 ${message.author.username} a gagné ${reward} pour avoir envoyé un message. Nouveau solde: ${balance}💸.`
+      );
     }
   },
 };

@@ -4,6 +4,16 @@ import {
   incrementVoiceTime,
 } from "../config/levels.js";
 import { Events } from "discord.js";
+import { QuickDB } from "quick.db";
+
+const db = new QuickDB();
+const economyTable = db.table("economy");
+
+const minVoiceReward = 50;
+const maxVoiceReward = 100;
+const rewardInterval = 30000; // 30 seconds
+
+const activeUsers = new Set();
 
 const voiceTimes = new Map();
 const voiceIntervals = new Map(); // Stocke les intervalles actifs
@@ -51,6 +61,29 @@ export default {
       }, 60000); // Toutes les 60 secondes
 
       voiceIntervals.set(userId, interval);
+
+      // ✅ Démarrer un intervalle pour récompense économique
+      if (!activeUsers.has(userId)) {
+        activeUsers.add(userId);
+        const rewardIntervalId = setInterval(async () => {
+          if (!newState.channelId) {
+            clearInterval(rewardIntervalId);
+            activeUsers.delete(userId);
+            return;
+          }
+
+          const reward =
+            Math.floor(Math.random() * (maxVoiceReward - minVoiceReward + 1)) +
+            minVoiceReward;
+          let balance = (await economyTable.get(`balance_${userId}`)) || 0;
+          balance += reward;
+          await economyTable.set(`balance_${userId}`, balance);
+
+          console.log(
+            `💸 ${newState.member.user.username} a gagné ${reward} pour être dans un canal vocal. Nouveau solde: ${balance}💸.`
+          );
+        }, rewardInterval);
+      }
     } else if (oldState.channelId && !newState.channelId) {
       const joinTime = voiceTimes.get(userId);
       if (joinTime) {
@@ -67,6 +100,9 @@ export default {
         clearInterval(voiceIntervals.get(userId));
         voiceIntervals.delete(userId);
       }
+
+      // ✅ Arrêter l'intervalle de récompense économique
+      activeUsers.delete(userId);
     } else if (
       oldState.channelId &&
       newState.channelId &&
@@ -105,6 +141,29 @@ export default {
       }, 60000);
 
       voiceIntervals.set(userId, interval);
+
+      // ✅ Redémarrer l'intervalle de récompense économique
+      if (!activeUsers.has(userId)) {
+        activeUsers.add(userId);
+        const rewardIntervalId = setInterval(async () => {
+          if (!newState.channelId) {
+            clearInterval(rewardIntervalId);
+            activeUsers.delete(userId);
+            return;
+          }
+
+          const reward =
+            Math.floor(Math.random() * (maxVoiceReward - minVoiceReward + 1)) +
+            minVoiceReward;
+          let balance = (await economyTable.get(`balance_${userId}`)) || 0;
+          balance += reward;
+          await economyTable.set(`balance_${userId}`, balance);
+
+          console.log(
+            `💸 ${newState.member.user.username} a gagné ${reward} pour être dans un canal vocal. Nouveau solde: ${balance}💸.`
+          );
+        }, rewardInterval);
+      }
     }
   },
 };

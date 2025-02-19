@@ -11,8 +11,8 @@ import { createCanvas } from "canvas";
 const db = new QuickDB();
 
 export const data = new SlashCommandBuilder()
-  .setName("user-info")
-  .setDescription("Afficher les informations d'un utilisateur")
+  .setName("user-warning")
+  .setDescription("Voir les sanctions d'un utilisateur")
   .addUserOption((option) =>
     option
       .setName("utilisateur")

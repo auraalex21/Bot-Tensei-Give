@@ -16,6 +16,7 @@ import { QuickDB } from "quick.db";
 import { createCanvas } from "canvas";
 import ms from "ms";
 import { GiveawaysManager } from "discord-giveaways";
+import { handleButtonInteraction } from "./commands/economy/shop.js"; // Import the handleButtonInteraction function
 
 dotenv.config();
 
@@ -214,14 +215,14 @@ const reloadGiveaways = async () => {
               if (!i.replied && !i.deferred) {
                 await i.reply({
                   content: "🎉 Vous avez été ajouté au giveaway !",
-                  flags: 64,
+                  ephemeral: true,
                 });
               }
             } else {
               if (!i.replied && !i.deferred) {
                 await i.reply({
                   content: "❌ Vous êtes déjà inscrit à ce giveaway.",
-                  flags: 64,
+                  ephemeral: true,
                 });
               }
             }
@@ -339,6 +340,47 @@ client.once("ready", async () => {
 
   // Reload active giveaways
   await reloadGiveaways();
+});
+
+client.on("interactionCreate", async (interaction) => {
+  if (interaction.isCommand()) {
+    const command = client.commands.get(interaction.commandName);
+    if (!command) return;
+
+    try {
+      await command.execute(interaction);
+    } catch (error) {
+      console.error(error);
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          content: "There was an error executing this command!",
+          ephemeral: true,
+        });
+      }
+    }
+  } else if (interaction.isButton()) {
+    // Handle button interactions
+    try {
+      await handleButtonInteraction(interaction);
+    } catch (error) {
+      console.error(error);
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          content: "There was an error handling this interaction!",
+          ephemeral: true,
+        });
+      }
+    }
+  }
+});
+
+// Global error handling
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
 });
 
 client.login(process.env.DISCORD_TOKEN);
