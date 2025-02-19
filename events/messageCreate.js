@@ -12,7 +12,7 @@ import { QuickDB } from "quick.db";
 const db = new QuickDB();
 const economyTable = db.table("economy");
 
-const rewardChannelId = "659699739532460042";
+const rewardChannelId = "1339234268907573250";
 const minMessageReward = 5;
 const maxMessageReward = 15;
 
