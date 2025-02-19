@@ -47,7 +47,12 @@ export default {
         const currentChannel =
           newState.guild.members.cache.get(userId)?.voice.channelId;
 
-        if (!currentChannel || excludedChannels.includes(currentChannel)) {
+        if (
+          !currentChannel ||
+          excludedChannels.includes(currentChannel) ||
+          newState.selfMute ||
+          newState.selfDeaf
+        ) {
           clearInterval(interval);
           voiceIntervals.delete(userId);
           console.log(`[VOIX] Arrêt de la mise à jour pour ${userId}`);
@@ -66,7 +71,15 @@ export default {
       if (!activeUsers.has(userId)) {
         activeUsers.add(userId);
         const rewardIntervalId = setInterval(async () => {
-          if (!newState.channelId) {
+          const currentChannel =
+            newState.guild.members.cache.get(userId)?.voice.channelId;
+
+          if (
+            !currentChannel ||
+            currentChannel === "1340010734750535691" ||
+            newState.selfMute ||
+            newState.selfDeaf
+          ) {
             clearInterval(rewardIntervalId);
             activeUsers.delete(userId);
             return;
@@ -127,7 +140,12 @@ export default {
         const currentChannel =
           newState.guild.members.cache.get(userId)?.voice.channelId;
 
-        if (!currentChannel || excludedChannels.includes(currentChannel)) {
+        if (
+          !currentChannel ||
+          excludedChannels.includes(currentChannel) ||
+          newState.selfMute ||
+          newState.selfDeaf
+        ) {
           clearInterval(interval);
           voiceIntervals.delete(userId);
           console.log(`[VOIX] Arrêt de la mise à jour pour ${userId}`);
@@ -146,7 +164,15 @@ export default {
       if (!activeUsers.has(userId)) {
         activeUsers.add(userId);
         const rewardIntervalId = setInterval(async () => {
-          if (!newState.channelId) {
+          const currentChannel =
+            newState.guild.members.cache.get(userId)?.voice.channelId;
+
+          if (
+            !currentChannel ||
+            currentChannel === "1340010734750535691" ||
+            newState.selfMute ||
+            newState.selfDeaf
+          ) {
             clearInterval(rewardIntervalId);
             activeUsers.delete(userId);
             return;
