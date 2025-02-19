@@ -78,7 +78,7 @@ export async function execute(interaction) {
 
     ctx.fillStyle = "#FFD700";
     ctx.font = "bold 28px sans-serif";
-    ctx.fillText(`LVL ${userData.level} (${userData.rank})`, 300, 400);
+    ctx.fillText(`LVL ${userData.level} (${userData.rank})`, 300, 350);
 
     ctx.font = "22px sans-serif";
     ctx.fillStyle = "#A9A9A9";
@@ -88,7 +88,7 @@ export async function execute(interaction) {
     const xpWidth = 500;
     const xpHeight = 15;
     const xpX = 200,
-      xpY = 140;
+      xpY = 380;
     const progress = userData.exp / userData.expToNext;
 
     ctx.fillStyle = "#222A56";
