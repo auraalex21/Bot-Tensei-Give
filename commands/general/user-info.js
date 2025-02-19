@@ -148,9 +148,11 @@ export async function execute(interaction) {
 async function getUserDataFromDB(userId) {
   const money = (await economyTable.get(`balance_${userId}`)) || 0;
   const badges = (await db.get(`badges_${userId}`)) || [];
-  const level = (await levelTable.get(`level_${userId}`)) || 1;
-  const xp = (await levelTable.get(`xp_${userId}`)) || 0;
-  const xpNeeded = level * 1000; // Progression d'XP
+  const levelData = (await levelTable.get(`levels_${userId}`)) || {
+    level: 1,
+    xp: 0,
+  };
+  const xpNeeded = levelData.level * 100; // Progression d'XP
 
-  return { money, badges, level, xp, xpNeeded };
+  return { money, badges, level: levelData.level, xp: levelData.xp, xpNeeded };
 }
