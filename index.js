@@ -135,9 +135,13 @@ const reloadGiveaways = async () => {
       if (remainingTime > 0) {
         const giveawayChannel = client.channels.cache.get(id.split("_")[1]);
         if (giveawayChannel) {
-          const message = await giveawayChannel.messages.fetch(
-            giveawayData.messageId
-          );
+          const message = await giveawayChannel.messages
+            .fetch(giveawayData.messageId)
+            .catch((error) => {
+              console.error("Error fetching message:", error);
+              return null;
+            });
+          if (!message) continue;
           const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
               .setCustomId("participate")
