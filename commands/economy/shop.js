@@ -113,7 +113,7 @@ export async function execute(interaction) {
         row.addComponents(
           new ButtonBuilder()
             .setCustomId(`buy_${i + index}`)
-            .setLabel(`Acheter ${items[i + index].name}`)
+            .setLabel(`${items[i + index].name}`)
             .setStyle(ButtonStyle.Primary)
         );
       });
