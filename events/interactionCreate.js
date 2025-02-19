@@ -6,6 +6,9 @@ import {
   ButtonStyle,
   AttachmentBuilder,
   Events,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
 } from "discord.js";
 
 const db = new QuickDB();
@@ -31,24 +34,26 @@ export default {
     } else if (interaction.isModalSubmit()) {
       if (interaction.customId === "candidatureModal") {
         await handleModalSubmit(interaction);
+      } else if (interaction.customId === "rejectionReasonModal") {
+        await handleRejectionReason(interaction);
       }
     } else if (interaction.isButton()) {
       if (interaction.customId === "acceptCandidature") {
         await handleCandidatureDecision(interaction, true);
       } else if (interaction.customId === "rejectCandidature") {
-        await handleCandidatureDecision(interaction, false);
+        await showRejectionModal(interaction);
       }
     }
   },
 };
 
 // ✅ Fonction pour envoyer un MP au candidat
-async function sendMP(user, status) {
+async function sendMP(user, status, reason = "") {
   try {
     const message =
       status === true
         ? "🎉 Félicitations ! Votre candidature a été **acceptée** ! Un membre du staff vous contactera bientôt."
-        : "❌ Votre candidature a été **refusée**. Vous pouvez retenter plus tard.";
+        : `❌ Votre candidature a été **refusée**. Raison: ${reason}`;
 
     await user.send(message);
   } catch (error) {
@@ -181,6 +186,37 @@ async function handleModalSubmit(interaction) {
       ephemeral: true,
     });
   }
+}
+
+async function showRejectionModal(interaction) {
+  const modal = new ModalBuilder()
+    .setCustomId("rejectionReasonModal")
+    .setTitle("Raison du refus");
+
+  const reasonInput = new TextInputBuilder()
+    .setCustomId("reasonInput")
+    .setLabel("Expliquez la raison du refus")
+    .setStyle(TextInputStyle.Paragraph)
+    .setRequired(true);
+
+  modal.addComponents(new ActionRowBuilder().addComponents(reasonInput));
+
+  await interaction.showModal(modal);
+}
+
+async function handleRejectionReason(interaction) {
+  const reason = interaction.fields.getTextInputValue("reasonInput");
+  const userId = await db.get(`candidature_${interaction.message.id}`);
+
+  if (userId) {
+    const user = await interaction.client.users.fetch(userId);
+    await sendMP(user, false, reason);
+  }
+
+  await interaction.update({
+    content: "❌ Candidature refusée.",
+    components: [],
+  });
 }
 
 // ✅ Fonction pour couper le texte proprement
