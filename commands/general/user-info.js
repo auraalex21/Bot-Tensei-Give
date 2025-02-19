@@ -19,30 +19,23 @@ export async function execute(interaction) {
   try {
     if (!interaction.isChatInputCommand()) return;
 
-    // ✅ Éviter l'erreur Unknown interaction en différant immédiatement
     await interaction.deferReply();
 
     const user = interaction.options.getUser("target") || interaction.user;
     const guildId = interaction.guild.id;
     const userData = await getUserDataFromDB(user.id, guildId);
 
-    // Vérification avant de répondre
-    if (!interaction.isRepliable()) return;
-
-    // 🖼️ Configuration du canvas
     const width = 900,
       height = 550;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
-    // 🎨 Arrière-plan style Solo Leveling
     const gradient = ctx.createLinearGradient(0, 0, width, height);
     gradient.addColorStop(0, "#000814");
     gradient.addColorStop(1, "#001D3D");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
-    // 🖼️ Avatar avec gestion des erreurs
     const avatarURL = user.displayAvatarURL({ format: "png", size: 256 });
     let avatar;
 
@@ -72,7 +65,6 @@ export async function execute(interaction) {
     ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize);
     ctx.restore();
 
-    // 🔵 Aura autour de l'avatar
     ctx.beginPath();
     ctx.arc(
       avatarX + avatarSize / 2,
@@ -88,7 +80,6 @@ export async function execute(interaction) {
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // 📝 Texte stylisé
     ctx.fillStyle = "#E2E8F0";
     ctx.font = "bold 36px 'Arial'";
     ctx.fillText(user.username, 220, 90);
@@ -97,12 +88,10 @@ export async function execute(interaction) {
     ctx.font = "22px 'Arial'";
     ctx.fillText(`🆔 ID: ${user.id}`, 220, 125);
 
-    // 💰 Argent
     ctx.fillStyle = "#1E90FF";
     ctx.font = "24px 'Arial'";
     ctx.fillText(`💰 Argent: ${userData.money}€`, 220, 160);
 
-    // 🏅 Badges
     ctx.fillStyle = "#A0C4FF";
     ctx.fillText(
       `🏆 Badges: ${userData.badges.join(", ") || "Aucun"}`,
@@ -110,12 +99,17 @@ export async function execute(interaction) {
       190
     );
 
-    // 📤 Envoi de l'image générée
+    ctx.fillStyle = "#FFD700";
+    ctx.fillText(`🔰 Rang: ${userData.rank}`, 220, 220);
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(`📈 Niveau: ${userData.level}`, 220, 250);
+    ctx.fillText(`🌟 Exp: ${userData.exp} / ${userData.expToNext}`, 220, 280);
+
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {
       name: "user-info.png",
     });
 
-    // Vérification avant d'envoyer la réponse
     if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ files: [attachment] });
     } else {
@@ -136,7 +130,6 @@ export async function execute(interaction) {
   }
 }
 
-// ✅ Récupération des données utilisateur
 async function getUserDataFromDB(userId, guildId) {
   const money = (await economyTable.get(`balance_${userId}`)) || 0;
   const badges = (await db.get(`badges_${guildId}_${userId}`)) || [];

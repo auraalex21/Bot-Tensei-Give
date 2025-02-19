@@ -167,7 +167,6 @@ export async function execute(interaction) {
           if (!giveawayData.participants.includes(i.user.id)) {
             giveawayData.participants.push(i.user.id);
             await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
-            // Assurez-vous de répondre à l'interaction ici
             if (!i.replied && !i.deferred) {
               try {
                 await i.reply({
@@ -196,7 +195,7 @@ export async function execute(interaction) {
               }
             }
           }
-        }, 1000); // Delay to avoid too many requests at once
+        }, 1000);
       }
     });
 
@@ -234,7 +233,12 @@ export async function execute(interaction) {
       }
 
       try {
-        await message.edit({ files: [await updateCanvas(winners, true)] });
+        const fetchedMessage = await giveawayChannel.messages.fetch(message.id);
+        if (fetchedMessage) {
+          await fetchedMessage.edit({
+            files: [await updateCanvas(winners, true)],
+          });
+        }
         await giveawayChannel.send({
           content: `🎉 Félicitations aux gagnants: ${winners
             .map((w) => `<@${w.id}>`)
@@ -244,7 +248,6 @@ export async function execute(interaction) {
         console.error("❌ Erreur lors de la modification du message :", error);
       }
 
-      // Save the winners to the database
       giveawayData.winners = winners.map((w) => w.id);
       await db.set(`giveaway_${giveawayChannel.id}`, giveawayData);
     });
@@ -255,7 +258,10 @@ export async function execute(interaction) {
         return;
       }
       try {
-        await message.edit({ files: [await updateCanvas()] });
+        const fetchedMessage = await giveawayChannel.messages.fetch(message.id);
+        if (fetchedMessage) {
+          await fetchedMessage.edit({ files: [await updateCanvas()] });
+        }
       } catch (error) {
         console.error("❌ Erreur lors de la modification du message :", error);
       }
