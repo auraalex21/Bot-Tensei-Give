@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { QuickDB } from "quick.db";
 import { createCanvas, loadImage } from "canvas";
 
@@ -25,7 +25,9 @@ export async function execute(interaction) {
     const ctx = canvas.getContext("2d");
 
     // Arrière-plan galaxie bleue
-    const background = await loadImage("path/to/galaxy_background.jpg");
+    const background = await loadImage(
+      "https://cdn.discordapp.com/attachments/1339309785400737853/1341659383326838845/Tensei.png?ex=67b775eb&is=67b6246b&hm=3f5efc89e4b390d2eacb0cdc08c65742f890ed8e0bd4667e4e65a5adc177dacf&"
+    );
     ctx.drawImage(background, 0, 0, width, height);
 
     // Titre du leaderboard
