@@ -31,6 +31,9 @@ export default {
 
     if (newState.member.user.bot) return;
 
+    // Ignore cases where both old and new channel IDs are "none"
+    if (oldChannelId === "none" && newChannelId === "none") return;
+
     const guildId = newState.guild.id;
     const userId = newState.member.user.id;
 
