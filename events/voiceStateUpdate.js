@@ -18,6 +18,8 @@ const activeUsers = new Set();
 const voiceTimes = new Map();
 const voiceIntervals = new Map(); // Stocke les intervalles actifs
 
+const allowedChannels = ["1339588538005454868", "1340794889155117076"];
+
 export default {
   name: Events.VoiceStateUpdate,
   async execute(client, oldState, newState) {
@@ -26,14 +28,6 @@ export default {
     );
 
     if (newState.member.user.bot) return;
-
-    const excludedChannels = [
-      "1339588778909765712",
-      "1340010734750535691",
-      "1339589443870265385",
-    ];
-    if (newState.channelId && excludedChannels.includes(newState.channelId))
-      return;
 
     const guildId = newState.guild.id;
     const userId = newState.member.user.id;
@@ -49,7 +43,7 @@ export default {
 
         if (
           !currentChannel ||
-          excludedChannels.includes(currentChannel) ||
+          !allowedChannels.includes(currentChannel) ||
           newState.selfMute ||
           newState.selfDeaf
         ) {
@@ -76,7 +70,7 @@ export default {
 
           if (
             !currentChannel ||
-            currentChannel === "1340010734750535691" ||
+            !allowedChannels.includes(currentChannel) ||
             newState.selfMute ||
             newState.selfDeaf
           ) {
@@ -142,7 +136,7 @@ export default {
 
         if (
           !currentChannel ||
-          excludedChannels.includes(currentChannel) ||
+          !allowedChannels.includes(currentChannel) ||
           newState.selfMute ||
           newState.selfDeaf
         ) {
@@ -169,7 +163,7 @@ export default {
 
           if (
             !currentChannel ||
-            currentChannel === "1340010734750535691" ||
+            !allowedChannels.includes(currentChannel) ||
             newState.selfMute ||
             newState.selfDeaf
           ) {
