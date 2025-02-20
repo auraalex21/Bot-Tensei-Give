@@ -7,7 +7,7 @@ const economyTable = db.table("economy");
 const excludedUserId = "ID_DU_UTILISATEUR_A_EXCLURE"; // Remplacez par l'ID de l'utilisateur à exclure
 
 export const data = new SlashCommandBuilder()
-  .setName("leaderboard")
+  .setName("leaderboard-money")
   .setDescription("Afficher le classement des utilisateurs par argent.");
 
 export async function execute(interaction) {
@@ -66,7 +66,12 @@ export async function execute(interaction) {
     await interaction.editReply({ files: [attachment] });
   } catch (error) {
     console.error("❌ Erreur lors de l'affichage du leaderboard :", error);
-    if (!interaction.replied && !interaction.deferred) {
+    if (interaction.deferred) {
+      await interaction.editReply({
+        content:
+          "❌ Une erreur s'est produite lors de l'affichage du leaderboard.",
+      });
+    } else if (!interaction.replied) {
       await interaction.reply({
         content:
           "❌ Une erreur s'est produite lors de l'affichage du leaderboard.",
