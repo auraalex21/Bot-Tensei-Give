@@ -31,7 +31,7 @@ export async function execute(interaction) {
 
     // Arrière-plan galaxie bleue
     const background = await loadImage(
-      "https://cdn.discordapp.com/attachments/1339309785400737853/1341659383326838845/Tensei.png?ex=67b775eb&is=67b6246b&hm=3f5efc89e4b390d2eacb0cdc08c65742f890ed8e0bd4667e4e65a5adc177dacf&"
+      "https://cdn.discordapp.com/attachments/1121875669807267891/1341562021270786140/IMG_1419.png?ex=67b86cbe&is=67b71b3e&hm=b43adf14090989c17087ae0a924f0909b80d1e98af90f34f3a17da1e7a699a49&"
     );
     ctx.drawImage(background, 0, 0, width, height);
 
@@ -66,12 +66,7 @@ export async function execute(interaction) {
     await interaction.editReply({ files: [attachment] });
   } catch (error) {
     console.error("❌ Erreur lors de l'affichage du leaderboard :", error);
-    if (interaction.deferred) {
-      await interaction.editReply({
-        content:
-          "❌ Une erreur s'est produite lors de l'affichage du leaderboard.",
-      });
-    } else if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({
         content:
           "❌ Une erreur s'est produite lors de l'affichage du leaderboard.",
