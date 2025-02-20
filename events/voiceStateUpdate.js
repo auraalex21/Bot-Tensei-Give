@@ -56,7 +56,7 @@ export default {
         }
 
         await incrementVoiceTime(userId, guildId, 60000); // Ajout de 1 minute
-        await addExperience(userId, guildId, 1, client); // Ajout d'XP
+        await addExperience(userId, guildId, 1); // Ajout d'XP
 
         console.log(`[VOIX] ${userId} a gagné 1 minute.`);
       }, 60000); // Toutes les 60 secondes
@@ -149,7 +149,7 @@ export default {
         }
 
         await incrementVoiceTime(userId, guildId, 60000);
-        await addExperience(userId, guildId, 1, client);
+        await addExperience(userId, guildId, 1);
 
         console.log(`[VOIX] ${userId} a gagné 1 minute.`);
       }, 60000);
