@@ -10,7 +10,7 @@ import ms from "ms";
 import { QuickDB } from "quick.db";
 import { createCanvas } from "canvas";
 import moment from "moment";
-import "moment/locale/fr";
+import "moment/locale/fr.js";
 
 const db = new QuickDB();
 
