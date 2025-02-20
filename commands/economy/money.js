@@ -9,6 +9,8 @@ export const data = new SlashCommandBuilder()
   .setDescription("Vérifier votre solde d'argent");
 
 export async function execute(interaction) {
+  if (!interaction.isCommand()) return;
+
   const userId = interaction.user.id;
   const balance = (await economyTable.get(`balance_${userId}`)) || 0;
 
@@ -17,8 +19,12 @@ export async function execute(interaction) {
     .setTitle("💰 Solde Bancaire")
     .setDescription(
       `💸 **${interaction.user.username}**, votre solde actuel est de **${balance}💸**.`
-    )
-    .setFooter({ text: "Utilisez /earn pour gagner plus d'argent." });
+    );
+  if (interaction.replied || interaction.deferred) {
+    await interaction.followUp({ embeds: [embed] });
+  } else {
+    await interaction.reply({ embeds: [embed] });
+  }
 
   await interaction.reply({ embeds: [embed] });
 }

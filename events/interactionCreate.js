@@ -28,7 +28,7 @@ export default {
           if (interaction.isRepliable()) {
             await interaction.reply({
               content: "There was an error while executing this command!",
-              flags: 64,
+              ephemeral: true,
             });
           }
         }
@@ -88,6 +88,8 @@ async function handleCandidatureDecision(interaction, status) {
           : "❌ Candidature refusée.",
         components: [],
       });
+    } else {
+      console.warn("Interaction has already been acknowledged.");
     }
 
     if (status) {

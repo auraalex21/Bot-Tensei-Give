@@ -7,7 +7,9 @@ import {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
+  AttachmentBuilder,
 } from "discord.js";
+import { createCanvas } from "canvas";
 
 const activeInteractions = new Set();
 
@@ -117,4 +119,42 @@ export async function handleModalSubmit(interaction) {
       ephemeral: true,
     });
   }
+}
+
+export async function handleButtonInteraction(interaction) {
+  if (!interaction.isButton()) return;
+
+  const customId = interaction.customId;
+  const userId = interaction.message.embeds[0].footer.text.split(" ")[3];
+  const user = await interaction.client.users.fetch(userId);
+
+  const width = 800;
+  const height = 200;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+
+  // Arrière-plan
+  ctx.fillStyle = "#141E30";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.font = "bold 40px Arial";
+  ctx.fillStyle = "#FFD700";
+  ctx.fillText("📩 Candidature de Staff", 50, 50);
+
+  ctx.font = "bold 30px Arial";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillText(`👤 Pseudo: ${user.username}`, 50, 100);
+
+  if (customId === "acceptCandidature") {
+    ctx.fillStyle = "#00FF00";
+    ctx.fillText("✅ Acceptée", 50, 150);
+  } else if (customId === "rejectCandidature") {
+    ctx.fillStyle = "#FF0000";
+    ctx.fillText("❌ Refusée", 50, 150);
+  }
+
+  const buffer = canvas.toBuffer();
+  const attachment = new AttachmentBuilder(buffer, { name: "candidature.png" });
+
+  await interaction.update({ files: [attachment], components: [] });
 }
