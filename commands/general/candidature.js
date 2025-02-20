@@ -157,4 +157,11 @@ export async function handleButtonInteraction(interaction) {
   const attachment = new AttachmentBuilder(buffer, { name: "candidature.png" });
 
   await interaction.update({ files: [attachment], components: [] });
+
+  // Notify the user about the decision
+  if (customId === "acceptCandidature") {
+    await user.send("🎉 Félicitations ! Votre candidature a été acceptée.");
+  } else if (customId === "rejectCandidature") {
+    await user.send("😞 Désolé, votre candidature a été refusée.");
+  }
 }

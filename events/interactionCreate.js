@@ -43,9 +43,13 @@ export default {
       if (interaction.customId === "acceptCandidature") {
         await handleCandidatureDecision(interaction, true);
       } else if (interaction.customId === "rejectCandidature") {
-        await showRejectionModal(interaction);
+        await handleCandidatureDecision(interaction, false);
       } else if (interaction.customId === "participer") {
-        if (interaction.isRepliable()) {
+        if (
+          !interaction.replied &&
+          !interaction.deferred &&
+          interaction.isRepliable()
+        ) {
           await interaction.reply({
             content: "Vous avez été ajouté au giveaway!",
             ephemeral: true,
@@ -81,46 +85,42 @@ async function handleCandidatureDecision(interaction, status) {
       console.warn("⚠️ Impossible de trouver l'utilisateur de la candidature.");
     }
 
+    const canvas = createCanvas(800, 300);
+    const ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = "#0A192F";
+    ctx.fillRect(0, 0, 800, 300);
+    ctx.fillStyle = "#001F3F";
+    ctx.fillRect(40, 40, 720, 220);
+    ctx.strokeStyle = "#00A2FF";
+    ctx.lineWidth = 6;
+    ctx.roundRect(20, 20, 760, 260, 15);
+    ctx.stroke();
+
+    ctx.font = "bold 28px Arial";
+    ctx.fillStyle = "#00A2FF";
+    ctx.fillText("📩 Candidature de Staff", 340, 60);
+
+    ctx.font = "bold 20px Arial";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(
+      status ? "✅ Candidature acceptée." : "❌ Candidature refusée.",
+      40,
+      110
+    );
+
+    const buffer = canvas.toBuffer();
+    const attachment = new AttachmentBuilder(buffer, {
+      name: "candidature.png",
+    });
+
     if (!interaction.replied && !interaction.deferred) {
       await interaction.update({
-        content: status
-          ? "✅ Candidature acceptée."
-          : "❌ Candidature refusée.",
-        components: [],
+        files: [attachment],
+        components: [], // Retirer les boutons
       });
     } else {
-      console.warn("Interaction has already been acknowledged.");
-    }
-
-    if (status) {
-      const canvas = createCanvas(800, 300);
-      const ctx = canvas.getContext("2d");
-
-      ctx.fillStyle = "#0A192F";
-      ctx.fillRect(0, 0, 800, 300);
-      ctx.fillStyle = "#001F3F";
-      ctx.fillRect(40, 40, 720, 220);
-      ctx.strokeStyle = "#00A2FF";
-      ctx.lineWidth = 6;
-      ctx.roundRect(20, 20, 760, 260, 15);
-      ctx.stroke();
-
-      ctx.font = "bold 28px Arial";
-      ctx.fillStyle = "#00A2FF";
-      ctx.fillText("📩 Candidature de Staff", 340, 60);
-
-      ctx.font = "bold 20px Arial";
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillText("✅ Candidature acceptée.", 40, 110);
-
-      const buffer = canvas.toBuffer();
-      const attachment = new AttachmentBuilder(buffer, {
-        name: "candidature_accepted.png",
-      });
-
-      await interaction.followUp({
-        files: [attachment],
-      });
+      console.warn("⚠️ Interaction already replied or deferred.");
     }
   } catch (error) {
     console.error("❌ Erreur lors du traitement de la décision:", error);
@@ -201,9 +201,7 @@ async function handleModalSubmit(interaction) {
         .setStyle(ButtonStyle.Danger)
     );
 
-    const channel = interaction.client.channels.cache.get(
-      "1340014452451315722"
-    );
+    const channel = interaction.client.channels.cache.get("659699739532460042");
     if (channel) {
       const message = await channel.send({
         content: `<@${interaction.user.id}>`,
@@ -259,10 +257,14 @@ async function handleRejectionReason(interaction) {
     await sendMP(user, false, reason);
   }
 
-  await interaction.update({
-    content: "❌ Candidature refusée.",
-    components: [],
-  });
+  if (!interaction.replied && !interaction.deferred) {
+    await interaction.update({
+      content: "❌ Candidature refusée.",
+      components: [],
+    });
+  } else {
+    console.warn("⚠️ Interaction already replied or deferred.");
+  }
 }
 
 // ✅ Fonction pour couper le texte proprement
