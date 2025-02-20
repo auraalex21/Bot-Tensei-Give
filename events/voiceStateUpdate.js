@@ -25,14 +25,15 @@ export default {
   async execute(oldState, newState) {
     const oldChannelId = oldState.channelId ? oldState.channelId : "none";
     const newChannelId = newState.channelId ? newState.channelId : "none";
+
+    // Ignore cases where both old and new channel IDs are "none"
+    if (oldChannelId === "none" && newChannelId === "none") return;
+
     console.log(
       `🔊 Mise à jour de l'état vocal : ${oldChannelId} -> ${newChannelId}`
     );
 
     if (newState.member.user.bot) return;
-
-    // Ignore cases where both old and new channel IDs are "none"
-    if (oldChannelId === "none" && newChannelId === "none") return;
 
     const guildId = newState.guild.id;
     const userId = newState.member.user.id;
