@@ -23,8 +23,8 @@ const allowedChannels = ["1339588538005454868", "1340794889155117076"];
 export default {
   name: Events.VoiceStateUpdate,
   async execute(oldState, newState) {
-    const oldChannelId = oldState.channelId || "null";
-    const newChannelId = newState.channelId || "null";
+    const oldChannelId = oldState.channelId ? oldState.channelId : "none";
+    const newChannelId = newState.channelId ? newState.channelId : "none";
     console.log(
       `🔊 Mise à jour de l'état vocal : ${oldChannelId} -> ${newChannelId}`
     );
