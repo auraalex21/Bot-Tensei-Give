@@ -1,153 +1,144 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { createCanvas, loadImage } from "canvas";
 import { QuickDB } from "quick.db";
-import { getUserLevel, roleRewards } from "../../config/levels.js";
+// import { getUserLevel, roleRewards } from "../../config/levels.js";
 
 const db = new QuickDB();
-const economyTable = db.table("economy");
+// const economyTable = db.table("economy");
 
 export const data = new SlashCommandBuilder()
-  .setName("user-info")
-  .setDescription(
-    "Affiche les informations de l'utilisateur dans un style Solo Leveling"
-  )
+  .setName("status")
+  .setDescription("Affiche le statut de l'utilisateur façon Solo Leveling")
   .addUserOption((option) =>
     option.setName("target").setDescription("L'utilisateur ciblé")
   );
 
 export async function execute(interaction) {
   try {
-    if (!interaction.isChatInputCommand()) return;
-
-    await interaction.deferReply();
+    await interaction.deferReply({ flags: 0 }).catch(() => {});
 
     const user = interaction.options.getUser("target") || interaction.user;
     const guildId = interaction.guild.id;
     const userData = await getUserDataFromDB(user.id, guildId);
 
-    const width = 900,
-      height = 550;
-    const canvas = createCanvas(width, height);
+    if (!userData) {
+      await interaction.editReply({
+        content: "❌ Impossible de récupérer les données de l'utilisateur.",
+      });
+      return;
+    }
+
+    async function getUserDataFromDB(userId, guildId) {
+      // Implement the function to fetch user data from the database
+      // This is a placeholder implementation
+      return {
+        rank: "Novice",
+        level: 1,
+      };
+    }
+
+    const canvas = createCanvas(900, 550);
     const ctx = canvas.getContext("2d");
 
-    const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, "#000814");
-    gradient.addColorStop(1, "#001D3D");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-
-    const avatarURL = user.displayAvatarURL({ format: "png", size: 256 });
-    let avatar;
-
-    try {
-      avatar = await loadImage(avatarURL);
-    } catch (err) {
-      console.error("❌ Erreur de chargement de l'avatar :", err);
-      avatar = await loadImage(
-        "https://media.discordapp.net/attachments/1339309785400737853/1341659383326838845/Tensei.png?format=png"
-      );
+    const backgroundLoaded = await drawBackground(ctx);
+    if (!backgroundLoaded) {
+      await interaction.editReply({
+        content: "❌ Impossible de charger l'image de fond.",
+      });
+      return;
     }
 
-    const avatarX = 50,
-      avatarY = 50,
-      avatarSize = 130;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(
-      avatarX + avatarSize / 2,
-      avatarY + avatarSize / 2,
-      avatarSize / 2,
-      0,
-      Math.PI * 2
-    );
-    ctx.closePath();
-    ctx.clip();
-    ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize);
-    ctx.restore();
-
-    ctx.beginPath();
-    ctx.arc(
-      avatarX + avatarSize / 2,
-      avatarY + avatarSize / 2,
-      avatarSize / 2 + 7,
-      0,
-      Math.PI * 2
-    );
-    ctx.strokeStyle = "#1E90FF";
-    ctx.lineWidth = 6;
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = "#1E90FF";
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    ctx.fillStyle = "#E2E8F0";
-    ctx.font = "bold 36px 'Arial'";
-    ctx.fillText(user.username, 220, 90);
-
-    ctx.fillStyle = "#A0C4FF";
-    ctx.font = "22px 'Arial'";
-    ctx.fillText(`🆔 ID: ${user.id}`, 220, 125);
-
-    ctx.fillStyle = "#1E90FF";
-    ctx.font = "24px 'Arial'";
-    ctx.fillText(`💰 Argent: ${userData.money}€`, 220, 160);
-
-    ctx.fillStyle = "#A0C4FF";
-    ctx.fillText(
-      `🏆 Badges: ${userData.badges.join(", ") || "Aucun"}`,
-      220,
-      190
-    );
-
-    ctx.fillStyle = "#FFD700";
-    ctx.fillText(`🔰 Rang: ${userData.rank}`, 220, 220);
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(`📈 Niveau: ${userData.level}`, 220, 250);
-    ctx.fillText(`🌟 Exp: ${userData.exp} / ${userData.expToNext}`, 220, 280);
+    const avatar = await loadUserAvatar(user);
+    drawAvatar(ctx, avatar);
+    drawEnhancedUserInfo(ctx, user, userData);
 
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {
-      name: "user-info.png",
+      name: "status.png",
     });
 
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ files: [attachment] });
-    } else {
-      await interaction.editReply({ files: [attachment] });
-    }
+    await interaction.editReply({ files: [attachment] }).catch(console.error);
   } catch (error) {
-    console.error("❌ Erreur lors de l'affichage du user-info :", error);
-
-    if (interaction.deferred || interaction.replied) {
-      await interaction.editReply({
-        content: "❌ Une erreur est survenue.",
-      });
-    } else {
-      await interaction.reply({
-        content: "❌ Une erreur est survenue.",
-      });
-    }
+    console.error("❌ Erreur lors de l'affichage du status :", error);
+    await interaction
+      .editReply({ content: "❌ Une erreur est survenue." })
+      .catch(console.error);
   }
 }
 
-async function getUserDataFromDB(userId, guildId) {
-  const money = (await economyTable.get(`balance_${userId}`)) || 0;
-  const badges = (await db.get(`badges_${guildId}_${userId}`)) || [];
-  const levelData = await getUserLevel(userId, guildId);
-
-  let rank = "Débutant";
-  for (const reward of roleRewards) {
-    if (levelData.level >= reward.level) {
-      rank = reward.nom;
-    }
+async function drawBackground(ctx) {
+  try {
+    const background = await loadImage(
+      "https://cdn.discordapp.com/attachments/1121875669807267891/1341562021270786140/IMG_1419.png?ex=67b86cbe&is=67b71b3e&hm=b43adf14090989c17087ae0a924f0909b80d1e98af90f34f3a17da1e7a699a49&"
+    );
+    ctx.drawImage(background, 0, 0, 900, 550);
+    return true;
+  } catch (error) {
+    console.error("❌ Erreur de chargement de l'image de fond :", error);
+    return false;
   }
+}
 
-  return {
-    money,
-    badges,
-    level: levelData.level,
-    exp: levelData.exp,
-    expToNext: levelData.level * 100,
-    rank,
-  };
+async function loadUserAvatar(user) {
+  try {
+    const avatarURL = user.displayAvatarURL({ extension: "png", size: 256 });
+    return await loadImage(avatarURL);
+  } catch (error) {
+    console.error("❌ Erreur de chargement de l'avatar :", error);
+    return await loadImage(
+      "https://cdn.discordapp.com/attachments/1121875669807267891/1341562021270786140/IMG_1419.png?ex=67b86cbe&is=67b71b3e&hm=b43adf14090989c17087ae0a924f0909b80d1e98af90f34f3a17da1e7a699a49&"
+    );
+  }
+}
+
+function drawAvatar(ctx, avatar) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(115, 115, 65, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+  ctx.drawImage(avatar, 50, 50, 130, 130);
+  ctx.restore();
+}
+
+function drawEnhancedUserInfo(ctx, user, userData) {
+  ctx.fillStyle = "rgba(10, 10, 60, 0.85)";
+  ctx.fillRect(50, 50, 800, 450);
+
+  ctx.fillStyle = "#FFD700";
+  ctx.font = "bold 40px Arial";
+  ctx.fillText("STATUS", 360, 90);
+
+  const sections = [
+    { label: "Nom", value: user.username, x: 100, y: 140 },
+    { label: "ID", value: user.id, x: 100, y: 180 },
+    { label: "Job", value: "Aventurier", x: 100, y: 220 },
+    { label: "Titre", value: userData.rank, x: 100, y: 260 },
+    { label: "Niveau", value: userData.level, x: 100, y: 300 },
+    { label: "Fatigue", value: "0", x: 100, y: 340 },
+  ];
+
+  const stats = [
+    { label: "Force", value: "10", x: 500, y: 140 },
+    { label: "Agilité", value: "8", x: 500, y: 180 },
+    { label: "Vitalité", value: "12", x: 500, y: 220 },
+    { label: "Intelligence", value: "9", x: 500, y: 260 },
+    { label: "Sens", value: "7", x: 500, y: 300 },
+    { label: "Points Restants", value: "5", x: 500, y: 340 },
+  ];
+
+  sections.forEach((section) => {
+    ctx.fillStyle = "#FFA500";
+    ctx.font = "bold 26px Arial";
+    ctx.fillText(`${section.label} :`, section.x, section.y);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(section.value, section.x + 200, section.y);
+  });
+
+  stats.forEach((stat) => {
+    ctx.fillStyle = "#87CEEB";
+    ctx.font = "bold 26px Arial";
+    ctx.fillText(`${stat.label} :`, stat.x, stat.y);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(stat.value, stat.x + 150, stat.y);
+  });
 }
