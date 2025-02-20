@@ -4,6 +4,7 @@ import { createCanvas, loadImage } from "canvas";
 
 const db = new QuickDB();
 const economyTable = db.table("economy");
+const excludedUserId = "ID_DU_UTILISATEUR_A_EXCLURE"; // Remplacez par l'ID de l'utilisateur à exclure
 
 export const data = new SlashCommandBuilder()
   .setName("leaderboard")
@@ -15,7 +16,11 @@ export async function execute(interaction) {
 
     const allUsers = await economyTable.all();
     const sortedUsers = allUsers
-      .filter((entry) => entry.id.startsWith("balance_"))
+      .filter(
+        (entry) =>
+          entry.id.startsWith("balance_") &&
+          entry.id.split("_")[1] !== excludedUserId
+      )
       .sort((a, b) => b.value - a.value)
       .slice(0, 10);
 
@@ -43,6 +48,12 @@ export async function execute(interaction) {
       const user = await interaction.client.users.fetch(userId);
       const balance = sortedUsers[i].value;
       const y = 100 + i * 45;
+
+      // Fond semi-transparent pour améliorer la lisibilité
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillRect(40, y - 20, 720, 35);
+
+      ctx.fillStyle = "#FFFFFF";
       ctx.fillText(`${i + 1}. ${user.username}`, 50, y);
       ctx.fillText(`💸 ${balance}`, 600, y);
     }
