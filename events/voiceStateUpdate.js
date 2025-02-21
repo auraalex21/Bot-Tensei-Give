@@ -59,10 +59,11 @@ export default {
           return;
         }
 
-        await incrementVoiceTime(userId, guildId, 60000); // Ajout de 1 minute
-        await addExperience(userId, guildId, 1); // Ajout d'XP
-
-        console.log(`[VOIX] ${userId} a gagné 1 minute.`);
+        if (allowedChannels.includes(currentChannel)) {
+          await incrementVoiceTime(userId, guildId, 60000); // Ajout de 1 minute
+          await addExperience(userId, guildId, 1); // Ajout d'XP
+          console.log(`[VOIX] ${userId} a gagné 1 minute.`);
+        }
       }, 60000); // Toutes les 60 secondes
 
       voiceIntervals.set(userId, interval);
@@ -152,10 +153,11 @@ export default {
           return;
         }
 
-        await incrementVoiceTime(userId, guildId, 60000);
-        await addExperience(userId, guildId, 1);
-
-        console.log(`[VOIX] ${userId} a gagné 1 minute.`);
+        if (allowedChannels.includes(currentChannel)) {
+          await incrementVoiceTime(userId, guildId, 60000);
+          await addExperience(userId, guildId, 1);
+          console.log(`[VOIX] ${userId} a gagné 1 minute.`);
+        }
       }, 60000);
 
       voiceIntervals.set(userId, interval);
