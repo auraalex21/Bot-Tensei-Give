@@ -48,23 +48,9 @@ export async function execute(interaction) {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
-    // 🎨 **Chargement de l'image d'arrière-plan**
-    const imageUrl =
-      "https://cdn.discordapp.com/attachments/1121875669807267891/1341562021270786140/IMG_1419.png";
-    const imagePath = path.resolve("./leaderboard_bg.png");
-
-    // 📥 **Télécharger l'image une seule fois**
-    if (!fs.existsSync(imagePath)) {
-      console.log("Téléchargement de l'image d'arrière-plan...");
-      const response = await fetch(imageUrl);
-      if (!response.ok) throw new Error("Impossible de télécharger l'image.");
-      const buffer = await response.buffer();
-      fs.writeFileSync(imagePath, buffer);
-    }
-
-    // 📤 **Charger l'image locale**
-    const background = await loadImage(imagePath);
-    ctx.drawImage(background, 0, 0, width, height);
+    // 🎨 **Remplir le fond avec une couleur noire**
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, width, height);
 
     // 🏆 **Affichage du titre**
     ctx.font = "bold 40px Arial";
