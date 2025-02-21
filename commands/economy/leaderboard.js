@@ -12,7 +12,8 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
   try {
-    if (interaction.deferred || interaction.replied) return;
+    if (!interaction.isCommand() || interaction.deferred || interaction.replied)
+      return;
     await interaction.deferReply(); // Évite l'expiration de l'interaction
 
     const allUsers = await economyTable.all();
@@ -75,7 +76,7 @@ export async function execute(interaction) {
       await interaction.reply({
         content:
           "❌ Une erreur s'est produite lors de l'affichage du leaderboard.",
-        ephemeral: true,
+        flags: 64, // 64 is the flag for ephemeral messages
       });
     }
   }
