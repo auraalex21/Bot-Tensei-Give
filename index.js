@@ -74,7 +74,7 @@ const loadCommands = (dir) => {
   for (const file of files) {
     const filePath = path.join(dir, file);
     if (fs.statSync(filePath).isDirectory()) {
-      loadCommands(filePath);
+      loadCommands(filePath); // Recursively load commands from subdirectories
     } else if (file.endsWith(".js")) {
       import(pathToFileURL(filePath).href)
         .then((command) => {
