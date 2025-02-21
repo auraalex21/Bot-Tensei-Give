@@ -4,7 +4,7 @@ import { createCanvas, loadImage } from "canvas";
 
 const db = new QuickDB();
 const economyTable = db.table("economy");
-const excludedUserId = "ID_DU_UTILISATEUR_A_EXCLURE"; // Remplacez par l'ID de l'utilisateur à exclure
+const excludedUserId = "378998346712481812"; // Remplacez par l'ID de l'utilisateur à exclure
 
 export const data = new SlashCommandBuilder()
   .setName("leaderboard-money")
@@ -12,6 +12,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
   try {
+    if (interaction.deferred || interaction.replied) return;
     await interaction.deferReply(); // Évite l'expiration de l'interaction
 
     const allUsers = await economyTable.all();
@@ -65,8 +66,12 @@ export async function execute(interaction) {
 
     await interaction.editReply({ files: [attachment] });
   } catch (error) {
-    console.error("❌ Erreur lors de l'affichage du leaderboard :", error);
-    if (!interaction.replied && !interaction.deferred) {
+    if (interaction.deferred) {
+      await interaction.editReply({
+        content:
+          "❌ Une erreur s'est produite lors de l'affichage du leaderboard.",
+      });
+    } else if (!interaction.replied) {
       await interaction.reply({
         content:
           "❌ Une erreur s'est produite lors de l'affichage du leaderboard.",
