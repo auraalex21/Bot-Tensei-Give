@@ -327,7 +327,7 @@ client.once("ready", async () => {
   // Synchroniser les commandes
   try {
     const commands = [];
-    const commandsPath = path.join(__dirname, "commands");
+    const commandsPath = path.join(__dirname, "commands/");
     const commandFiles = fs
       .readdirSync(commandsPath)
       .filter((file) => file.endsWith(".js"));
