@@ -15,6 +15,11 @@ const economyTable = db.table("economy");
 const rewardChannelId = "1339234268907573250";
 const minMessageReward = 30;
 const maxMessageReward = 50;
+const blacklistDuration = 5 * 60 * 1000; // 5 minutes en millisecondes
+const spamThreshold = 3; // Nombre de messages considérés comme du spam
+const spamInterval = 3000; // 3 secondes en millisecondes
+
+const userBlacklist = new Map();
 
 export default {
   name: Events.MessageCreate,
@@ -24,22 +29,46 @@ export default {
     const guildId = message.guild.id;
     const userId = message.author.id;
 
+    // Vérifier si l'utilisateur est sur liste noire
+    if (userBlacklist.has(userId)) {
+      const blacklistInfo = userBlacklist.get(userId);
+      if (Date.now() - blacklistInfo.timestamp < blacklistDuration) {
+        return; // Ne pas exécuter le reste du code si l'utilisateur est sur liste noire
+      } else {
+        userBlacklist.delete(userId); // Retirer de la liste noire après la durée
+      }
+    }
+
     const lastMessageTime = await getLastMessageTime(userId, guildId);
     const now = Date.now();
 
-    // Vérifier si 3 secondes se sont écoulées depuis le dernier message
-    if (lastMessageTime && now - lastMessageTime < 3000) {
-      return;
+    // Vérifier le spam
+    if (lastMessageTime && now - lastMessageTime < spamInterval) {
+      if (userBlacklist.has(userId)) {
+        const blacklistInfo = userBlacklist.get(userId);
+        blacklistInfo.count += 1;
+        if (blacklistInfo.count >= spamThreshold) {
+          blacklistInfo.timestamp = now;
+          console.log(
+            `🚫 ${message.author.username} a été mis sur BlackListe pour spam.`
+          );
+          return;
+        }
+      } else {
+        userBlacklist.set(userId, { count: 1, timestamp: now });
+      }
+    } else {
+      userBlacklist.set(userId, { count: 1, timestamp: now });
     }
 
     await setLastMessageTime(userId, guildId, now);
 
     // Ajouter de l'expérience à l'utilisateur
     if (message.channel.id === rewardChannelId) {
-      const exp = Math.floor(Math.random() * 10) + 20; // Expérience aléatoire entre 1 et 5
+      const exp = Math.floor(Math.random() * 10) + 20; // Expérience aléatoire entre 20 et 30
       const leveledUp = await addExperience(userId, guildId, exp, client);
 
-      // Incrémenter le compteur de messages
+      // Incrémenter le nombre de messages
       await incrementMessageCount(userId, guildId);
 
       if (leveledUp) {
@@ -47,9 +76,9 @@ export default {
         const levelUpChannelId = "1340011943733366805";
         const levelUpChannel = client.channels.cache.get(levelUpChannelId);
 
-        // Add money gains on level up
+        // Ajouter des gains d'argent lors de la montée de niveau
         let balance = (await economyTable.get(`balance_${userId}`)) || 0;
-        const levelUpReward = 100 * userLevel.level; // Define money gain per level
+        const levelUpReward = 100 * userLevel.level; // Définir le gain d'argent par niveau
         balance += levelUpReward;
         await economyTable.set(`balance_${userId}`, balance);
 
@@ -59,7 +88,7 @@ export default {
           const padding = 30;
           const avatarSize = 120;
 
-          // Création du canvas
+          // Créer le canvas
           const canvas = createCanvas(width, height);
           const ctx = canvas.getContext("2d");
 
@@ -70,7 +99,7 @@ export default {
           ctx.fillStyle = gradient;
           ctx.fillRect(0, 0, width, height);
 
-          // Chargement de l'avatar
+          // Charger l'avatar
           const avatarURL = message.author.displayAvatarURL({
             format: "png",
             size: 128,
@@ -79,7 +108,7 @@ export default {
           try {
             avatar = await loadImage(avatarURL);
           } catch (err) {
-            console.error("Failed to load avatar image:", err);
+            console.error("Échec du chargement de l'image de l'avatar:", err);
             avatar = await loadImage(
               "https://cdn.discordapp.com/embed/avatars/0.png"
             );
@@ -102,7 +131,7 @@ export default {
           ctx.closePath();
           ctx.restore();
 
-          // Avatar en cercle
+          // Avatar circulaire
           ctx.save();
           ctx.beginPath();
           ctx.arc(
@@ -135,7 +164,7 @@ export default {
           );
           ctx.shadowBlur = 0;
 
-          // Texte du niveau
+          // Texte de niveau
           ctx.font = "bold 28px Arial";
           ctx.fillStyle = "#FFD700";
           ctx.fillText(
@@ -144,7 +173,7 @@ export default {
             height / 2
           );
 
-          // Animation lumineuse autour du texte (optionnel)
+          // Animation lumineuse optionnelle autour du texte
           ctx.font = "italic 22px Arial";
           ctx.fillStyle = "#FFFFFF";
           ctx.fillText(
