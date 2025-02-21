@@ -20,7 +20,7 @@ export async function execute(interaction) {
   const member = interaction.guild.members.cache.get(interaction.user.id);
 
   // Check if the user has the required role
-  if (!member.roles.cache.has("1339230333953904751")) {
+  if (!member.roles.cache.has(/*"1339230333953904751"*/ "784528527977742356")) {
     return interaction.reply({
       content: ":x: Vous n'avez pas la permission d'utiliser cette commande.",
       ephemeral: true,
