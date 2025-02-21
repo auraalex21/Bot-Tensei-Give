@@ -91,7 +91,7 @@ export async function execute(interaction) {
     ctx.fillStyle = "#FFD700";
     ctx.shadowColor = "#FFD700";
     ctx.shadowBlur = 20;
-    ctx.fillText("🛍️ Boutique des Chasseurs", 50, 90);
+    ctx.fillText("🛍️ Boutique des Rat", 50, 90);
     ctx.shadowBlur = 0;
 
     ctx.font = "30px Arial";
