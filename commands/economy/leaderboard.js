@@ -14,7 +14,9 @@ export async function execute(interaction) {
   try {
     if (!interaction.isCommand() || interaction.deferred || interaction.replied)
       return;
-    await interaction.deferReply(); // Évite l'expiration de l'interaction
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply(); // Évite l'expiration de l'interaction
+    }
 
     const allUsers = await economyTable.all();
     const sortedUsers = allUsers
