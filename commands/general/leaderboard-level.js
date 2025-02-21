@@ -13,13 +13,15 @@ export const data = new SlashCommandBuilder()
   .setDescription("Afficher le classement des niveaux");
 
 export async function execute(interaction) {
+  await interaction.deferReply(); // Acknowledge the interaction
+
   const guildId = interaction.guild.id;
   const leaderboard = await getLeaderboard(guildId);
 
   if (leaderboard.length === 0) {
-    return interaction.reply({
+    return interaction.editReply({
       content: "❌ Aucun utilisateur trouvé dans le classement.",
-      ephemeral: true,
+      flags: 64, // Equivalent to ephemeral: true
     });
   }
 
@@ -171,9 +173,8 @@ export async function execute(interaction) {
     name: "leaderboard.png",
   });
 
-  return interaction.reply({
+  return interaction.editReply({
     content: "Voici le classement des niveaux :",
     files: [attachment],
-    ephemeral: false,
   });
 }
