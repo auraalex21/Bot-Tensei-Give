@@ -60,8 +60,9 @@ export default {
         }
 
         if (allowedChannels.includes(currentChannel)) {
-          await incrementVoiceTime(userId, guildId, 60000); // Ajout de 1 minute
-          await addExperience(userId, guildId, 1); // Ajout d'XP
+          await incrementVoiceTime(userId, guildId, 60000);
+          const experience = Math.floor(Math.random() * 15) + 1;
+          await addExperience(userId, guildId, experience);
           console.log(`[VOIX] ${userId} a gagné 1 minute.`);
         }
       }, 60000); // Toutes les 60 secondes

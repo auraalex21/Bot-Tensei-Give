@@ -36,7 +36,7 @@ export default {
 
     // Ajouter de l'expérience à l'utilisateur
     if (message.channel.id === rewardChannelId) {
-      const exp = Math.floor(Math.random() * 5) + 1; // Expérience aléatoire entre 1 et 5
+      const exp = Math.floor(Math.random() * 30) + 50; // Expérience aléatoire entre 1 et 5
       const leveledUp = await addExperience(userId, guildId, exp, client);
 
       // Incrémenter le compteur de messages
