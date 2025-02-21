@@ -46,6 +46,12 @@ export default {
       const levelUpChannelId = "1340011943733366805";
       const levelUpChannel = client.channels.cache.get(levelUpChannelId);
 
+      // Add money gains on level up
+      let balance = (await economyTable.get(`balance_${userId}`)) || 0;
+      const levelUpReward = 100 * userLevel.level; // Define money gain per level
+      balance += levelUpReward;
+      await economyTable.set(`balance_${userId}`, balance);
+
       if (levelUpChannel) {
         const width = 700;
         const height = 250;
@@ -150,6 +156,7 @@ export default {
 
         // Envoyer le message avec l'image
         levelUpChannel.send({
+          content: `🎉 ${message.author.username} a atteint le niveau ${userLevel.level} et a gagné ${levelUpReward} pièces !`,
           files: [attachment],
         });
       }
