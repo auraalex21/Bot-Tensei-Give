@@ -326,14 +326,26 @@ client.once("ready", async () => {
 
   // Synchroniser les commandes
   try {
-    await synchronizeSlashCommands(
-      client,
-      client.commands.map((c) => c.data.toJSON()),
-      {
-        debug: true,
-        guildId: process.env.GUILD_ID,
+    const commands = [];
+    const commandsPath = path.join(__dirname, "commands/loteri");
+    const commandFiles = fs
+      .readdirSync(commandsPath)
+      .filter((file) => file.endsWith(".js"));
+
+    for (const file of commandFiles) {
+      const command = await import(
+        pathToFileURL(path.join(commandsPath, file)).href
+      );
+      if (command.default && command.default.data) {
+        client.commands.set(command.default.data.name, command.default);
+        commands.push(command.default.data.toJSON());
       }
-    );
+    }
+
+    await synchronizeSlashCommands(client, commands, {
+      debug: true,
+      guildId: process.env.GUILD_ID,
+    });
     console.log("✅ Commandes synchronisées avec succès.");
   } catch (error) {
     console.error(
@@ -388,3 +400,45 @@ process.on("uncaughtException", (error) => {
 });
 
 client.login(process.env.DISCORD_TOKEN);
+
+const PRIZE_AMOUNT = 1000;
+
+async function drawLottery() {
+  const allUsers = await db.all();
+  let ticketEntries = [];
+
+  for (const entry of allUsers) {
+    if (entry.id.startsWith("tickets_")) {
+      let userId = entry.id.split("_")[1];
+      let ticketCount = entry.value;
+
+      for (let i = 0; i < ticketCount; i++) {
+        ticketEntries.push(userId);
+      }
+    }
+  }
+
+  if (ticketEntries.length === 0) {
+    console.log("❌ Aucun ticket vendu, pas de gagnant.");
+    return;
+  }
+
+  let winnerId =
+    ticketEntries[Math.floor(Math.random() * ticketEntries.length)];
+
+  // Réinitialiser les tickets
+  for (const entry of allUsers) {
+    if (entry.id.startsWith("tickets_")) {
+      await db.delete(entry.id);
+    }
+  }
+
+  await db.add(`balance_${winnerId}`, PRIZE_AMOUNT);
+
+  let winner = await client.users.fetch(winnerId);
+  let channel = client.channels.cache.get("ID_DU_CHANNEL"); // Remplace par l'ID du salon où annoncer le gagnant
+  channel.send(`🎉 Félicitations ${winner} ! Tu as gagné ${PRIZE_AMOUNT} 💰 !`);
+}
+
+// Démarrer un tirage toutes les 24h
+setInterval(drawLottery, 86400000);
