@@ -9,8 +9,8 @@ import { QuickDB } from "quick.db";
 const db = new QuickDB();
 const economyTable = db.table("economy");
 
-const minVoiceReward = 30;
-const maxVoiceReward = 75;
+const minVoiceReward = 5;
+const maxVoiceReward = 10;
 const rewardInterval = 30000; // 30 seconds
 
 const activeUsers = new Set();

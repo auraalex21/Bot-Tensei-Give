@@ -13,8 +13,8 @@ const db = new QuickDB();
 const economyTable = db.table("economy");
 
 const rewardChannelId = "1339234268907573250";
-const minMessageReward = 5;
-const maxMessageReward = 15;
+const minMessageReward = 30;
+const maxMessageReward = 50;
 
 export default {
   name: Events.MessageCreate,
