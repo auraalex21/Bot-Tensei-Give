@@ -113,11 +113,11 @@ function drawUserInfo(ctx, user, userData) {
   ctx.shadowBlur = 0;
 
   const sections = [
-    { label: "Nom", value: user.username, x: 150, y: 150 },
-    { label: "ID", value: user.id, x: 150, y: 190 },
-    { label: "Titre", value: userData.rank, x: 150, y: 270 },
-    { label: "Niveau", value: userData.level, x: 150, y: 310 },
-    { label: "Argent", value: `${userData.balance}💸`, x: 150, y: 350 },
+    { label: "Nom", value: user.username, x: 150, y: 170 },
+    { label: "ID", value: user.id, x: 150, y: 210 },
+    { label: "Titre", value: userData.rank, x: 150, y: 290 },
+    { label: "Niveau", value: userData.level, x: 150, y: 330 },
+    { label: "Argent", value: `${userData.balance}💸`, x: 150, y: 370 },
   ];
 
   sections.forEach((section) => {
