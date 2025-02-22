@@ -1,8 +1,10 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { createCanvas, loadImage } from "canvas";
 import { QuickDB } from "quick.db";
+import { getUserLevel } from "../../config/levels.js";
 
 const db = new QuickDB();
+const economyTable = db.table("economy");
 
 export const data = new SlashCommandBuilder()
   .setName("status")
@@ -50,7 +52,9 @@ export async function execute(interaction) {
 
 async function getUserData(userId, guildId) {
   try {
-    return { rank: "Débutant", level: 1 };
+    const balance = (await economyTable.get(`balance_${userId}`)) || 0;
+    const userLevel = await getUserLevel(userId, guildId);
+    return { rank: "Débutant", level: userLevel.level, balance };
   } catch (error) {
     console.error(
       "❌ Erreur lors de la récupération des données utilisateur :",
@@ -113,6 +117,7 @@ function drawUserInfo(ctx, user, userData) {
     { label: "ID", value: user.id, x: 150, y: 180 },
     { label: "Titre", value: userData.rank, x: 150, y: 260 },
     { label: "Niveau", value: userData.level, x: 150, y: 300 },
+    { label: "Argent", value: `${userData.balance}💸`, x: 150, y: 340 },
   ];
 
   sections.forEach((section) => {
