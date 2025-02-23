@@ -7,7 +7,7 @@ import {
 import { QuickDB } from "quick.db";
 
 const db = new QuickDB();
-const chestChannelId = "659699739532460042"; // Replace with your channel ID
+const chestChannelId = "1343256884982976512"; // Replace with your channel ID
 
 export default {
   name: "chestEvent",
