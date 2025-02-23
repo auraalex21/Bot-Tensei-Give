@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { QuickDB } from "quick.db";
+import { v4 as uuidv4 } from "uuid";
 
 const db = new QuickDB();
 const economyTable = db.table("economy");
@@ -35,7 +36,8 @@ export async function execute(interaction) {
   let balance = (await economyTable.get(`balance_${userId}`)) || 0;
   balance += dailyAmount;
 
-  await economyTable.set(`balance_${userId}`, balance);
+  const economyId = uuidv4(); // Generate a unique ID for the economy entry
+  await economyTable.set(`balance_${userId}`, { id: economyId, balance });
   await economyTable.set(`daily_${userId}`, now);
 
   const embed = new EmbedBuilder()

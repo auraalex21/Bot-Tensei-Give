@@ -201,7 +201,9 @@ async function handleModalSubmit(interaction) {
         .setStyle(ButtonStyle.Danger)
     );
 
-    const channel = interaction.client.channels.cache.get("659699739532460042");
+    const channel = interaction.client.channels.cache.get(
+      "1340014452451315722"
+    );
     if (channel) {
       const message = await channel.send({
         content: `<@${interaction.user.id}>`,
