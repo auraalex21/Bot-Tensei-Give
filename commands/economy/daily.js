@@ -36,8 +36,7 @@ export async function execute(interaction) {
   let balance = (await economyTable.get(`balance_${userId}`)) || 0;
   balance += dailyAmount;
 
-  const economyId = uuidv4(); // Generate a unique ID for the economy entry
-  await economyTable.set(`balance_${userId}`, { id: economyId, balance });
+  await economyTable.set(`balance_${userId}`, balance);
   await economyTable.set(`daily_${userId}`, now);
 
   const embed = new EmbedBuilder()
