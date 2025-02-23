@@ -21,7 +21,7 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction) {
-  await interaction.deferReply({ ephemeral: true }); // Évite l'expiration de l'interaction
+  await interaction.deferReply({ ephemeral: true });
 
   const authorizedUserId = "378998346712481812";
   if (interaction.user.id !== authorizedUserId) {
@@ -38,7 +38,7 @@ export async function execute(interaction) {
     let balance = (await economyTable.get(`balance_${user.id}`)) || 0;
     balance += amount;
 
-    await economyTable.set(`balance_${user.id}`, balance); // Mise à jour correcte
+    await economyTable.set(`balance_${user.id}`, balance);
 
     await interaction.editReply(
       `✅ **${amount}💸** ont été ajoutés à **${user.username}**.\n💰 **Nouveau solde**: ${balance}💸`
