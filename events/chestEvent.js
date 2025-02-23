@@ -1,0 +1,51 @@
+import {
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} from "discord.js";
+import { QuickDB } from "quick.db";
+
+const db = new QuickDB();
+const chestChannelId = "659699739532460042"; // Replace with your channel ID
+
+export default {
+  name: "chestEvent",
+  async execute(client) {
+    const sendChest = async () => {
+      const channel = client.channels.cache.get(chestChannelId);
+      if (channel) {
+        const embed = new EmbedBuilder()
+          .setTitle("🎁 Un coffre est apparu !")
+          .setDescription(
+            "Cliquez sur le bouton ci-dessous pour ouvrir le coffre et recevoir une récompense."
+          )
+          .setColor("#FFD700");
+
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("open_chest")
+            .setLabel("Ouvrir")
+            .setStyle(ButtonStyle.Primary)
+        );
+
+        const message = await channel.send({
+          embeds: [embed],
+          components: [row],
+        });
+        await db.set("chestMessageId", message.id); // Store the message ID
+      }
+
+      // Schedule the next chest spawn
+      const minInterval = 1 * 60 * 60 * 1000; // 1 hour in milliseconds
+      const maxInterval = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+      const nextInterval =
+        Math.floor(Math.random() * (maxInterval - minInterval + 1)) +
+        minInterval;
+      setTimeout(sendChest, nextInterval);
+    };
+
+    // Send the first chest immediately
+    await sendChest();
+  },
+};
