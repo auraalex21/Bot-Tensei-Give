@@ -10,6 +10,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
+import { execute as openChest } from "../commands/economy/openChest.js";
 
 const db = new QuickDB();
 
@@ -55,6 +56,8 @@ export default {
             ephemeral: true,
           });
         }
+      } else if (interaction.customId === "open_chest") {
+        await openChest(interaction);
       }
     }
   },

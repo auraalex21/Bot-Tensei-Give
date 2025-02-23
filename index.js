@@ -17,6 +17,7 @@ import { createCanvas } from "canvas";
 import ms from "ms";
 import { GiveawaysManager } from "discord-giveaways";
 import { handleButtonInteraction } from "./commands/economy/shop.js"; // Import the handleButtonInteraction function
+import chestEvent from "./events/chestEvent.js";
 
 dotenv.config();
 
@@ -275,6 +276,9 @@ loadEvents(path.resolve(__dirname, "./events"));
 
 client.once("ready", async () => {
   console.log(`Prêt en tant que ${client.user.tag}`);
+
+  // Initialize the chest event
+  chestEvent.execute(client);
 
   client.giveawaysManager.on(
     "giveawayReactionAdded",
