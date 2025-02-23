@@ -7,8 +7,8 @@ const economyTable = db.table("economy");
 export async function execute(interaction) {
   if (interaction.customId === "open_chest") {
     const userId = interaction.user.id;
-    const minAmount = 500;
-    const maxAmount = 5000;
+    const minAmount = 100;
+    const maxAmount = 1000;
     const rewardAmount =
       Math.floor(Math.random() * (maxAmount - minAmount + 1)) + minAmount;
 
