@@ -98,7 +98,9 @@ export async function handleModalSubmit(interaction) {
     );
 
     // 📢 Envoi de l'embed dans le bon canal
-    const channel = interaction.client.channels.cache.get("659699739532460042");
+    const channel = interaction.client.channels.cache.get(
+      "1340014452451315722"
+    );
     if (channel) {
       await channel.send({ embeds: [embed], components: [row] });
       await interaction.reply({
