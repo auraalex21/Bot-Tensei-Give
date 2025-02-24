@@ -26,6 +26,8 @@ export async function execute(interaction) {
 
     // 🔄 Récupération des utilisateurs et tri par balance
     const allUsers = await economyTable.all();
+    console.log("All Users:", allUsers); // Log all users before filtering and sorting
+
     const sortedUsers = allUsers
       .filter(
         (entry) =>
@@ -34,6 +36,8 @@ export async function execute(interaction) {
       )
       .sort((a, b) => b.value - a.value)
       .slice(0, 10); // Top 10
+
+    console.log("Sorted Users:", sortedUsers); // Log sorted users
 
     // 📌 Vérifier si le classement est vide
     if (sortedUsers.length === 0) {
