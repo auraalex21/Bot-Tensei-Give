@@ -13,13 +13,25 @@ export async function execute(interaction) {
       Math.floor(Math.random() * (maxAmount - minAmount + 1)) + minAmount;
 
     let balance = (await economyTable.get(`balance_${userId}`)) || 0;
-    balance += rewardAmount;
+
+    // Determine if the reward is an addition or a withdrawal
+    const isAddition = Math.random() < 0.4; // 40% chance for addition
+
+    if (isAddition) {
+      balance += rewardAmount;
+    } else {
+      balance -= rewardAmount;
+      if (balance < 0) balance = 0; // Ensure balance doesn't go negative
+    }
+
     await economyTable.set(`balance_${userId}`, balance);
 
     const embed = new EmbedBuilder()
       .setTitle("🎁 Coffre ouvert !")
       .setDescription(
-        `🎉 ${interaction.user.username} a ouvert le coffre et reçu **${rewardAmount}💸** !`
+        `🎉 ${interaction.user.username} a ouvert le coffre et ${
+          isAddition ? "reçu" : "perdu"
+        } **${rewardAmount}💸** !`
       )
       .setColor("#FFD700");
 
@@ -37,7 +49,9 @@ export async function execute(interaction) {
     }
 
     await interaction.reply({
-      content: `🎉 Vous avez ouvert le coffre et reçu **${rewardAmount}💸** ! Votre nouveau solde est de **${balance}💸**.`,
+      content: `🎉 Vous avez ouvert le coffre et ${
+        isAddition ? "reçu" : "perdu"
+      } **${rewardAmount}💸** ! Votre nouveau solde est de **${balance}💸**.`,
       ephemeral: true,
     });
   }
