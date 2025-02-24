@@ -32,7 +32,8 @@ export async function execute(interaction) {
       .filter(
         (entry) =>
           entry.id.startsWith("balance_") &&
-          entry.id.split("_")[1] !== excludedUserId
+          entry.id.split("_")[1] !== excludedUserId &&
+          typeof entry.value === "number"
       )
       .sort((a, b) => b.value - a.value)
       .slice(0, 10); // Top 10
