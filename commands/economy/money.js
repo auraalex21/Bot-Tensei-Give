@@ -25,6 +25,4 @@ export async function execute(interaction) {
   } else {
     await interaction.reply({ embeds: [embed] });
   }
-
-  await interaction.reply({ embeds: [embed] });
 }
