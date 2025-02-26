@@ -1,6 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { QuickDB } from "quick.db";
-import { v4 as uuidv4 } from "uuid";
 
 const db = new QuickDB();
 const economyTable = db.table("economy");

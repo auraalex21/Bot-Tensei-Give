@@ -1,0 +1,115 @@
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { QuickDB } from "quick.db";
+
+const db = new QuickDB();
+const economyTable = db.table("economy");
+const serverBankKey = "server_bank_balance";
+const initialBankBalance = 150000;
+const cooldown = 60 * 60 * 1000; // 1 heure
+const weeklyReset = 7 * 24 * 60 * 60 * 1000; // 1 semaine
+
+// Initialisation de la banque du serveur
+async function initializeBankBalance() {
+  const bankBalance = await economyTable.get(serverBankKey);
+  if (bankBalance === null) {
+    await economyTable.set(serverBankKey, initialBankBalance);
+  }
+}
+
+// Réinitialisation automatique chaque semaine
+setInterval(async () => {
+  await economyTable.set(serverBankKey, initialBankBalance);
+}, weeklyReset);
+
+export const data = new SlashCommandBuilder()
+  .setName("serverbank")
+  .setDescription("Gérer la banque du serveur")
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("balance")
+      .setDescription("Vérifier le solde de la banque du serveur")
+  )
+  .addSubcommand((subcommand) =>
+    subcommand.setName("rob").setDescription("Braquer la banque du serveur")
+  );
+
+export async function execute(interaction) {
+  try {
+    await initializeBankBalance();
+
+    const subcommand = interaction.options.getSubcommand();
+    const userId = interaction.user.id;
+    const now = Date.now();
+
+    if (subcommand === "balance") {
+      const bankBalance = (await economyTable.get(serverBankKey)) || 0;
+
+      const embed = new EmbedBuilder()
+        .setColor("#FFD700")
+        .setTitle("💰 Solde de la Banque du Serveur")
+        .setDescription(
+          `Le solde actuel de la banque du serveur est de **${bankBalance}💸**.`
+        );
+
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    } else if (subcommand === "rob") {
+      const lastRobbed = (await economyTable.get(`last_robbed_${userId}`)) || 0;
+
+      if (now - lastRobbed < cooldown) {
+        const timeLeft = cooldown - (now - lastRobbed);
+        const hours = Math.floor(timeLeft / (60 * 60 * 1000));
+        const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setTitle("Braquage de la Banque du Serveur")
+          .setDescription(
+            `❌ Vous avez déjà braqué la banque récemment. Réessayez dans ${hours} heures et ${minutes} minutes.`
+          );
+
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+
+      let bankBalance = (await economyTable.get(serverBankKey)) || 0;
+
+      if (bankBalance <= 0) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setTitle("Braquage de la Banque du Serveur")
+          .setDescription(
+            "❌ Il n'y a plus rien à prendre dans la banque du serveur."
+          );
+
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+
+      const robAmount = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
+      const amountStolen = Math.min(robAmount, bankBalance);
+      bankBalance -= amountStolen;
+
+      let userBalance = (await economyTable.get(`balance_${userId}`)) || 0;
+      userBalance += amountStolen;
+
+      await economyTable.set(serverBankKey, bankBalance);
+      await economyTable.set(`balance_${userId}`, userBalance);
+      await economyTable.set(`last_robbed_${userId}`, now);
+
+      const embed = new EmbedBuilder()
+        .setColor(0x00ff00)
+        .setTitle("Braquage de la Banque du Serveur")
+        .setDescription(
+          `✅ Vous avez volé **${amountStolen}💸**. Votre nouveau solde est de **${userBalance}💸**.`
+        );
+
+      return interaction.reply({ embeds: [embed], ephemeral: false });
+    }
+  } catch (error) {
+    console.error("❌ Erreur lors de l'exécution de la commande :", error);
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "❌ Une erreur s'est produite.",
+        ephemeral: true,
+      });
+    }
+  }
+}
