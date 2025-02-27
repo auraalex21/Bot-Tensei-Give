@@ -9,14 +9,6 @@ import { QuickDB } from "quick.db";
 const db = new QuickDB();
 const chestChannelId = "1343256884982976512"; // Replace with your channel ID
 
-const chestMessages = [
-  "🎉 Félicitations {user}, vous avez trouvé un coffre rempli de trésors !",
-  "✨ Incroyable {user}, vous avez ouvert un coffre magique !",
-  "💎 Bravo {user}, vous avez découvert un coffre légendaire !",
-  "🏆 Super {user}, vous avez mis la main sur un coffre rare !",
-  "🎁 Génial {user}, vous avez trouvé un coffre surprise !",
-];
-
 export default {
   name: "chestEvent",
   async execute(client) {
@@ -53,43 +45,21 @@ export default {
       setTimeout(sendChest, nextInterval);
     };
 
-    // Send the first chest immediately
-    await sendChest();
+    client.on("interactionCreate", async (interaction) => {
+      if (!interaction.isButton()) return;
 
-    client.on("messageCreate", async (message) => {
-      if (message.content.toLowerCase() === "!openchest") {
-        const userId = message.author.id;
-        const guildId = message.guild.id;
+      if (interaction.customId === "open_chest") {
+        await interaction.update({
+          content: "🎉 Coffre ouvert ! Vous avez reçu une récompense.",
+          embeds: [],
+          components: [],
+        });
 
-        // Vérifiez si l'utilisateur a un coffre à ouvrir
-        const chestKey = `chest_${guildId}_${userId}`;
-        const hasChest = await db.get(chestKey);
-
-        if (!hasChest) {
-          return message.reply("❌ Vous n'avez pas de coffre à ouvrir.");
-        }
-
-        // Supprimez le coffre de l'utilisateur
-        await db.delete(chestKey);
-
-        // Sélectionnez un message personnalisé aléatoire
-        const randomMessage =
-          chestMessages[Math.floor(Math.random() * chestMessages.length)];
-
-        // Remplacez {user} par le nom de l'utilisateur
-        const personalizedMessage = randomMessage.replace(
-          "{user}",
-          message.author.username
-        );
-
-        // Envoyez le message personnalisé
-        const embed = new EmbedBuilder()
-          .setTitle("Coffre Ouvert !")
-          .setDescription(personalizedMessage)
-          .setColor("#FFD700");
-
-        message.channel.send({ embeds: [embed] });
+        // Optionally, you can add logic to give the user a reward here
       }
     });
+
+    // Send the first chest immediately
+    await sendChest();
   },
 };
