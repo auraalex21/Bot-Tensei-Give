@@ -23,6 +23,8 @@ export async function execute(interaction) {
   const guildId = interaction.guild.id;
   const client = interaction.client;
 
+  await interaction.deferReply({ ephemeral: true });
+
   const keys = await db.all();
   const users = [];
 
@@ -50,7 +52,7 @@ export async function execute(interaction) {
     }
   }
 
-  interaction.reply({
+  interaction.editReply({
     content: `✅ Les rôles ont été attribués aux utilisateurs ayant atteint le niveau requis.`,
     ephemeral: true,
   });
