@@ -52,7 +52,7 @@ export async function execute(interaction) {
     }
   }
 
-  interaction.editReply({
+  await interaction.editReply({
     content: `✅ Les rôles ont été attribués aux utilisateurs ayant atteint le niveau requis.`,
     ephemeral: true,
   });
