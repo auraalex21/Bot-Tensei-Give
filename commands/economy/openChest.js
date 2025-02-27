@@ -4,6 +4,20 @@ import { EmbedBuilder } from "discord.js";
 const db = new QuickDB();
 const economyTable = db.table("economy");
 
+const additionPhrases = [
+  "a découvert un trésor légendaire et a reçu",
+  "a bravé les dangers et a gagné",
+  "a trouvé un coffre caché et a obtenu",
+  "a été béni par les dieux et a reçu",
+];
+
+const withdrawalPhrases = [
+  "a été frappé par la malédiction et a perdu",
+  "a dépensé une fortune pour un artefact rare et a sacrifié",
+  "a été volé par des bandits et a égaré",
+  "a parié et a perdu",
+];
+
 export async function execute(interaction) {
   if (interaction.customId === "open_chest") {
     const userId = interaction.user.id;
@@ -17,6 +31,10 @@ export async function execute(interaction) {
     // Determine if the reward is an addition or a withdrawal
     const isAddition = Math.random() < 0.4; // 40% chance for addition
 
+    const phrase = isAddition
+      ? additionPhrases[Math.floor(Math.random() * additionPhrases.length)]
+      : withdrawalPhrases[Math.floor(Math.random() * withdrawalPhrases.length)];
+
     if (isAddition) {
       balance += rewardAmount;
     } else {
@@ -29,9 +47,7 @@ export async function execute(interaction) {
     const embed = new EmbedBuilder()
       .setTitle("🎁 Coffre ouvert !")
       .setDescription(
-        `🎉 ${interaction.user.username} a ouvert le coffre et ${
-          isAddition ? "reçu" : "perdu"
-        } **${rewardAmount}💸** !`
+        `🎉 ${interaction.user.username} a ouvert le coffre et ${phrase} **${rewardAmount}💸** !`
       )
       .setColor("#FFD700");
 
@@ -49,9 +65,7 @@ export async function execute(interaction) {
     }
 
     await interaction.reply({
-      content: `🎉 Vous avez ouvert le coffre et ${
-        isAddition ? "reçu" : "perdu"
-      } **${rewardAmount}💸** ! Votre nouveau solde est de **${balance}💸**.`,
+      content: `🎉 Vous avez ouvert le coffre et ${phrase} **${rewardAmount}💸** ! Votre nouveau solde est de **${balance}💸**.`,
       ephemeral: true,
     });
   }
