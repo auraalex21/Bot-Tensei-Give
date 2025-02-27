@@ -2,15 +2,29 @@ import { QuickDB } from "quick.db";
 const db = new QuickDB();
 
 export const roleRewards = [
-  // 🔥 Ajout de export ici
-  { level: 5, roleId: "1339902720546439189", bonus: 0.05, nom: "Bronze" },
-  { level: 15, roleId: "1339902718088577074", bonus: 0.1, nom: "Argent" },
-  { level: 25, roleId: "1339902715165147166", bonus: 0.15, nom: "Or" },
-  { level: 40, roleId: "1339902712724066406", bonus: 0.25, nom: "Diamant" },
+  { level: 10, roleId: "1339902720546439189", bonus: 0.05, nom: "Bronze" },
+  { level: 25, roleId: "1339902718088577074", bonus: 0.1, nom: "Argent" },
+  { level: 40, roleId: "1339902715165147166", bonus: 0.15, nom: "Or" },
+  { level: 60, roleId: "1339902712724066406", bonus: 0.25, nom: "Diamant" },
 ];
 
+// Fonction pour attribuer un rôle à un utilisateur
+async function assignRole(userId, guildId, roleId, client) {
+  const guild = client.guilds.cache.get(guildId);
+  if (!guild) return;
+
+  const member = guild.members.cache.get(userId);
+  if (!member) return;
+
+  const role = guild.roles.cache.get(roleId);
+  if (!role) return;
+
+  await member.roles.add(role);
+  console.log(`🎉 [ROLE] ${userId} a reçu le rôle ${role.name}`);
+}
+
 // ✅ Ajouter de l'expérience à un utilisateur
-export async function addExperience(userId, guildId, exp) {
+export async function addExperience(userId, guildId, exp, client) {
   const key = `levels_${guildId}_${userId}`;
   let userData = (await db.get(key)) || { level: 1, exp: 0 };
 
@@ -27,6 +41,12 @@ export async function addExperience(userId, guildId, exp) {
     console.log(
       `🏆 [LEVEL UP] ${userId} est maintenant niveau ${userData.level}`
     );
+
+    // Vérifier et attribuer le rôle correspondant
+    const reward = roleRewards.find((r) => r.level === userData.level);
+    if (reward) {
+      await assignRole(userId, guildId, reward.roleId, client);
+    }
   }
 
   await db.set(key, userData);
