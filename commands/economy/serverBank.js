@@ -7,6 +7,7 @@ const serverBankKey = "server_bank_balance";
 const initialBankBalance = 150000;
 const cooldown = 60 * 60 * 1000; // 1 heure
 const weeklyReset = 7 * 24 * 60 * 60 * 1000; // 1 semaine
+let lastResetTime = Date.now();
 
 // Initialisation de la banque du serveur
 async function initializeBankBalance() {
@@ -20,6 +21,7 @@ async function initializeBankBalance() {
 setInterval(async () => {
   console.log("Réinitialisation de la banque du serveur...");
   await economyTable.set(serverBankKey, initialBankBalance);
+  lastResetTime = Date.now();
 }, weeklyReset);
 
 // Appel de la fonction d'initialisation au démarrage
@@ -47,12 +49,22 @@ export async function execute(interaction) {
 
     if (subcommand === "balance") {
       const bankBalance = (await economyTable.get(serverBankKey)) || 0;
+      const timeSinceLastReset = now - lastResetTime;
+      const timeUntilNextReset = weeklyReset - timeSinceLastReset;
+      const days = Math.floor(timeUntilNextReset / (24 * 60 * 60 * 1000));
+      const hours = Math.floor(
+        (timeUntilNextReset % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000)
+      );
+      const minutes = Math.floor(
+        (timeUntilNextReset % (60 * 60 * 1000)) / (60 * 1000)
+      );
 
       const embed = new EmbedBuilder()
         .setColor("#FFD700")
         .setTitle("💰 Solde de la Banque du Serveur")
         .setDescription(
-          `Le solde actuel de la banque du serveur est de **${bankBalance}💸**.`
+          `Le solde actuel de la banque du serveur est de **${bankBalance}💸**.\n` +
+            `La banque sera réinitialisée dans **${days} jours, ${hours} heures et ${minutes} minutes**.`
         );
 
       return interaction.reply({ embeds: [embed], ephemeral: true });
