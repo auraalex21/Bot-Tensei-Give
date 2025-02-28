@@ -382,6 +382,15 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
+client.on("error", (error) => {
+  console.error("WebSocket error:", error);
+});
+
+client.on("disconnect", () => {
+  console.warn("WebSocket disconnected. Attempting to reconnect...");
+  client.login(process.env.DISCORD_TOKEN); // Reconnect the bot
+});
+
 // Global error handling
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);

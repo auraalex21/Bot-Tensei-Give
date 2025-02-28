@@ -45,12 +45,21 @@ export default {
       setTimeout(sendChest, nextInterval);
     };
 
+    client.on("error", (error) => {
+      console.error("WebSocket error:", error);
+    });
+
+    client.on("disconnect", () => {
+      console.warn("WebSocket disconnected. Attempting to reconnect...");
+      client.login(process.env.BOT_TOKEN); // Reconnect the bot
+    });
+
     client.on("interactionCreate", async (interaction) => {
       if (!interaction.isButton()) return;
 
       if (interaction.customId === "open_chest") {
         await interaction.update({
-          content: "🎉 Coffre ouvert ! Vous avez reçu une récompense.",
+          content: `🎉 ${interaction.user.username} a ouvert le coffre et reçu une récompense.`,
           embeds: [],
           components: [],
         });
