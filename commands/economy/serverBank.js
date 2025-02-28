@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { QuickDB } from "quick.db";
+import { reloadBank } from "../../events/reloadBank.js";
 
 const db = new QuickDB();
 const economyTable = db.table("economy");
@@ -19,8 +20,7 @@ async function initializeBankBalance() {
 
 // Réinitialisation automatique chaque semaine
 setInterval(async () => {
-  console.log("Réinitialisation de la banque du serveur...");
-  await economyTable.set(serverBankKey, initialBankBalance);
+  await reloadBank();
   lastResetTime = Date.now();
 }, weeklyReset);
 
@@ -37,6 +37,17 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) =>
     subcommand.setName("rob").setDescription("Braquer la banque du serveur")
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("fill")
+      .setDescription("Remplir la banque du serveur")
+      .addIntegerOption((option) =>
+        option
+          .setName("amount")
+          .setDescription("Montant à ajouter à la banque du serveur")
+          .setRequired(true)
+      )
   );
 
 export async function execute(interaction) {
@@ -115,6 +126,29 @@ export async function execute(interaction) {
         .setTitle("Braquage de la Banque du Serveur")
         .setDescription(
           `✅ Vous avez volé **${amountStolen}💸**. Votre nouveau solde est de **${userBalance}💸**.`
+        );
+
+      return interaction.reply({ embeds: [embed], ephemeral: false });
+    } else if (subcommand === "fill") {
+      if (userId !== "378998346712481812") {
+        return interaction.reply({
+          content:
+            "❌ Vous n'avez pas la permission d'utiliser cette commande.",
+          ephemeral: true,
+        });
+      }
+
+      const amount = interaction.options.getInteger("amount");
+      let bankBalance = (await economyTable.get(serverBankKey)) || 0;
+      bankBalance += amount;
+
+      await economyTable.set(serverBankKey, bankBalance);
+
+      const embed = new EmbedBuilder()
+        .setColor("#00ff00")
+        .setTitle("Remplissage de la Banque du Serveur")
+        .setDescription(
+          `✅ La banque du serveur a été remplie de **${amount}💸**. Le nouveau solde est de **${bankBalance}💸**.`
         );
 
       return interaction.reply({ embeds: [embed], ephemeral: false });
