@@ -18,8 +18,12 @@ async function initializeBankBalance() {
 
 // Réinitialisation automatique chaque semaine
 setInterval(async () => {
+  console.log("Réinitialisation de la banque du serveur...");
   await economyTable.set(serverBankKey, initialBankBalance);
 }, weeklyReset);
+
+// Appel de la fonction d'initialisation au démarrage
+initializeBankBalance();
 
 export const data = new SlashCommandBuilder()
   .setName("serverbank")
