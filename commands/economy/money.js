@@ -12,7 +12,7 @@ export async function execute(interaction) {
   if (!interaction.isCommand()) return;
 
   const userId = interaction.user.id;
-  const balance = (await economyTable.get(`balance_${userId}`)) || 0;
+  const balance = Number(await economyTable.get(`balance_${userId}`)) || 0;
 
   const embed = new EmbedBuilder()
     .setColor("#FFD700")
