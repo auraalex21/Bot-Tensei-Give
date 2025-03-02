@@ -69,7 +69,6 @@ export default {
   },
 };
 
-// ✅ Fonction pour envoyer un MP au candidat
 async function sendMP(user, status, reason = "") {
   try {
     const message =
@@ -83,10 +82,9 @@ async function sendMP(user, status, reason = "") {
   }
 }
 
-// ✅ Fonction pour gérer l'acceptation/refus d'une candidature
 async function handleCandidatureDecision(interaction, status) {
   try {
-    const user = interaction.message.mentions.users.first(); // Récupérer l'utilisateur de la candidature
+    const user = interaction.message.mentions.users.first();
 
     if (user) {
       await sendMP(user, status);
@@ -126,7 +124,7 @@ async function handleCandidatureDecision(interaction, status) {
     if (!interaction.replied && !interaction.deferred) {
       await interaction.update({
         files: [attachment],
-        components: [], // Retirer les boutons
+        components: [],
       });
     } else {
       console.warn("⚠️ Interaction already replied or deferred.");
@@ -142,7 +140,6 @@ async function handleModalSubmit(interaction) {
     const experience = interaction.fields.getTextInputValue("experienceInput");
     const motivation = interaction.fields.getTextInputValue("motivationInput");
 
-    // 📏 Définition des tailles de base
     const width = 800;
     let height = 300;
 
@@ -225,7 +222,6 @@ async function handleModalSubmit(interaction) {
         ephemeral: true,
       });
 
-      // ✅ Stocker l'ID du message pour retrouver l'utilisateur plus tard
       await db.set(`candidature_${message.id}`, interaction.user.id);
     } else {
       await interaction.reply({
@@ -235,14 +231,14 @@ async function handleModalSubmit(interaction) {
     }
   } catch (error) {
     console.error("❌ Erreur lors de l'envoi de la candidature:", error);
-    await interaction.reply({
-      content:
-        "❌ Une erreur est survenue lors de l'envoi de votre candidature.",
-      ephemeral: true,
-    });
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content:
+          "❌ Une erreur est survenue lors de l'envoi de votre candidature.",
+        ephemeral: true,
+      });
+    }
   }
-  // Removed unused function showRejectionModal
-  await interaction.showModal(modal);
 }
 
 async function handleRejectionReason(interaction) {
@@ -264,7 +260,6 @@ async function handleRejectionReason(interaction) {
   }
 }
 
-// ✅ Fonction pour couper le texte proprement
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   const words = text.split(" ");
   let line = "";
