@@ -1,9 +1,6 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { QuickDB } from "quick.db";
-import { createCanvas, loadImage } from "canvas";
-import fs from "fs";
-import path from "path";
-import fetch from "node-fetch";
+import { createCanvas } from "canvas";
 
 // Initialisation de la base de données
 const db = new QuickDB();
@@ -22,10 +19,11 @@ export async function execute(interaction) {
     if (!interaction.isCommand()) return;
 
     // ✅ Empêche l'expiration de l'interaction en la différant immédiatement
-    await interaction.deferReply();
+    if (!interaction.isCommand() || interaction.replied || interaction.deferred)
+      return;
 
-    // 🔄 Récupération des utilisateurs et tri par balance
-    const allUsers = await economyTable.all();
+    // ✅ Empêche l'expiration de l'interaction en la différant immédiatement
+    await interaction.deferReply();
     console.log("All Users:", allUsers); // Log all users before filtering and sorting
 
     const sortedUsers = allUsers
