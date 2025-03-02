@@ -64,9 +64,15 @@ export async function execute(interaction) {
       }
     }
 
-    await interaction.reply({
-      content: `🎉 Vous avez ouvert le coffre et ${phrase} **${rewardAmount}💸** ! Votre nouveau solde est de **${balance}💸**.`,
-      ephemeral: true,
-    });
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: `🎉 Vous avez ouvert le coffre et ${phrase} **${rewardAmount}💸** ! Votre nouveau solde est de **${balance}💸**.`,
+        ephemeral: true,
+      });
+    } else {
+      await interaction.editReply({
+        content: `🎉 Vous avez ouvert le coffre et ${phrase} **${rewardAmount}💸** ! Votre nouveau solde est de **${balance}💸**.`,
+      });
+    }
   }
 }
