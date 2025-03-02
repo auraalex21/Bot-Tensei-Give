@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { QuickDB } from "quick.db";
-import { reloadBank } from "../../events/reloadBank.js";
+import { execute as reloadBank } from "../../events/reloadBank.js";
 
 const db = new QuickDB();
 const economyTable = db.table("economy");
