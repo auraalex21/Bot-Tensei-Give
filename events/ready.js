@@ -1,6 +1,6 @@
 import { Events } from "discord.js";
 
-const targetMessageId = "1339253344853692416";
+const targetMessageId = "1345410522199228536";
 const targetChannelId = "1339231311545503826";
 const botReactionEmoji = "✅"; // Emoji the bot will react with
 
