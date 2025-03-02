@@ -22,7 +22,9 @@ export default {
       if (!command) return;
 
       try {
-        await command.execute(interaction);
+        if (!interaction.replied && !interaction.deferred) {
+          await command.execute(interaction);
+        }
       } catch (error) {
         console.error("Error handling interaction:", error);
         if (!interaction.replied && !interaction.deferred) {
@@ -57,7 +59,11 @@ export default {
           });
         }
       } else if (interaction.customId === "open_chest") {
-        await openChest(interaction);
+        try {
+          await openChest(interaction);
+        } catch (error) {
+          console.error("Error handling interaction:", error);
+        }
       }
     }
   },
@@ -235,21 +241,7 @@ async function handleModalSubmit(interaction) {
       ephemeral: true,
     });
   }
-}
-
-async function showRejectionModal(interaction) {
-  const modal = new ModalBuilder()
-    .setCustomId("rejectionReasonModal")
-    .setTitle("Raison du refus");
-
-  const reasonInput = new TextInputBuilder()
-    .setCustomId("reasonInput")
-    .setLabel("Expliquez la raison du refus")
-    .setStyle(TextInputStyle.Paragraph)
-    .setRequired(true);
-
-  modal.addComponents(new ActionRowBuilder().addComponents(reasonInput));
-
+  // Removed unused function showRejectionModal
   await interaction.showModal(modal);
 }
 

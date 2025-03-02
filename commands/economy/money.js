@@ -21,7 +21,16 @@ export async function execute(interaction) {
       `💸 **${interaction.user.username}**, votre solde actuel est de **${balance}💸**.`
     );
   if (interaction.replied || interaction.deferred) {
-    await interaction.followUp({ embeds: [embed] });
+    try {
+      await interaction.followUp({ embeds: [embed] });
+      try {
+        await interaction.reply({ embeds: [embed] });
+      } catch (error) {
+        console.error("Error replying to interaction:", error);
+      }
+    } catch (error) {
+      console.error("Error following up interaction:", error);
+    }
   } else {
     await interaction.reply({ embeds: [embed] });
   }
