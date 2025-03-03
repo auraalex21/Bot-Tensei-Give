@@ -7,7 +7,7 @@ const economyTable = db.table("economy");
 const serverBankKey = "server_bank_balance";
 const initialBankBalance = 150000;
 const cooldown = 60 * 60 * 1000; // 1 heure
-const weeklyReset = 7 * 24 * 60 * 60 * 1000; // 1 semaine
+const weeklyReset = 24 * 60 * 60 * 1000; // 24 heures
 let lastResetTime = Date.now();
 
 // Initialisation de la banque du serveur
