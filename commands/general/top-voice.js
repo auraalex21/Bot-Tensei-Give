@@ -84,7 +84,6 @@ export async function execute(interaction) {
   const userTimeString = `${userHours}h ${userMinutes}min`;
 
   await interaction.editReply({
-    content: `📊 **Voici le classement des utilisateurs par activité vocale :**\n\n🎖 **Vos informations :**\n➤ Niveau : **${userLevel.level}**\n➤ Temps vocal : **${userTimeString}**`,
     files: [attachment],
   });
 }
