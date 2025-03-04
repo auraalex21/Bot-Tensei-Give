@@ -1,8 +1,4 @@
-import {
-  addExperience,
-  getUserLevel,
-  incrementVoiceTime,
-} from "../config/levels.js";
+import { addExperience, incrementVoiceTime } from "../config/levels.js";
 import { Events } from "discord.js";
 import { QuickDB } from "quick.db";
 
@@ -11,7 +7,7 @@ const economyTable = db.table("economy");
 
 const minVoiceReward = 5;
 const maxVoiceReward = 10;
-const rewardInterval = 30000; // 30 secondes
+const rewardInterval = 30000; // 30 sec
 const allowedChannels = ["1339588538005454868", "1340794889155117076"];
 
 const voiceTimes = new Map();
@@ -30,14 +26,14 @@ export default {
 
     console.log(`🔊 Mise à jour voix : ${oldChannelId} -> ${newChannelId}`);
 
+    // ➤ L'utilisateur rejoint un salon vocal
     if (!oldState.channelId && newState.channelId) {
-      // ➤ L'utilisateur rejoint un salon vocal
       if (!allowedChannels.includes(newChannelId)) return;
 
       console.log(`[VOIX] ${userId} a rejoint ${newChannelId}`);
       voiceTimes.set(userId, Date.now());
 
-      // ✅ Démarrer un intervalle pour le suivi du temps vocal
+      // ✅ Démarrer le suivi du temps vocal
       const interval = setInterval(async () => {
         const member = newState.guild.members.cache.get(userId);
         if (
@@ -54,14 +50,13 @@ export default {
         }
 
         await incrementVoiceTime(userId, guildId, 60000);
-        const experience = Math.floor(Math.random() * 15) + 1;
-        await addExperience(userId, guildId, experience);
+        await addExperience(userId, guildId, 1);
         console.log(`[VOIX] ${userId} a gagné 1 minute.`);
       }, 60000);
 
       voiceIntervals.set(userId, interval);
 
-      // ✅ Démarrer un intervalle pour les récompenses économiques
+      // ✅ Démarrer l'intervalle de récompenses économiques
       const rewardIntervalId = setInterval(async () => {
         const member = newState.guild.members.cache.get(userId);
         if (
@@ -89,8 +84,8 @@ export default {
       rewardIntervals.set(userId, rewardIntervalId);
     }
 
+    // ➤ L'utilisateur quitte totalement le vocal
     if (oldState.channelId && !newState.channelId) {
-      // ➤ L'utilisateur quitte totalement le vocal
       const joinTime = voiceTimes.get(userId);
       if (joinTime) {
         const timeSpent = Date.now() - joinTime;
@@ -112,12 +107,12 @@ export default {
       }
     }
 
+    // ➤ L'utilisateur change de canal
     if (
       oldState.channelId &&
       newState.channelId &&
       oldState.channelId !== newState.channelId
     ) {
-      // ➤ L'utilisateur change de canal
       const joinTime = voiceTimes.get(userId);
       if (joinTime) {
         const timeSpent = Date.now() - joinTime;
