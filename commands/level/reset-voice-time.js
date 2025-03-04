@@ -28,7 +28,9 @@ export async function execute(interaction) {
   const guildId = interaction.guild.id;
 
   if (resetAll) {
-    const keys = await db.keys(`voiceTime_${guildId}_*`);
+    const keys = (await db.all())
+      .filter((entry) => entry.id.startsWith(`voiceTime_${guildId}_`))
+      .map((entry) => entry.id);
     for (const key of keys) {
       await db.delete(key);
     }
