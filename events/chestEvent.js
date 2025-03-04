@@ -58,7 +58,8 @@ export default {
       if (!interaction.isButton()) return;
 
       if (interaction.customId === "open_chest") {
-        await interaction.update({
+        await interaction.deferUpdate();
+        await interaction.editReply({
           content: `🎉 ${interaction.user.username} a ouvert le coffre et reçu une récompense.`,
           embeds: [],
           components: [],
