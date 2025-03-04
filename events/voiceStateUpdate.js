@@ -11,95 +11,86 @@ const economyTable = db.table("economy");
 
 const minVoiceReward = 5;
 const maxVoiceReward = 10;
-const rewardInterval = 30000; // 30 seconds
-
-const activeUsers = new Set();
+const rewardInterval = 30000; // 30 secondes
+const allowedChannels = ["1339588538005454868", "1340794889155117076"];
 
 const voiceTimes = new Map();
-const voiceIntervals = new Map(); // Stocke les intervalles actifs
-
-const allowedChannels = ["1339588538005454868", "1340794889155117076"];
+const voiceIntervals = new Map();
+const rewardIntervals = new Map();
 
 export default {
   name: Events.VoiceStateUpdate,
   async execute(oldState, newState) {
-    const oldChannelId = oldState.channelId ? oldState.channelId : "none";
-    const newChannelId = newState.channelId ? newState.channelId : "none";
-
-    // Ignore cases where both old and new channel IDs are "none"
-    if (oldChannelId === "none" && newChannelId === "none") return;
-
-    console.log(
-      `🔊 Mise à jour de l'état vocal : ${oldChannelId} -> ${newChannelId}`
-    );
-
-    if (newState.member.user.bot) return;
+    const userId = newState.member?.user?.id;
+    if (!userId || newState.member.user.bot) return;
 
     const guildId = newState.guild.id;
-    const userId = newState.member.user.id;
+    const oldChannelId = oldState.channelId || "none";
+    const newChannelId = newState.channelId || "none";
+
+    console.log(`🔊 Mise à jour voix : ${oldChannelId} -> ${newChannelId}`);
 
     if (!oldState.channelId && newState.channelId) {
-      console.log(`[VOIX] ${userId} a rejoint le vocal.`);
+      // ➤ L'utilisateur rejoint un salon vocal
+      if (!allowedChannels.includes(newChannelId)) return;
+
+      console.log(`[VOIX] ${userId} a rejoint ${newChannelId}`);
       voiceTimes.set(userId, Date.now());
 
-      // ✅ Démarrer un intervalle pour mise à jour continue
+      // ✅ Démarrer un intervalle pour le suivi du temps vocal
       const interval = setInterval(async () => {
-        const currentChannel =
-          newState.guild.members.cache.get(userId)?.voice.channelId;
-
+        const member = newState.guild.members.cache.get(userId);
         if (
-          !currentChannel ||
-          !allowedChannels.includes(currentChannel) ||
-          newState.selfMute ||
-          newState.selfDeaf
+          !member ||
+          !member.voice.channelId ||
+          !allowedChannels.includes(member.voice.channelId) ||
+          member.voice.selfMute ||
+          member.voice.selfDeaf
         ) {
           clearInterval(interval);
           voiceIntervals.delete(userId);
-          console.log(`[VOIX] Arrêt de la mise à jour pour ${userId}`);
+          console.log(`[VOIX] Arrêt du suivi pour ${userId}`);
           return;
         }
 
-        if (allowedChannels.includes(currentChannel)) {
-          await incrementVoiceTime(userId, guildId, 60000);
-          const experience = Math.floor(Math.random() * 15) + 1;
-          await addExperience(userId, guildId, experience);
-          console.log(`[VOIX] ${userId} a gagné 1 minute.`);
-        }
-      }, 60000); // Toutes les 60 secondes
+        await incrementVoiceTime(userId, guildId, 60000);
+        const experience = Math.floor(Math.random() * 15) + 1;
+        await addExperience(userId, guildId, experience);
+        console.log(`[VOIX] ${userId} a gagné 1 minute.`);
+      }, 60000);
 
       voiceIntervals.set(userId, interval);
 
-      // ✅ Démarrer un intervalle pour récompense économique
-      if (!activeUsers.has(userId)) {
-        activeUsers.add(userId);
-        const rewardIntervalId = setInterval(async () => {
-          const currentChannel =
-            newState.guild.members.cache.get(userId)?.voice.channelId;
+      // ✅ Démarrer un intervalle pour les récompenses économiques
+      const rewardIntervalId = setInterval(async () => {
+        const member = newState.guild.members.cache.get(userId);
+        if (
+          !member ||
+          !member.voice.channelId ||
+          !allowedChannels.includes(member.voice.channelId) ||
+          member.voice.selfMute ||
+          member.voice.selfDeaf
+        ) {
+          clearInterval(rewardIntervalId);
+          rewardIntervals.delete(userId);
+          return;
+        }
 
-          if (
-            !currentChannel ||
-            !allowedChannels.includes(currentChannel) ||
-            newState.selfMute ||
-            newState.selfDeaf
-          ) {
-            clearInterval(rewardIntervalId);
-            activeUsers.delete(userId);
-            return;
-          }
+        const reward =
+          Math.floor(Math.random() * (maxVoiceReward - minVoiceReward + 1)) +
+          minVoiceReward;
+        let balance = (await economyTable.get(`balance_${userId}`)) || 0;
+        balance += reward;
+        await economyTable.set(`balance_${userId}`, balance);
 
-          const reward =
-            Math.floor(Math.random() * (maxVoiceReward - minVoiceReward + 1)) +
-            minVoiceReward;
-          let balance = (await economyTable.get(`balance_${userId}`)) || 0;
-          balance += reward;
-          await economyTable.set(`balance_${userId}`, balance);
+        console.log(`💸 ${userId} a gagné ${reward} crédits.`);
+      }, rewardInterval);
 
-          console.log(
-            `💸 ${newState.member.user.username} a gagné ${reward} pour être dans un canal vocal. Nouveau solde: ${balance}💸.`
-          );
-        }, rewardInterval);
-      }
-    } else if (oldState.channelId && !newState.channelId) {
+      rewardIntervals.set(userId, rewardIntervalId);
+    }
+
+    if (oldState.channelId && !newState.channelId) {
+      // ➤ L'utilisateur quitte totalement le vocal
       const joinTime = voiceTimes.get(userId);
       if (joinTime) {
         const timeSpent = Date.now() - joinTime;
@@ -110,19 +101,23 @@ export default {
         voiceTimes.delete(userId);
       }
 
-      // ✅ Arrêter l'intervalle de mise à jour
       if (voiceIntervals.has(userId)) {
         clearInterval(voiceIntervals.get(userId));
         voiceIntervals.delete(userId);
       }
 
-      // ✅ Arrêter l'intervalle de récompense économique
-      activeUsers.delete(userId);
-    } else if (
+      if (rewardIntervals.has(userId)) {
+        clearInterval(rewardIntervals.get(userId));
+        rewardIntervals.delete(userId);
+      }
+    }
+
+    if (
       oldState.channelId &&
       newState.channelId &&
       oldState.channelId !== newState.channelId
     ) {
+      // ➤ L'utilisateur change de canal
       const joinTime = voiceTimes.get(userId);
       if (joinTime) {
         const timeSpent = Date.now() - joinTime;
@@ -133,51 +128,50 @@ export default {
       }
       voiceTimes.set(userId, Date.now());
 
-      // ✅ Redémarrer l'intervalle dans le nouveau canal
       if (voiceIntervals.has(userId)) {
         clearInterval(voiceIntervals.get(userId));
+        voiceIntervals.delete(userId);
       }
 
-      const interval = setInterval(async () => {
-        const currentChannel =
-          newState.guild.members.cache.get(userId)?.voice.channelId;
+      if (rewardIntervals.has(userId)) {
+        clearInterval(rewardIntervals.get(userId));
+        rewardIntervals.delete(userId);
+      }
 
-        if (
-          !currentChannel ||
-          !allowedChannels.includes(currentChannel) ||
-          newState.selfMute ||
-          newState.selfDeaf
-        ) {
-          clearInterval(interval);
-          voiceIntervals.delete(userId);
-          console.log(`[VOIX] Arrêt de la mise à jour pour ${userId}`);
-          return;
-        }
+      if (allowedChannels.includes(newChannelId)) {
+        // ✅ Redémarrer le suivi du temps vocal
+        const interval = setInterval(async () => {
+          const member = newState.guild.members.cache.get(userId);
+          if (
+            !member ||
+            !member.voice.channelId ||
+            !allowedChannels.includes(member.voice.channelId) ||
+            member.voice.selfMute ||
+            member.voice.selfDeaf
+          ) {
+            clearInterval(interval);
+            voiceIntervals.delete(userId);
+            return;
+          }
 
-        if (allowedChannels.includes(currentChannel)) {
           await incrementVoiceTime(userId, guildId, 60000);
           await addExperience(userId, guildId, 1);
-          console.log(`[VOIX] ${userId} a gagné 1 minute.`);
-        }
-      }, 60000);
+        }, 60000);
 
-      voiceIntervals.set(userId, interval);
+        voiceIntervals.set(userId, interval);
 
-      // ✅ Redémarrer l'intervalle de récompense économique
-      if (!activeUsers.has(userId)) {
-        activeUsers.add(userId);
+        // ✅ Redémarrer l'intervalle économique
         const rewardIntervalId = setInterval(async () => {
-          const currentChannel =
-            newState.guild.members.cache.get(userId)?.voice.channelId;
-
+          const member = newState.guild.members.cache.get(userId);
           if (
-            !currentChannel ||
-            !allowedChannels.includes(currentChannel) ||
-            newState.selfMute ||
-            newState.selfDeaf
+            !member ||
+            !member.voice.channelId ||
+            !allowedChannels.includes(member.voice.channelId) ||
+            member.voice.selfMute ||
+            member.voice.selfDeaf
           ) {
             clearInterval(rewardIntervalId);
-            activeUsers.delete(userId);
+            rewardIntervals.delete(userId);
             return;
           }
 
@@ -187,11 +181,9 @@ export default {
           let balance = (await economyTable.get(`balance_${userId}`)) || 0;
           balance += reward;
           await economyTable.set(`balance_${userId}`, balance);
-
-          console.log(
-            `💸 ${newState.member.user.username} a gagné ${reward} pour être dans un canal vocal. Nouveau solde: ${balance}💸.`
-          );
         }, rewardInterval);
+
+        rewardIntervals.set(userId, rewardIntervalId);
       }
     }
   },
