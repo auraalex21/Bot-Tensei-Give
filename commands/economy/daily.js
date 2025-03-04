@@ -29,7 +29,7 @@ export async function execute(interaction) {
       .setDescription(
         `❌ Vous avez déjà réclamé votre récompense quotidienne. Réessayez dans ${hours} heures et ${minutes} minutes.`
       );
-    return interaction.reply({ embeds: [embed], ephemeral: true });
+    return interaction.reply({ embeds: [embed], flags: 64 });
   }
 
   let balance = (await economyTable.get(`balance_${userId}`)) || 0;
@@ -44,5 +44,5 @@ export async function execute(interaction) {
     .setDescription(
       `✅ Vous avez réclamé votre récompense quotidienne de **${dailyAmount}💸**. Votre nouveau solde est de **${balance}💸**.`
     );
-  await interaction.reply({ embeds: [embed], ephemeral: false });
+  await interaction.reply({ embeds: [embed] });
 }
