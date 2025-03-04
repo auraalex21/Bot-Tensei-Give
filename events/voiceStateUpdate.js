@@ -7,7 +7,7 @@ const economyTable = db.table("economy");
 
 const minVoiceReward = 5;
 const maxVoiceReward = 10;
-const rewardInterval = 30000; // 30 sec
+const rewardInterval = 30000; // 30 secondes
 const allowedChannels = ["1339588538005454868", "1340794889155117076"];
 
 const voiceTimes = new Map();
@@ -23,6 +23,9 @@ export default {
     const guildId = newState.guild.id;
     const oldChannelId = oldState.channelId || "none";
     const newChannelId = newState.channelId || "none";
+
+    // ✅ Empêcher les logs et les traitements inutiles
+    if (!oldState.channelId && !newState.channelId) return;
 
     console.log(`🔊 Mise à jour voix : ${oldChannelId} -> ${newChannelId}`);
 
@@ -107,7 +110,7 @@ export default {
       }
     }
 
-    // ➤ L'utilisateur change de canal
+    // ➤ L'utilisateur change de canal vocal
     if (
       oldState.channelId &&
       newState.channelId &&
