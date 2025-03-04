@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { getTopVoiceUsers, getUserLevel } from "../../config/levels.js";
-import { createCanvas } from "canvas";
+import { createCanvas, loadImage } from "canvas";
 import { QuickDB } from "quick.db";
 
 const db = new QuickDB();
@@ -22,18 +22,22 @@ export async function execute(interaction) {
     });
   }
 
+  // ➤ Paramètres du canvas
   const canvasWidth = 900;
   const canvasHeight = 600;
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext("2d");
 
+  // ➤ Fond du canvas
   ctx.fillStyle = "#0A192F";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // ➤ Bordure
   ctx.strokeStyle = "#007BFF";
   ctx.lineWidth = 4;
   ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
 
+  // ➤ Titre du classement
   ctx.fillStyle = "#00A2FF";
   ctx.font = "bold 40px Arial";
   ctx.textAlign = "center";
@@ -42,26 +46,31 @@ export async function execute(interaction) {
   ctx.font = "22px Arial";
   ctx.textAlign = "left";
 
+  // ➤ Affichage des 5 meilleurs utilisateurs
   for (let i = 0; i < Math.min(topUsers.length, 5); i++) {
     const user = topUsers[i];
     const baseY = 120 + i * 70;
     const rankIcon = ["🥇", "🥈", "🥉"][i] || `#${i + 1}`;
 
+    // ➤ Récupération des informations Discord
     const discordUser = await interaction.client.users
       .fetch(user.userId)
       .catch(() => null);
     const username = discordUser ? discordUser.username : "Utilisateur inconnu";
 
+    // ➤ Calcul du temps en heures et minutes
     const totalMinutes = Math.floor(user.voiceTime / 60000) || 0;
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     const timeString = `${hours}h ${minutes}min`;
 
+    // ➤ Affichage du classement
     ctx.fillStyle = "#FFFFFF";
     ctx.fillText(`${rankIcon} ${username}`, 50, baseY);
     ctx.fillStyle = "#00FF00";
     ctx.fillText(timeString, canvasWidth - 200, baseY);
 
+    // ➤ Ligne de séparation
     ctx.strokeStyle = "#0056B3";
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
@@ -71,10 +80,12 @@ export async function execute(interaction) {
     ctx.setLineDash([]);
   }
 
+  // ➤ Génération de l'image
   const attachment = new AttachmentBuilder(canvas.toBuffer(), {
     name: "top-voice.png",
   });
 
+  // ➤ Informations utilisateur
   const user = interaction.user;
   const userLevel = await getUserLevel(user.id, guildId);
   const userVoiceTime = (await db.get(`voiceTime_${guildId}_${user.id}`)) || 0;
@@ -83,8 +94,9 @@ export async function execute(interaction) {
   const userMinutes = userTotalMinutes % 60;
   const userTimeString = `${userHours}h ${userMinutes}min`;
 
+  // ➤ Envoi de l'image et des informations utilisateur
   return interaction.reply({
-    content: `📊 Voici le classement des utilisateurs par activité vocale :\n\n**Vos informations :**\nNiveau : ${userLevel.level}\nTemps vocal : ${userTimeString}`,
+    content: `📊 **Voici le classement des utilisateurs par activité vocale :**\n\n🎖 **Vos informations :**\n➤ Niveau : **${userLevel.level}**\n➤ Temps vocal : **${userTimeString}**`,
     files: [attachment],
   });
 }
