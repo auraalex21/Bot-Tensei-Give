@@ -64,6 +64,7 @@ export default (client) => ({
       .setColor("#0000FF");
 
     // Envoyer le message dans le salon de vérification
+    await member.guild.channels.fetch();
     const verificationChannel = member.guild.channels.cache.get(
       verificationChannelId
     );
