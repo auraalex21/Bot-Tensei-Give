@@ -51,7 +51,7 @@ export default {
       .setDescription(
         `Veuillez entrer ce code dans le salon <#${verificationChannelId}> pour vérifier votre compte : **${verificationCode}**`
       )
-      .setColor("BLUE");
+      .setColor("#0000FF");
 
     try {
       await member.send({ embeds: [embed] });
