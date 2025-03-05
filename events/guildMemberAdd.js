@@ -7,9 +7,9 @@ const db = new QuickDB();
 const verificationChannelId = "1340366991038615592"; // ID du salon de vérification
 const verificationRoleId = "1339298936099442759"; // ID du rôle de vérification
 
-export default {
+export default (client) => ({
   name: Events.GuildMemberAdd,
-  async execute(client, member) {
+  async execute(member) {
     console.log(`Nouveau membre ajouté : ${member.user.tag}`);
     const invitesBefore = (await db.get(`invites_${member.guild.id}`)) || {};
     const invitesAfter = await member.guild.invites.fetch();
@@ -60,10 +60,10 @@ export default {
       console.error(`❌ Impossible d'envoyer un message à ${member.user.tag}.`);
     }
   },
-};
+});
 
 // Event listener for messageCreate
-client.on(Events.MessageCreate, async (message) => {
+export const messageCreateListener = async (client, message) => {
   if (message.channel.id !== verificationChannelId) return;
 
   const verificationCode = await db.get(
@@ -86,4 +86,4 @@ client.on(Events.MessageCreate, async (message) => {
       `❌ ${message.author}, le code de vérification est incorrect.`
     );
   }
-});
+};
