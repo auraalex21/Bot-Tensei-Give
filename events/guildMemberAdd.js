@@ -1,6 +1,6 @@
 import { QuickDB } from "quick.db";
 import pkg from "discord.js";
-const { Events, MessageEmbed } = pkg;
+const { Events, EmbedBuilder } = pkg;
 import { addInvite } from "../config/invites.js";
 
 const db = new QuickDB();
@@ -46,7 +46,7 @@ export default {
     ).toString();
     await db.set(`verificationCode_${member.id}`, verificationCode);
 
-    const embed = new MessageEmbed()
+    const embed = new EmbedBuilder()
       .setTitle("Vérification requise")
       .setDescription(
         `Veuillez entrer ce code dans le salon <#${verificationChannelId}> pour vérifier votre compte : **${verificationCode}**`
