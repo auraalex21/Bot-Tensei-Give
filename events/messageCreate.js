@@ -6,15 +6,19 @@ import {
   incrementMessageCount,
 } from "../config/levels.js";
 import { createCanvas, loadImage } from "canvas";
-import { AttachmentBuilder, Events } from "discord.js";
+import { AttachmentBuilder, Events, PermissionsBitField } from "discord.js";
 import { QuickDB } from "quick.db";
 
 const db = new QuickDB();
 const economyTable = db.table("economy");
 
+// 📌 Configurations
 const rewardChannelId = "1339234268907573250";
 const levelUpChannelId = "1340011943733366805";
+const verificationChannelId = "1340366991038615592"; // ID du salon de vérification
+const verificationRoleId = "1339298936099442759"; // ID du rôle à ajouter après vérification
 
+// 🎰 Récompenses & Spam Protection
 const minMessageReward = 10;
 const maxMessageReward = 15;
 const blacklistDuration = 5 * 60 * 1000; // 5 minutes
@@ -22,7 +26,7 @@ const spamThreshold = 3; // Seuil de spam
 const spamInterval = 1000; // Intervalle en ms
 
 const userBlacklist = new Map();
-const userMessageTimestamps = new Map(); // Stocke les messages récents
+const userMessageTimestamps = new Map();
 
 export default {
   name: Events.MessageCreate,
@@ -37,7 +41,48 @@ export default {
       `📩 Message reçu de ${message.author.tag} dans ${message.channel.id}`
     );
 
-    // 🚫 Vérifier si l'utilisateur est blacklisté
+    // 📌 [1] Vérification Raid Protect
+    if (message.channel.id === verificationChannelId) {
+      const verificationCode = await db.get(`verificationCode_${userId}`);
+      if (!verificationCode) return;
+
+      if (message.content.trim() === verificationCode) {
+        const member = message.guild.members.cache.get(userId);
+        const role = message.guild.roles.cache.get(verificationRoleId);
+
+        if (!role) {
+          console.error("❌ Le rôle de vérification est introuvable !");
+          return;
+        }
+
+        if (!member) {
+          console.error("❌ Impossible de trouver le membre dans le serveur.");
+          return;
+        }
+
+        // Vérifier si le bot a la permission d'ajouter des rôles
+        const botMember = message.guild.members.cache.get(client.user.id);
+        if (!botMember.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+          console.error("❌ Le bot n'a pas la permission d'ajouter des rôles.");
+          return;
+        }
+
+        // Ajouter le rôle et confirmer la vérification
+        await member.roles.add(role);
+        await db.delete(`verificationCode_${userId}`);
+
+        await message.channel.send(
+          `✅ ${message.author}, vous avez été vérifié avec succès !`
+        );
+      } else {
+        await message.channel.send(
+          `❌ ${message.author}, le code est incorrect. Réessayez.`
+        );
+      }
+      return;
+    }
+
+    // 🚫 [2] Vérifier si l'utilisateur est blacklisté pour spam
     if (userBlacklist.has(userId)) {
       const blacklistInfo = userBlacklist.get(userId);
       if (now - blacklistInfo.timestamp < blacklistDuration) {
@@ -57,7 +102,7 @@ export default {
       }
     }
 
-    // 📡 Détection du spam
+    // 📡 [3] Détection du spam
     if (!userMessageTimestamps.has(userId)) {
       userMessageTimestamps.set(userId, []);
     }
@@ -84,7 +129,7 @@ export default {
 
     await setLastMessageTime(userId, guildId, now);
 
-    // 🎮 Gagner de l'XP et de l'argent si l'utilisateur n'est pas blacklisté
+    // 🎮 [4] Gagner de l'XP et de l'argent si l'utilisateur n'est pas blacklisté
     if (message.channel.id === rewardChannelId) {
       console.log(`⭐ Ajout d'expérience pour ${message.author.username}`);
 
@@ -113,6 +158,7 @@ export default {
       }
     }
 
+    // 💰 [5] Récompense d'argent pour l'envoi de messages
     if (!message.author.bot && message.channel.id === rewardChannelId) {
       const reward =
         Math.floor(Math.random() * (maxMessageReward - minMessageReward + 1)) +
@@ -137,14 +183,12 @@ async function generateLevelUpImage(user, level) {
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
-  // 🎨 Fond avec dégradé
   const gradient = ctx.createLinearGradient(0, 0, width, height);
   gradient.addColorStop(0, "#141E30");
   gradient.addColorStop(1, "#243B55");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
 
-  // 🖼️ Charger l'avatar
   const avatarURL = user.displayAvatarURL({ format: "png", size: 128 });
   let avatar;
   try {
@@ -154,24 +198,6 @@ async function generateLevelUpImage(user, level) {
     avatar = await loadImage("https://cdn.discordapp.com/embed/avatars/0.png");
   }
 
-  // ✨ Contour lumineux
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(
-    padding + avatarSize / 2,
-    height / 2,
-    avatarSize / 2 + 10,
-    0,
-    Math.PI * 2
-  );
-  ctx.fillStyle = "#FFD700";
-  ctx.shadowColor = "#FFD700";
-  ctx.shadowBlur = 15;
-  ctx.fill();
-  ctx.closePath();
-  ctx.restore();
-
-  // 🖼️ Avatar circulaire
   ctx.save();
   ctx.beginPath();
   ctx.arc(padding + avatarSize / 2, height / 2, avatarSize / 2, 0, Math.PI * 2);
@@ -186,23 +212,12 @@ async function generateLevelUpImage(user, level) {
   );
   ctx.restore();
 
-  // 🏆 Texte stylisé
   ctx.font = "bold 35px Arial";
   ctx.fillStyle = "#ffffff";
   ctx.fillText(user.tag, padding * 2 + avatarSize, height / 3);
-
   ctx.font = "bold 28px Arial";
   ctx.fillStyle = "#FFD700";
   ctx.fillText(`Niveau ${level}`, padding * 2 + avatarSize, height / 2);
-
-  // 🔥 Effet final
-  ctx.font = "italic 22px Arial";
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillText(
-    "🚀 Continuez comme ça !",
-    padding * 2 + avatarSize,
-    height - padding
-  );
 
   return new AttachmentBuilder(canvas.toBuffer(), { name: "level-up.png" });
 }

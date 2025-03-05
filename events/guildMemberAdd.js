@@ -1,19 +1,21 @@
 import { QuickDB } from "quick.db";
 import pkg from "discord.js";
-const { Events, EmbedBuilder } = pkg;
+const { Events, EmbedBuilder, PermissionsBitField } = pkg;
 import { addInvite } from "../config/invites.js";
 
 const db = new QuickDB();
 const verificationChannelId = "1340366991038615592"; // ID du salon de vérification
-const verificationRoleId = "1339298936099442759"; // ID du rôle de vérification
+const verificationRoleId = "1339298936099442759"; // ID du rôle à ajouter après vérification
 
 export default (client) => ({
   name: Events.GuildMemberAdd,
   async execute(member) {
-    console.log(`Nouveau membre ajouté : ${member.user.tag}`);
+    console.log(`👤 Nouveau membre ajouté : ${member.user.tag}`);
+
     const invitesBefore = (await db.get(`invites_${member.guild.id}`)) || {};
     const invitesAfter = await member.guild.invites.fetch();
 
+    // Trouver l'invitation utilisée
     const invite = invitesAfter.find(
       (i) => invitesBefore[i.code] && invitesBefore[i.code] < i.uses
     );
@@ -21,9 +23,10 @@ export default (client) => ({
     if (invite) {
       const inviter = invite.inviter;
       await addInvite(inviter.id, member.guild.id);
-      await db.set(`invitedBy_${member.id}`, inviter.id); // Enregistrer qui a invité le membre
+      await db.set(`invitedBy_${member.id}`, inviter.id);
     }
 
+    // Mettre à jour les invitations dans la base de données
     await db.set(
       `invites_${member.guild.id}`,
       invitesAfter.reduce((acc, invite) => {
@@ -32,28 +35,28 @@ export default (client) => ({
       }, {})
     );
 
-    // Vérifiez si le bot a les permissions nécessaires
+    // Vérifier si le bot a les permissions nécessaires
     const botMember = member.guild.members.cache.get(client.user.id);
-    if (!botMember.permissions.has("MANAGE_ROLES")) {
-      console.error(
-        `❌ Le bot n'a pas les permissions nécessaires pour gérer les rôles.`
-      );
+    if (!botMember.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+      console.error("❌ Le bot n'a pas la permission de gérer les rôles.");
       return;
     }
 
-    // Protection contre les raids avec vérification par code
+    // Générer un code de vérification
     const verificationCode = Math.floor(
       100000 + Math.random() * 900000
     ).toString();
     await db.set(`verificationCode_${member.id}`, verificationCode);
 
+    // Créer l'embed de vérification
     const embed = new EmbedBuilder()
-      .setTitle("Vérification requise")
+      .setTitle("🔒 Vérification requise")
       .setDescription(
-        `Veuillez entrer ce code dans le salon <#${verificationChannelId}> pour vérifier votre compte : **${verificationCode}**`
+        `Bienvenue ${member.user.username} !\nVeuillez entrer ce code dans <#${verificationChannelId}> pour vérifier votre compte : **${verificationCode}**`
       )
       .setColor("#0000FF");
 
+    // Envoyer le message en MP
     try {
       await member.send({ embeds: [embed] });
     } catch (error) {
@@ -61,29 +64,3 @@ export default (client) => ({
     }
   },
 });
-
-// Event listener for messageCreate
-export const messageCreateListener = async (message) => {
-  if (message.channel.id !== verificationChannelId) return;
-
-  const verificationCode = await db.get(
-    `verificationCode_${message.author.id}`
-  );
-  if (!verificationCode) return;
-
-  if (message.content === verificationCode) {
-    const member = message.guild.members.cache.get(message.author.id);
-    const role = message.guild.roles.cache.get(verificationRoleId);
-    if (member && role) {
-      await member.roles.add(role);
-      await db.delete(`verificationCode_${message.author.id}`);
-      await message.channel.send(
-        `✅ ${message.author}, vous avez été vérifié avec succès !`
-      );
-    }
-  } else {
-    await message.channel.send(
-      `❌ ${message.author}, le code de vérification est incorrect.`
-    );
-  }
-};
