@@ -27,3 +27,4 @@ giveaways.json
 .idea/
 *.sublime-project
 *.sublime-workspace
+json.sqlite
