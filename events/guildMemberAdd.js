@@ -5,6 +5,7 @@ import { addInvite } from "../config/invites.js";
 
 const db = new QuickDB();
 const verificationChannelId = "1340366991038615592"; // ID du salon de vérification
+const verificationRoleId = "1339298936099442759"; // ID du rôle de vérification
 
 export default {
   name: Events.GuildMemberAdd,
@@ -60,3 +61,29 @@ export default {
     }
   },
 };
+
+// Event listener for messageCreate
+client.on(Events.MessageCreate, async (message) => {
+  if (message.channel.id !== verificationChannelId) return;
+
+  const verificationCode = await db.get(
+    `verificationCode_${message.author.id}`
+  );
+  if (!verificationCode) return;
+
+  if (message.content === verificationCode) {
+    const member = message.guild.members.cache.get(message.author.id);
+    const role = message.guild.roles.cache.get(verificationRoleId);
+    if (member && role) {
+      await member.roles.add(role);
+      await db.delete(`verificationCode_${message.author.id}`);
+      await message.channel.send(
+        `✅ ${message.author}, vous avez été vérifié avec succès !`
+      );
+    }
+  } else {
+    await message.channel.send(
+      `❌ ${message.author}, le code de vérification est incorrect.`
+    );
+  }
+});
