@@ -4,7 +4,7 @@ import { createCanvas } from "canvas";
 
 // Initialisation de la base de données
 const db = new QuickDB();
-// const economyTable = db.table("economy");
+const economyTable = db.table("economy");
 
 // ID de l'utilisateur à exclure du leaderboard
 const excludedUserId = "378998346712481812";
@@ -24,7 +24,7 @@ export async function execute(interaction) {
 
     // ✅ Empêche l'expiration de l'interaction en la différant immédiatement
     await interaction.deferReply();
-    const allUsers = await db.all(); // Fetch all users from the database
+    const allUsers = await economyTable.all(); // Fetch all users from the economy table
     console.log("All Users:", allUsers); // Log all users before filtering and sorting
 
     const sortedUsers = allUsers
