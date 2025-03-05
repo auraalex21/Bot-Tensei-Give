@@ -1,8 +1,9 @@
 import { QuickDB } from "quick.db";
-import { Events } from "discord.js";
+import { Events, MessageEmbed } from "discord.js";
 import { addInvite } from "../config/invites.js";
 
 const db = new QuickDB();
+const verificationChannelId = "1340366991038615592"; // ID du salon de vérification
 
 export default {
   name: Events.GuildMemberAdd,
@@ -36,6 +37,25 @@ export default {
         `❌ Le bot n'a pas les permissions nécessaires pour gérer les rôles.`
       );
       return;
+    }
+
+    // Protection contre les raids avec vérification par code
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+    await db.set(`verificationCode_${member.id}`, verificationCode);
+
+    const embed = new MessageEmbed()
+      .setTitle("Vérification requise")
+      .setDescription(
+        `Veuillez entrer ce code dans le salon <#${verificationChannelId}> pour vérifier votre compte : **${verificationCode}**`
+      )
+      .setColor("BLUE");
+
+    try {
+      await member.send({ embeds: [embed] });
+    } catch (error) {
+      console.error(`❌ Impossible d'envoyer un message à ${member.user.tag}.`);
     }
   },
 };
