@@ -18,6 +18,12 @@ export default {
   name: Events.InteractionCreate,
   async execute(client, interaction) {
     if (interaction.isCommand()) {
+      // Vérifiez si l'interaction a déjà été reconnue
+      if (interaction.replied || interaction.deferred) {
+        console.warn("Interaction déjà reconnue :", interaction.id);
+        return;
+      }
+
       const command = client.commands.get(interaction.commandName);
       if (!command) return;
 
