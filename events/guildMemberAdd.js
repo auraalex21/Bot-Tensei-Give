@@ -56,11 +56,45 @@ export default (client) => ({
       )
       .setColor("#0000FF");
 
-    // Envoyer le message en MP
-    try {
-      await member.send({ embeds: [embed] });
-    } catch (error) {
-      console.error(`❌ Impossible d'envoyer un message à ${member.user.tag}.`);
+    // Envoyer le message dans le salon de vérification
+    const verificationChannel = member.guild.channels.cache.get(
+      verificationChannelId
+    );
+    if (verificationChannel) {
+      await verificationChannel.send({
+        content: `<@${member.id}>`,
+        embeds: [embed],
+      });
+    } else {
+      console.error("❌ Le salon de vérification n'a pas été trouvé.");
     }
+
+    // Ajouter un listener pour les messages dans le salon de vérification
+    client.on(Events.MessageCreate, async (message) => {
+      if (
+        message.channel.id === verificationChannelId &&
+        message.author.id === member.id
+      ) {
+        const enteredCode = message.content.trim();
+        const storedCode = await db.get(`verificationCode_${member.id}`);
+
+        if (enteredCode === storedCode) {
+          const role = member.guild.roles.cache.get(verificationRoleId);
+          if (role) {
+            await member.roles.add(role);
+            await db.delete(`verificationCode_${member.id}`);
+            await message.reply(
+              "✅ Vérification réussie ! Vous avez maintenant accès au serveur."
+            );
+          } else {
+            console.error("❌ Le rôle de vérification n'a pas été trouvé.");
+          }
+        } else {
+          await message.reply(
+            "❌ Code de vérification incorrect. Veuillez réessayer."
+          );
+        }
+      }
+    });
   },
 });
