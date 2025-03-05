@@ -26,5 +26,9 @@ giveaways.json
 .vscode/
 .idea/
 *.sublime-project
+<<<<<<< HEAD
+*.sublime-workspacejson.sqlite
+=======
 *.sublime-workspace
 json.sqlite
+>>>>>>> refs/remotes/origin/main
