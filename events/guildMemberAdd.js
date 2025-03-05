@@ -1,5 +1,6 @@
 import { QuickDB } from "quick.db";
-import { Events, MessageEmbed } from "discord.js";
+import pkg from "discord.js";
+const { Events, MessageEmbed } = pkg;
 import { addInvite } from "../config/invites.js";
 
 const db = new QuickDB();
