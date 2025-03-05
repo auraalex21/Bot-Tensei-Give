@@ -13,15 +13,20 @@ export default (client) => ({
     console.log(`👤 Nouveau membre ajouté : ${member.user.tag}`);
 
     const invitesBefore = (await db.get(`invites_${member.guild.id}`)) || {};
+    console.log("Invitations avant l'arrivée du membre :", invitesBefore);
+
     const invitesAfter = await member.guild.invites.fetch();
+    console.log("Invitations après l'arrivée du membre :", invitesAfter);
 
     // Trouver l'invitation utilisée
     const invite = invitesAfter.find(
       (i) => invitesBefore[i.code] && invitesBefore[i.code] < i.uses
     );
+    console.log("Invitation utilisée :", invite);
 
     if (invite) {
       const inviter = invite.inviter;
+      console.log("Invité par :", inviter.tag);
       await addInvite(inviter.id, member.guild.id);
       await db.set(`invitedBy_${member.id}`, inviter.id);
     }
@@ -34,6 +39,7 @@ export default (client) => ({
         return acc;
       }, {})
     );
+    console.log("Invitations mises à jour dans la base de données.");
 
     // Vérifier si le bot a les permissions nécessaires
     const botMember = member.guild.members.cache.get(client.user.id);
@@ -47,6 +53,7 @@ export default (client) => ({
       100000 + Math.random() * 900000
     ).toString();
     await db.set(`verificationCode_${member.id}`, verificationCode);
+    console.log("Code de vérification généré :", verificationCode);
 
     // Créer l'embed de vérification
     const embed = new EmbedBuilder()
@@ -65,6 +72,7 @@ export default (client) => ({
         content: `<@${member.id}>`,
         embeds: [embed],
       });
+      console.log("Message de vérification envoyé dans le salon.");
     } else {
       console.error("❌ Le salon de vérification n'a pas été trouvé.");
     }
@@ -75,8 +83,14 @@ export default (client) => ({
         message.channel.id === verificationChannelId &&
         message.author.id === member.id
       ) {
+        console.log(
+          "Message reçu dans le salon de vérification :",
+          message.content
+        );
         const enteredCode = message.content.trim();
         const storedCode = await db.get(`verificationCode_${member.id}`);
+        console.log("Code de vérification entré :", enteredCode);
+        console.log("Code de vérification stocké :", storedCode);
 
         if (enteredCode === storedCode) {
           const role = member.guild.roles.cache.get(verificationRoleId);
@@ -86,6 +100,7 @@ export default (client) => ({
             await message.reply(
               "✅ Vérification réussie ! Vous avez maintenant accès au serveur."
             );
+            console.log("Rôle de vérification ajouté au membre.");
           } else {
             console.error("❌ Le rôle de vérification n'a pas été trouvé.");
           }
@@ -93,6 +108,7 @@ export default (client) => ({
           await message.reply(
             "❌ Code de vérification incorrect. Veuillez réessayer."
           );
+          console.log("Code de vérification incorrect.");
         }
       }
     });
