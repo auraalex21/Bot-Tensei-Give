@@ -63,7 +63,7 @@ export default (client) => ({
 });
 
 // Event listener for messageCreate
-export const messageCreateListener = async (client, message) => {
+export const messageCreateListener = async (message) => {
   if (message.channel.id !== verificationChannelId) return;
 
   const verificationCode = await db.get(
