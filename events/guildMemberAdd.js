@@ -69,16 +69,23 @@ export default (client) => ({
       verificationChannelId
     );
     if (verificationChannel) {
-      const thread = await verificationChannel.threads.create({
-        name: `Vérification de ${member.user.username}`,
-        autoArchiveDuration: 60,
-        reason: "Vérification de nouveau membre",
-      });
-      await thread.send({
-        content: `<@${member.id}>`,
-        embeds: [embed],
-      });
-      console.log("Fil de vérification créé et message envoyé.");
+      try {
+        const thread = await verificationChannel.threads.create({
+          name: `Vérification de ${member.user.username}`,
+          autoArchiveDuration: 60,
+          reason: "Vérification de nouveau membre",
+        });
+        await thread.send({
+          content: `<@${member.id}>`,
+          embeds: [embed],
+        });
+        console.log("Fil de vérification créé et message envoyé.");
+      } catch (error) {
+        console.error(
+          "❌ Erreur lors de la création du fil de vérification :",
+          error
+        );
+      }
     } else {
       console.error("❌ Le salon de vérification n'a pas été trouvé.");
     }
