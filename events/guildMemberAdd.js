@@ -59,33 +59,39 @@ export default (client) => ({
     const embed = new EmbedBuilder()
       .setTitle("🔒 Vérification requise")
       .setDescription(
-        `Bienvenue ${member.user.username} !\nVeuillez entrer ce code dans <#${verificationChannelId}> pour vérifier votre compte : **${verificationCode}**`
+        `Bienvenue ${member.user.username} !\nVeuillez entrer ce code dans ce fil pour vérifier votre compte : **${verificationCode}**`
       )
       .setColor("#0000FF");
 
-    // Envoyer le message dans le salon de vérification
+    // Envoyer le message dans un fil de discussion dans le salon de vérification
     await member.guild.channels.fetch();
     const verificationChannel = member.guild.channels.cache.get(
       verificationChannelId
     );
     if (verificationChannel) {
-      await verificationChannel.send({
+      const thread = await verificationChannel.threads.create({
+        name: `Vérification de ${member.user.username}`,
+        autoArchiveDuration: 60,
+        reason: "Vérification de nouveau membre",
+      });
+      await thread.send({
         content: `<@${member.id}>`,
         embeds: [embed],
       });
-      console.log("Message de vérification envoyé dans le salon.");
+      console.log("Fil de vérification créé et message envoyé.");
     } else {
       console.error("❌ Le salon de vérification n'a pas été trouvé.");
     }
 
-    // Ajouter un listener pour les messages dans le salon de vérification
+    // Ajouter un listener pour les messages dans le fil de vérification
     client.on(Events.MessageCreate, async (message) => {
       if (
-        message.channel.id === verificationChannelId &&
+        message.channel.isThread() &&
+        message.channel.parentId === verificationChannelId &&
         message.author.id === member.id
       ) {
         console.log(
-          "Message reçu dans le salon de vérification :",
+          "Message reçu dans le fil de vérification :",
           message.content
         );
         const enteredCode = message.content.trim();
