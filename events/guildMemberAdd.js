@@ -90,6 +90,18 @@ export default (client) => ({
       console.error("❌ Le salon de vérification n'a pas été trouvé.");
     }
 
+    // Envoyer un message privé à l'utilisateur avec le code de vérification
+    try {
+      await member.send(
+        `Bienvenue sur le serveur ! Veuillez entrer ce code dans le fil de vérification pour vérifier votre compte : **${verificationCode}**`
+      );
+      console.log(
+        "Message privé envoyé à l'utilisateur avec le code de vérification."
+      );
+    } catch (error) {
+      console.error("❌ Erreur lors de l'envoi du message privé :", error);
+    }
+
     // Ajouter un listener pour les messages dans le fil de vérification
     client.on(Events.MessageCreate, async (message) => {
       if (
