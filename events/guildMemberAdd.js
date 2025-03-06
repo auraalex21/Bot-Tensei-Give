@@ -59,45 +59,26 @@ export default (client) => ({
     const embed = new EmbedBuilder()
       .setTitle("🔒 Vérification requise")
       .setDescription(
-        `Bienvenue ${member.user.username} !\nVeuillez entrer ce code dans ce fil pour vérifier votre compte : **${verificationCode}**`
+        `Bienvenue ${member.user.username} !\nVeuillez entrer ce code dans ce salon pour vérifier votre compte : **${verificationCode}**`
       )
       .setColor("#0000FF");
 
-    // Envoyer le message dans un fil de discussion dans le salon de vérification
+    // Envoyer l'embed dans le salon de vérification
     await member.guild.channels.fetch();
     const verificationChannel = member.guild.channels.cache.get(
       verificationChannelId
     );
+    let verificationMessage;
     if (verificationChannel) {
       try {
-        const thread = await verificationChannel.threads.create({
-          name: `Vérification de ${member.user.username}`,
-          autoArchiveDuration: 60,
-          reason: "Vérification de nouveau membre",
-        });
-        await thread.send({
+        verificationMessage = await verificationChannel.send({
           content: `<@${member.id}>`,
           embeds: [embed],
         });
-        console.log("Fil de vérification créé et message envoyé.");
+        console.log("Message de vérification envoyé dans le salon.");
       } catch (error) {
         console.error(
-          "❌ Erreur lors de la création du fil de vérification :",
-          error
-        );
-      }
-
-      // Envoyer un message dans le salon de vérification avec le code de vérification
-      try {
-        await verificationChannel.send(
-          `Bienvenue ${member.user.username} ! Veuillez entrer ce code dans le fil de vérification pour vérifier votre compte : **${verificationCode}**`
-        );
-        console.log(
-          "Message envoyé dans le salon de vérification avec le code."
-        );
-      } catch (error) {
-        console.error(
-          "❌ Erreur lors de l'envoi du message dans le salon de vérification :",
+          "❌ Erreur lors de l'envoi du message de vérification :",
           error
         );
       }
@@ -108,7 +89,7 @@ export default (client) => ({
     // Envoyer un message privé à l'utilisateur avec le code de vérification
     try {
       await member.send(
-        `Bienvenue sur le serveur ! Veuillez entrer ce code dans le fil de vérification pour vérifier votre compte : **${verificationCode}**`
+        `Bienvenue sur le serveur ! Veuillez entrer ce code dans le salon de vérification pour vérifier votre compte : **${verificationCode}**`
       );
       console.log(
         "Message privé envoyé à l'utilisateur avec le code de vérification."
@@ -117,15 +98,14 @@ export default (client) => ({
       console.error("❌ Erreur lors de l'envoi du message privé :", error);
     }
 
-    // Ajouter un listener pour les messages dans le fil de vérification
+    // Ajouter un listener pour les messages dans le salon de vérification
     client.on(Events.MessageCreate, async (message) => {
       if (
-        message.channel.isThread() &&
-        message.channel.parentId === verificationChannelId &&
+        message.channel.id === verificationChannelId &&
         message.author.id === member.id
       ) {
         console.log(
-          "Message reçu dans le fil de vérification :",
+          "Message reçu dans le salon de vérification :",
           message.content
         );
         const enteredCode = message.content.trim();
@@ -142,6 +122,10 @@ export default (client) => ({
               "✅ Vérification réussie ! Vous avez maintenant accès au serveur."
             );
             console.log("Rôle de vérification ajouté au membre.");
+            if (verificationMessage) {
+              await verificationMessage.delete();
+              console.log("Message de vérification supprimé.");
+            }
           } else {
             console.error("❌ Le rôle de vérification n'a pas été trouvé.");
           }
