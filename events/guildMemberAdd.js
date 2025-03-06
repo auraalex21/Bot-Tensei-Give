@@ -86,6 +86,21 @@ export default (client) => ({
           error
         );
       }
+
+      // Envoyer un message dans le salon de vérification avec le code de vérification
+      try {
+        await verificationChannel.send(
+          `Bienvenue ${member.user.username} ! Veuillez entrer ce code dans le fil de vérification pour vérifier votre compte : **${verificationCode}**`
+        );
+        console.log(
+          "Message envoyé dans le salon de vérification avec le code."
+        );
+      } catch (error) {
+        console.error(
+          "❌ Erreur lors de l'envoi du message dans le salon de vérification :",
+          error
+        );
+      }
     } else {
       console.error("❌ Le salon de vérification n'a pas été trouvé.");
     }
