@@ -1,141 +1,98 @@
 import { QuickDB } from "quick.db";
 import pkg from "discord.js";
-const { Events, EmbedBuilder, PermissionsBitField } = pkg;
-import { addInvite } from "../config/invites.js";
+import { createCanvas } from "canvas";
+const { Events } = pkg;
 
 const db = new QuickDB();
 const verificationChannelId = "1340366991038615592"; // ID du salon de vérification
 const verificationRoleId = "1339298936099442759"; // ID du rôle à ajouter après vérification
 
-export default (client) => ({
+export default {
   name: Events.GuildMemberAdd,
-  async execute(member) {
-    console.log(`👤 Nouveau membre ajouté : ${member.user.tag}`);
-
-    const invitesBefore = (await db.get(`invites_${member.guild.id}`)) || {};
-    console.log("Invitations avant l'arrivée du membre :", invitesBefore);
-
-    const invitesAfter = await member.guild.invites.fetch();
-    console.log("Invitations après l'arrivée du membre :", invitesAfter);
-
-    // Trouver l'invitation utilisée
-    const invite = invitesAfter.find(
-      (i) => invitesBefore[i.code] && invitesBefore[i.code] < i.uses
-    );
-    console.log("Invitation utilisée :", invite);
-
-    if (invite) {
-      const inviter = invite.inviter;
-      console.log("Invité par :", inviter.tag);
-      await addInvite(inviter.id, member.guild.id);
-      await db.set(`invitedBy_${member.id}`, inviter.id);
-    }
-
-    // Mettre à jour les invitations dans la base de données
-    await db.set(
-      `invites_${member.guild.id}`,
-      invitesAfter.reduce((acc, invite) => {
-        acc[invite.code] = invite.uses;
-        return acc;
-      }, {})
-    );
-    console.log("Invitations mises à jour dans la base de données.");
-
-    // Vérifier si le bot a les permissions nécessaires
+  async execute(client, member) {
     const botMember = member.guild.members.cache.get(client.user.id);
-    if (!botMember.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+    if (!botMember.permissions.has("MANAGE_ROLES")) {
       console.error("❌ Le bot n'a pas la permission de gérer les rôles.");
       return;
     }
+    console.log(`👤 Nouveau membre ajouté : ${member.user.tag}`);
 
-    // Générer un code de vérification
+    // Génération du code
     const verificationCode = Math.floor(
       100000 + Math.random() * 900000
     ).toString();
     await db.set(`verificationCode_${member.id}`, verificationCode);
     console.log("Code de vérification généré :", verificationCode);
 
-    // Créer l'embed de vérification
-    const embed = new EmbedBuilder()
-      .setTitle("🔒 Vérification requise")
-      .setDescription(
-        `Bienvenue ${member.user.username} !\nVeuillez entrer ce code dans ce salon pour vérifier votre compte : **${verificationCode}**`
-      )
-      .setColor("#0000FF");
+    // Création de l'image du code avec message
+    const canvas = createCanvas(500, 300);
+    const ctx = canvas.getContext("2d");
 
-    // Envoyer l'embed dans le salon de vérification
-    await member.guild.channels.fetch();
+    // Création du fond dégradé
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, "#0000FF");
+    gradient.addColorStop(1, "#8000FF");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Texte de bienvenue
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 24px Arial";
+    ctx.fillText(`Bienvenue ${member.user.username} !`, 50, 50);
+    ctx.font = "20px Arial";
+    ctx.fillText("Veuillez entrer ce code dans ce salon", 50, 90);
+    ctx.fillText("pour vérifier votre compte.", 50, 120);
+
+    // Encadrement du code
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(50, 150, 400, 70);
+
+    // Code de vérification
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 36px Arial";
+    ctx.fillText(`Code: ${verificationCode}`, 80, 195);
+
+    const buffer = canvas.toBuffer();
+
+    // Envoi de l'image de vérification
     const verificationChannel = member.guild.channels.cache.get(
       verificationChannelId
     );
     let verificationMessage;
     if (verificationChannel) {
-      try {
-        verificationMessage = await verificationChannel.send({
-          content: `<@${member.id}>`,
-          embeds: [embed],
-        });
-        console.log("Message de vérification envoyé dans le salon.");
-      } catch (error) {
-        console.error(
-          "❌ Erreur lors de l'envoi du message de vérification :",
-          error
-        );
-      }
+      verificationMessage = await verificationChannel.send({
+        files: [{ attachment: buffer, name: "verification-code.png" }],
+      });
+      console.log("Message de vérification envoyé.");
     } else {
       console.error("❌ Le salon de vérification n'a pas été trouvé.");
+      return;
     }
 
-    // Envoyer un message privé à l'utilisateur avec le code de vérification
-    try {
-      await member.send(
-        `Bienvenue sur le serveur ! Veuillez entrer ce code dans le salon de vérification pour vérifier votre compte : **${verificationCode}**`
-      );
-      console.log(
-        "Message privé envoyé à l'utilisateur avec le code de vérification."
-      );
-    } catch (error) {
-      console.error("❌ Erreur lors de l'envoi du message privé :", error);
-    }
-
-    // Ajouter un listener pour les messages dans le salon de vérification
+    // Écoute des messages pour vérifier le code
     client.on(Events.MessageCreate, async (message) => {
       if (
         message.channel.id === verificationChannelId &&
         message.author.id === member.id
       ) {
-        console.log(
-          "Message reçu dans le salon de vérification :",
-          message.content
-        );
+        console.log("Message reçu :", message.content);
         const enteredCode = message.content.trim();
         const storedCode = await db.get(`verificationCode_${member.id}`);
-        console.log("Code de vérification entré :", enteredCode);
-        console.log("Code de vérification stocké :", storedCode);
 
         if (enteredCode === storedCode) {
           const role = member.guild.roles.cache.get(verificationRoleId);
           if (role) {
             await member.roles.add(role);
             await db.delete(`verificationCode_${member.id}`);
-            await message.reply(
-              "✅ Vérification réussie ! Vous avez maintenant accès au serveur."
-            );
-            console.log("Rôle de vérification ajouté au membre.");
-            if (verificationMessage) {
-              await verificationMessage.delete();
-              console.log("Message de vérification supprimé.");
-            }
+            await message.delete();
+            if (verificationMessage) await verificationMessage.delete();
+            console.log("Rôle ajouté au membre, message supprimé.");
           } else {
             console.error("❌ Le rôle de vérification n'a pas été trouvé.");
           }
-        } else {
-          await message.reply(
-            "❌ Code de vérification incorrect. Veuillez réessayer."
-          );
-          console.log("Code de vérification incorrect.");
         }
       }
     });
   },
-});
+};
