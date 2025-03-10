@@ -56,17 +56,6 @@ export default {
 
     client.on("interactionCreate", async (interaction) => {
       if (!interaction.isButton()) return;
-
-      if (interaction.customId === "open_chest") {
-        await interaction.deferUpdate();
-        await interaction.editReply({
-          content: `🎉 ${interaction.user.username} a ouvert le coffre et reçu une récompense.`,
-          embeds: [],
-          components: [],
-        });
-
-        // Optionally, you can add logic to give the user a reward here
-      }
     });
 
     // Send the first chest immediately
