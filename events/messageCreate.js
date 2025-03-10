@@ -45,9 +45,9 @@ export default {
     const currentHour = new Date(parisTime).getHours();
 
     if (
-      message.content.toLowerCase() === "bonsoir" &&
+      message.content.toLowerCase().includes("bonsoir") &&
       currentHour >= 0 &&
-      currentHour < 20
+      currentHour < 16
     ) {
       if (!userBonsoirWarnings.has(userId)) {
         userBonsoirWarnings.set(userId, 1);
