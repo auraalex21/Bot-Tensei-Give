@@ -44,22 +44,98 @@ export default {
     });
     const currentHour = new Date(parisTime).getHours();
 
+    const bonsoirVariations = [
+      "bonsoir",
+      "bsr",
+      "boonsoir",
+      "bon swar",
+      "bonsoirée",
+      "bonsoire",
+      "bonsoiree",
+      "b'soir",
+      "bon swr",
+      "bonsoooiiir",
+      "bonsoiiir",
+      "bonsoirrr",
+      "bonsoiiiir",
+      "bonswouar",
+      "bonsoâr",
+      "bonsoaar",
+      "bØnsøîr",
+      "bønsoir",
+      "b0ns0ir",
+      "b0nso1r",
+      "bønsoîr",
+      "bonzoir",
+      "bonswar",
+      "bonsouar",
+      "boñsóir",
+      "bonswor",
+      "bonsuarr",
+      "bsoiir",
+      "bonsuââr",
+      "bonswaaar",
+      "bonssssooooiiiirrrr",
+      "bônsoir",
+      "boñswar",
+      "bonzwar",
+      "boanesoire",
+      "boanesoiree",
+      "boânsoir",
+      "boànsoir",
+      "bo'nsoir",
+      "bønzøîr",
+      "boönsoîr",
+      "bonsuyar",
+      "bonsssoir",
+      "bonsowar",
+      "bonzzzzsoir",
+      "bo'nsoirée",
+      "bons0ir",
+      "bonswir",
+      "bonswouare",
+      "booonsoiiir",
+      "boooonsouar",
+      "bonnsouar",
+      "bonsoirw",
+      "boonsoooir",
+      "bonswoir",
+      "boonswâr",
+      "bonswoâr",
+      "bsonsoir",
+      "boånsoïr",
+      "b0n5o1r",
+      "bonšoir",
+      "boñsoîr",
+      "bonsuoir",
+      "bøn5oir",
+      "bøn5oîr",
+      "bonšøîr",
+      "bon5oir",
+      "bonswaïr",
+      "bônzøîr",
+      "bonsuoâr",
+      "bønszøir",
+    ];
+
     if (
-      message.content.toLowerCase().includes("bonsoir") &&
+      bonsoirVariations.some((variant) =>
+        message.content.toLowerCase().includes(variant)
+      ) &&
       currentHour >= 0 &&
       currentHour < 16
     ) {
       if (!userBonsoirWarnings.has(userId)) {
         userBonsoirWarnings.set(userId, 1);
         await message.channel.send(
-          `${message.author}, ce n'est pas le soir. La prochaine fois, je te TO.`
+          `${message.author}, ce n'est pas encore le soir. La prochaine fois, c'est un avertissement.`
         );
       } else {
         const warnings = userBonsoirWarnings.get(userId);
         if (warnings === 1) {
           userBonsoirWarnings.set(userId, 2);
           await message.channel.send(
-            `${message.author}, ce n'est toujours pas le soir. La prochaine fois, je te TO.`
+            `${message.author}, tu t'obstines… Encore un et c'est le timeout !`
           );
         } else if (warnings === 2) {
           const member = message.guild.members.cache.get(userId);
@@ -69,7 +145,7 @@ export default {
               "A dit 'bonsoir' plusieurs fois avant 16h"
             );
             await message.channel.send(
-              `${message.author} a été mis en timeout pour 10 minutes.`
+              `${message.author} a été mis en timeout pour 10 minutes. Faut apprendre à dire 'bonjour' !`
             );
           }
           userBonsoirWarnings.delete(userId);
