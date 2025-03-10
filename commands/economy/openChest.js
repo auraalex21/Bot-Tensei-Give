@@ -5,17 +5,17 @@ const db = new QuickDB();
 const economyTable = db.table("economy");
 
 const additionPhrases = [
-  "a découvert un trésor légendaire et a reçu",
-  "a bravé les dangers et a gagné",
-  "a trouvé un coffre caché et a obtenu",
-  "a été béni par les dieux et a reçu",
+  "a mis la main sur un trésor oublié et s'est enrichi de",
+  "a triomphé des épreuves du destin et a remporté",
+  "a percé les mystères d'un coffre ancien et a mis la main sur",
+  "a reçu la bénédiction des divinités et s'est vu offrir",
 ];
 
 const withdrawalPhrases = [
-  "a été frappé par la malédiction et a perdu",
-  "a dépensé une fortune pour un artefact rare et a sacrifié",
-  "a été volé par des bandits et a égaré",
-  "a parié et a perdu",
+  "a succombé à une sombre malédiction et s'est vu dépouillé de",
+  "a troqué sa fortune contre un artefact mythique, sacrifiant ainsi",
+  "a été pris en embuscade par des voleurs de l'ombre et a perdu",
+  "a tenté sa chance dans un pari audacieux… et a tout misé sur",
 ];
 
 export async function execute(interaction) {
