@@ -27,6 +27,7 @@ const spamInterval = 1000; // Intervalle en ms
 
 const userBlacklist = new Map();
 const userMessageTimestamps = new Map();
+const userBonsoirWarnings = new Map();
 
 export default {
   name: Events.MessageCreate,
@@ -36,6 +37,46 @@ export default {
     const userId = message.author.id;
     const guildId = message.guild.id;
     const now = Date.now();
+
+    // Check if the message is "bonsoir" and the current time in Paris
+    const parisTime = new Date().toLocaleString("en-US", {
+      timeZone: "Europe/Paris",
+    });
+    const currentHour = new Date(parisTime).getHours();
+
+    if (
+      message.content.toLowerCase() === "bonsoir" &&
+      currentHour >= 0 &&
+      currentHour < 20
+    ) {
+      if (!userBonsoirWarnings.has(userId)) {
+        userBonsoirWarnings.set(userId, 1);
+        await message.channel.send(
+          `${message.author}, ce n'est pas le soir. La prochaine fois, je te TO.`
+        );
+      } else {
+        const warnings = userBonsoirWarnings.get(userId);
+        if (warnings === 1) {
+          userBonsoirWarnings.set(userId, 2);
+          await message.channel.send(
+            `${message.author}, ce n'est toujours pas le soir. La prochaine fois, je te TO.`
+          );
+        } else if (warnings === 2) {
+          const member = message.guild.members.cache.get(userId);
+          if (member) {
+            await member.timeout(
+              10 * 60 * 1000,
+              "A dit 'bonsoir' plusieurs fois avant 16h"
+            );
+            await message.channel.send(
+              `${message.author} a été mis en timeout pour 10 minutes.`
+            );
+          }
+          userBonsoirWarnings.delete(userId);
+        }
+      }
+      return;
+    }
 
     console.log(
       `📩 Message reçu de ${message.author.tag} dans ${message.channel.id}`
