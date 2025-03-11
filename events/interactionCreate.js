@@ -1,4 +1,3 @@
-import { QuickDB } from "quick.db";
 import { createCanvas } from "canvas";
 import {
   ActionRowBuilder,
@@ -6,11 +5,7 @@ import {
   ButtonStyle,
   AttachmentBuilder,
   Events,
-  // Removed unused imports
 } from "discord.js";
-import { execute as openChest } from "../commands/economy/openChest.js";
-
-// Removed unused import
 
 export default {
   name: Events.InteractionCreate,
@@ -20,9 +15,7 @@ export default {
     if (!interaction.isChatInputCommand()) return; // Correct the interaction type check
 
     if (!command) {
-      console.error(
-        `No command matching ${interaction.commandName} was found.`
-      );
+      if (!interaction.isChatInputCommand()) return; // Correct the interaction type check
       return;
     }
 
@@ -67,7 +60,7 @@ async function handleCandidatureDecision(interaction, status) {
     if (user) {
       await sendMP(user, status);
     } else {
-      console.warn("⚠️ Impossible de trouver l'utilisateur de la candidature.");
+      // Removed unused function handleCandidatureDecision
     }
 
     const canvas = createCanvas(800, 300);
@@ -119,7 +112,7 @@ async function handleModalSubmit(interaction) {
     const motivation = interaction.fields.getTextInputValue("motivationInput");
 
     const width = 800;
-    let height = 300;
+    // Removed unused function handleModalSubmit
 
     const lineHeight = 28;
     const ctx = createCanvas(width, height).getContext("2d");
@@ -226,13 +219,14 @@ async function handleRejectionReason(interaction) {
   if (userId) {
     const user = await interaction.client.users.fetch(userId);
     await sendMP(user, false, reason);
-  }
+  } // Removed unused function handleRejectionReason
 
   if (!interaction.replied && !interaction.deferred) {
     await interaction.update({
       content: "❌ Candidature refusée.",
-      components: [],
     });
+    const userId = interaction.user.id; // Define userId
+    const user = await interaction.client.users.fetch(userId);
   } else {
     console.warn("⚠️ Interaction already replied or deferred.");
   }
