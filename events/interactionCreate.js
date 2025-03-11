@@ -10,14 +10,10 @@ import {
 export default {
   name: Events.InteractionCreate,
   async execute(interaction) {
-    if (!interaction.isCommand()) return; // Correct the interaction type check
+    if (!interaction.isChatInputCommand()) return;
 
-    if (!interaction.isChatInputCommand()) return; // Correct the interaction type check
-
-    if (!command) {
-      if (!interaction.isChatInputCommand()) return; // Correct the interaction type check
-      return;
-    }
+    const command = interaction.client.commands.get(interaction.commandName);
+    if (!command) return;
 
     try {
       await command.execute(interaction);
@@ -55,12 +51,9 @@ async function sendMP(user, status, reason = "") {
 
 async function handleCandidatureDecision(interaction, status) {
   try {
-    // Removed unused function
-
+    const user = await interaction.client.users.fetch(interaction.user.id);
     if (user) {
       await sendMP(user, status);
-    } else {
-      // Removed unused function handleCandidatureDecision
     }
 
     const canvas = createCanvas(800, 300);
@@ -107,13 +100,11 @@ async function handleCandidatureDecision(interaction, status) {
 
 async function handleModalSubmit(interaction) {
   try {
-    // Removed unused function
     const experience = interaction.fields.getTextInputValue("experienceInput");
     const motivation = interaction.fields.getTextInputValue("motivationInput");
 
     const width = 800;
-    // Removed unused function handleModalSubmit
-
+    let height = 300;
     const lineHeight = 28;
     const ctx = createCanvas(width, height).getContext("2d");
     ctx.font = "20px Arial";
@@ -146,7 +137,7 @@ async function handleModalSubmit(interaction) {
     ctxFinal.fillText("Pseudo:", 40, 110);
     ctxFinal.font = "18px Arial";
     ctxFinal.fillStyle = "#DDDDDD";
-    ctxFinal.fillText(pseudo, 140, 110);
+    ctxFinal.fillText(interaction.user.username, 140, 110);
 
     ctxFinal.font = "bold 20px Arial";
     ctxFinal.fillStyle = "#FFFFFF";
@@ -214,19 +205,17 @@ async function handleModalSubmit(interaction) {
 
 async function handleRejectionReason(interaction) {
   const reason = interaction.fields.getTextInputValue("reasonInput");
-  // Removed unused function
+  const userId = interaction.user.id;
+  const user = await interaction.client.users.fetch(userId);
 
-  if (userId) {
-    const user = await interaction.client.users.fetch(userId);
+  if (user) {
     await sendMP(user, false, reason);
-  } // Removed unused function handleRejectionReason
+  }
 
   if (!interaction.replied && !interaction.deferred) {
     await interaction.update({
       content: "❌ Candidature refusée.",
     });
-    const userId = interaction.user.id; // Define userId
-    const user = await interaction.client.users.fetch(userId);
   } else {
     console.warn("⚠️ Interaction already replied or deferred.");
   }
