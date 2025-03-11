@@ -78,7 +78,7 @@ export async function execute(interaction) {
             `La banque sera réinitialisée dans **${days} jours, ${hours} heures et ${minutes} minutes**.`
         );
 
-      return interaction.reply({ embeds: [embed], ephemeral: true });
+      return interaction.reply({ embeds: [embed], flags: 64 });
     } else if (subcommand === "rob") {
       const lastRobbed = (await economyTable.get(`last_robbed_${userId}`)) || 0;
 
@@ -94,7 +94,7 @@ export async function execute(interaction) {
             `❌ Vous avez déjà braqué la banque récemment. Réessayez dans ${hours} heures et ${minutes} minutes.`
           );
 
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        return interaction.reply({ embeds: [embed], flags: 64 });
       }
 
       let bankBalance = (await economyTable.get(serverBankKey)) || 0;
@@ -107,7 +107,7 @@ export async function execute(interaction) {
             "❌ Il n'y a plus rien à prendre dans la banque du serveur."
           );
 
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        return interaction.reply({ embeds: [embed], flags: 64 });
       }
 
       const robAmount = Math.floor(Math.random() * (30000 - 10000 + 1)) + 10000;
@@ -128,13 +128,13 @@ export async function execute(interaction) {
           `✅ Vous avez volé **${amountStolen}💸**. Votre nouveau solde est de **${userBalance}💸**.`
         );
 
-      return interaction.reply({ embeds: [embed], ephemeral: false });
+      return interaction.reply({ embeds: [embed], flags: 0 });
     } else if (subcommand === "fill") {
       if (userId !== "378998346712481812") {
         return interaction.reply({
           content:
             "❌ Vous n'avez pas la permission d'utiliser cette commande.",
-          ephemeral: true,
+          flags: 64,
         });
       }
 
@@ -151,14 +151,14 @@ export async function execute(interaction) {
           `✅ La banque du serveur a été remplie de **${amount}💸**. Le nouveau solde est de **${bankBalance}💸**.`
         );
 
-      return interaction.reply({ embeds: [embed], ephemeral: false });
+      return interaction.reply({ embeds: [embed], flags: 0 });
     }
   } catch (error) {
     console.error("❌ Erreur lors de l'exécution de la commande :", error);
     if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({
         content: "❌ Une erreur s'est produite.",
-        ephemeral: true,
+        flags: 64,
       });
     }
   }

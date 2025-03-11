@@ -16,60 +16,34 @@ const db = new QuickDB();
 
 export default {
   name: Events.InteractionCreate,
-  async execute(client, interaction) {
-    if (interaction.isCommand()) {
-      // Vérifiez si l'interaction a déjà été reconnue
-      if (interaction.replied || interaction.deferred) {
-        console.warn("Interaction déjà reconnue :", interaction.id);
-        return;
-      }
+  async execute(interaction) {
+    if (!interaction.isCommand()) return;
 
-      const command = client.commands.get(interaction.commandName);
-      if (!command) return;
+    const command = interaction.client.commands.get(interaction.commandName);
 
-      try {
-        if (!interaction.replied && !interaction.deferred) {
-          await command.execute(interaction);
-        }
-      } catch (error) {
-        console.error("Error handling interaction:", error);
-        if (!interaction.replied && !interaction.deferred) {
-          if (interaction.isRepliable()) {
-            await interaction.reply({
-              content: "There was an error while executing this command!",
-              ephemeral: true,
-            });
-          }
-        }
-      }
-    } else if (interaction.isModalSubmit()) {
-      if (interaction.customId === "candidatureModal") {
-        await handleModalSubmit(interaction);
-      } else if (interaction.customId === "rejectionReasonModal") {
-        await handleRejectionReason(interaction);
-      }
-    } else if (interaction.isButton()) {
-      if (interaction.customId === "acceptCandidature") {
-        await handleCandidatureDecision(interaction, true);
-      } else if (interaction.customId === "rejectCandidature") {
-        await handleCandidatureDecision(interaction, false);
-      } else if (interaction.customId === "participer") {
-        if (
-          !interaction.replied &&
-          !interaction.deferred &&
-          interaction.isRepliable()
-        ) {
-          await interaction.reply({
-            content: "Vous avez été ajouté au giveaway!",
-            ephemeral: true,
-          });
-        }
-      } else if (interaction.customId === "open_chest") {
-        try {
-          await openChest(interaction);
-        } catch (error) {
-          console.error("Error handling interaction:", error);
-        }
+    if (!command) {
+      console.error(
+        `No command matching ${interaction.commandName} was found.`
+      );
+      return;
+    }
+
+    try {
+      await command.execute(interaction);
+    } catch (error) {
+      console.error(`Error executing ${interaction.commandName}`);
+      console.error(error);
+
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          content: "There was an error while executing this command!",
+          ephemeral: true,
+        });
+      } else if (interaction.deferred) {
+        await interaction.followUp({
+          content: "There was an error while executing this command!",
+          ephemeral: true,
+        });
       }
     }
   },
