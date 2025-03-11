@@ -276,7 +276,7 @@ discord.js@^14.18.0, discord.js@>=14.0.0:
 discord.js@discordjs/discord.js#refs/pull/6414/head:
   version "0.0.0"
   resolved "git+ssh://git@github.com/discordjs/discord.js.git"
-  integrity sha512-Ik95/1y+QRU2J4iMLyZDxjsgPkBgdORuRrkwcARElam7zz+dpCxktDr1jT8mPga2p6WcdbXwIgHwpZw5hXhySQ==
+  integrity sha512-aMIvYu9zSQDmO7LD8MzusmfA2ElxXYhDAhK4tDPNVsUBBgGP7clfYOubx4+44Kb4zuaiGMpnrbTq1NY8PgkKBg==
 
 dotenv@^16.4.7:
   version "16.4.7"

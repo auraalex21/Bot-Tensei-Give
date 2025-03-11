@@ -116,6 +116,7 @@ export default {
       "bônzøîr",
       "bonsuoâr",
       "bønszøir",
+      "b0nsoir",
     ];
 
     if (
