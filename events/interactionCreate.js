@@ -6,20 +6,18 @@ import {
   ButtonStyle,
   AttachmentBuilder,
   Events,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
+  // Removed unused imports
 } from "discord.js";
 import { execute as openChest } from "../commands/economy/openChest.js";
 
-const db = new QuickDB();
+// Removed unused import
 
 export default {
   name: Events.InteractionCreate,
   async execute(interaction) {
     if (!interaction.isCommand()) return; // Correct the interaction type check
 
-    const command = interaction.client.commands.get(interaction.commandName);
+    if (!interaction.isChatInputCommand()) return; // Correct the interaction type check
 
     if (!command) {
       console.error(
@@ -64,7 +62,7 @@ async function sendMP(user, status, reason = "") {
 
 async function handleCandidatureDecision(interaction, status) {
   try {
-    const user = interaction.message.mentions.users.first();
+    // Removed unused function
 
     if (user) {
       await sendMP(user, status);
@@ -116,7 +114,7 @@ async function handleCandidatureDecision(interaction, status) {
 
 async function handleModalSubmit(interaction) {
   try {
-    const pseudo = interaction.fields.getTextInputValue("pseudoInput");
+    // Removed unused function
     const experience = interaction.fields.getTextInputValue("experienceInput");
     const motivation = interaction.fields.getTextInputValue("motivationInput");
 
@@ -223,7 +221,7 @@ async function handleModalSubmit(interaction) {
 
 async function handleRejectionReason(interaction) {
   const reason = interaction.fields.getTextInputValue("reasonInput");
-  const userId = await db.get(`candidature_${interaction.message.id}`);
+  // Removed unused function
 
   if (userId) {
     const user = await interaction.client.users.fetch(userId);
