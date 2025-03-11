@@ -17,7 +17,7 @@ const db = new QuickDB();
 export default {
   name: Events.InteractionCreate,
   async execute(interaction) {
-    if (!interaction.isCommand()) return;
+    if (!interaction.isChatInputCommand()) return; // Correct the interaction type check
 
     const command = interaction.client.commands.get(interaction.commandName);
 
