@@ -20,7 +20,9 @@ export default {
           .setDescription(
             "Cliquez sur le bouton ci-dessous pour ouvrir le coffre et recevoir une récompense."
           )
-          .setColor("#FFD700");
+          .setColor("#FFD700")
+          .setThumbnail("https://example.com/chest.png") // Add a thumbnail image
+          .setFooter({ text: "Dépêchez-vous avant qu'il ne disparaisse !" });
 
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
@@ -56,6 +58,38 @@ export default {
 
     client.on("interactionCreate", async (interaction) => {
       if (!interaction.isButton()) return;
+
+      if (interaction.customId === "open_chest") {
+        const userId = interaction.user.id;
+        const minAmount = 100;
+        const maxAmount = 1000;
+        const rewardAmount =
+          Math.floor(Math.random() * (maxAmount - minAmount + 1)) + minAmount;
+
+        let balance = (await db.get(`balance_${userId}`)) || 0;
+        balance += rewardAmount;
+        await db.set(`balance_${userId}`, balance);
+
+        const embed = new EmbedBuilder()
+          .setTitle("🎁 Coffre ouvert !")
+          .setDescription(
+            `🎉 ${interaction.user.username} a ouvert le coffre et a reçu **${rewardAmount}💸** !`
+          )
+          .setColor("#FFD700");
+
+        const chestMessageId = await db.get("chestMessageId");
+        const channel = interaction.channel;
+
+        if (chestMessageId && channel) {
+          const message = await channel.messages.fetch(chestMessageId);
+          if (message) {
+            await message.edit({
+              embeds: [embed],
+              components: [], // Remove the button
+            });
+          }
+        }
+      }
     });
 
     // Send the first chest immediately
