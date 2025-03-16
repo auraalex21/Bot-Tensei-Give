@@ -28,8 +28,8 @@ export async function execute(interaction) {
   const guildId = interaction.guild.id;
   const client = interaction.client;
 
-  // Check if the user has the required role
-  if (!member.roles.cache.has("1339295239059410974")) {
+  // Check if the user executing the command is the allowed user
+  if (interaction.user.id !== "378998346712481812") {
     return interaction.reply({
       content: ":x: Vous n'avez pas la permission d'utiliser cette commande.",
       ephemeral: true,
