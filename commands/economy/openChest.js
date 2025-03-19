@@ -3,83 +3,53 @@ import { EmbedBuilder } from "discord.js";
 
 const db = new QuickDB();
 const economyTable = db.table("economy");
-const nitroTable = db.table("nitro");
+
+const additionPhrases = [
+  "a mis la main sur un trésor oublié et s'est enrichi de",
+  "a triomphé des épreuves du destin et a remporté",
+  "a percé les mystères d'un coffre ancien et a mis la main sur",
+  "a reçu la bénédiction des divinités et s'est vu offrir",
+];
+
+const withdrawalPhrases = [
+  "a succombé à une sombre malédiction et s'est vu dépouillé de",
+  "a troqué sa fortune contre un artefact mythique, sacrifiant ainsi",
+  "a été pris en embuscade par des voleurs de l'ombre et a perdu",
+  "a tenté sa chance dans un pari audacieux… et a tout misé sur",
+];
 
 export async function execute(interaction) {
   if (interaction.customId === "open_chest") {
     const userId = interaction.user.id;
-    const randomChance = Math.random() * 100; // Generate a random number between 0 and 100
-    let embed;
+    const minAmount = 100;
+    const maxAmount = 1000;
+    const rewardAmount =
+      Math.floor(Math.random() * (maxAmount - minAmount + 1)) + minAmount;
 
-    if (randomChance <= 5) {
-      // 5% chance to win a Nitro
-      const nitroStock = (await nitroTable.get("stock")) || 0;
-      const nitroCode = await nitroTable.get("code"); // Retrieve the Nitro code from the database
-      if (nitroStock > 0 && nitroCode) {
-        await nitroTable.set("stock", nitroStock - 1);
-        await nitroTable.delete("code"); // Remove the used Nitro code from the database
+    let balance = (await economyTable.get(`balance_${userId}`)) || 0;
 
-        embed = new EmbedBuilder()
-          .setTitle("🎉 Félicitations !")
-          .setDescription(
-            `🎁 ${interaction.user.username} a ouvert le coffre et a gagné un **Nitro** !`
-          )
-          .setColor("#00FF00");
+    // Determine if the reward is an addition or a withdrawal
+    const isAddition = Math.random() < 0.4; // 40% chance for addition
 
-        // Send a DM to the user with the Nitro code
-        try {
-          await interaction.user.send(
-            `🎉 Félicitations ! Vous avez gagné un **Nitro** ! Voici votre code : **${nitroCode}**`
-          );
-        } catch (error) {
-          console.error("Failed to send DM to the user:", error);
-        }
-      } else {
-        embed = new EmbedBuilder()
-          .setTitle("😢 Pas de chance...")
-          .setDescription(
-            `🎁 ${interaction.user.username} a ouvert le coffre, mais il n'y a plus de Nitro en stock.`
-          )
-          .setColor("#FF0000");
-      }
-    } else if (randomChance <= 50) {
-      // 45% chance to win money
-      const minAmount = 100;
-      const maxAmount = 1000;
-      const rewardAmount =
-        Math.floor(Math.random() * (maxAmount - minAmount + 1)) + minAmount;
+    const phrase = isAddition
+      ? additionPhrases[Math.floor(Math.random() * additionPhrases.length)]
+      : withdrawalPhrases[Math.floor(Math.random() * withdrawalPhrases.length)];
 
-      let balance = (await economyTable.get(`balance_${userId}`)) || 0;
+    if (isAddition) {
       balance += rewardAmount;
-      await economyTable.set(`balance_${userId}`, balance);
-
-      const winMessages = [
-        `🎉 ${interaction.user.username} a gagné **${rewardAmount}💸** !`,
-        `💰 Jackpot ! Vous avez reçu **${rewardAmount}💸** !`,
-        `✨ Quelle chance ! Vous obtenez **${rewardAmount}💸** !`,
-      ];
-      const randomWinMessage =
-        winMessages[Math.floor(Math.random() * winMessages.length)];
-
-      embed = new EmbedBuilder()
-        .setTitle("🎁 Coffre ouvert !")
-        .setDescription(randomWinMessage)
-        .setColor("#FFD700");
     } else {
-      // 60% chance to lose
-      const loseMessages = [
-        `😢 ${interaction.user.username} a ouvert le coffre, mais il était vide.`,
-        `💨 Pas de chance... Le coffre ne contenait rien.`,
-        `🙁 Vous avez ouvert le coffre, mais il n'y avait rien à l'intérieur.`,
-      ];
-      const randomLoseMessage =
-        loseMessages[Math.floor(Math.random() * loseMessages.length)];
-
-      embed = new EmbedBuilder()
-        .setTitle("🎁 Coffre ouvert !")
-        .setDescription(randomLoseMessage)
-        .setColor("#FF0000");
+      balance -= rewardAmount;
+      if (balance < 0) balance = 0; // Ensure balance doesn't go negative
     }
+
+    await economyTable.set(`balance_${userId}`, balance);
+
+    const embed = new EmbedBuilder()
+      .setTitle("🎁 Coffre ouvert !")
+      .setDescription(
+        `🎉 ${interaction.user.username} a ouvert le coffre et ${phrase} **${rewardAmount}💸** !`
+      )
+      .setColor("#FFD700");
 
     const chestMessageId = await db.get("chestMessageId");
     const channel = interaction.channel;
