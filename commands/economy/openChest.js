@@ -79,7 +79,7 @@ export async function execute(interaction) {
         .setTitle("🎁 Coffre ouvert !")
         .setDescription(randomLoseMessage)
         .setColor("#FF0000");
-    } else {
+    } else if (randomChance <= 100) {
       // 37% chance to lose money
       const minLoss = 50;
       const maxLoss = 500;
