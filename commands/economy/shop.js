@@ -68,25 +68,23 @@ export async function execute(interaction) {
     if (interaction.replied || interaction.deferred) return;
     await interaction.deferReply();
 
-    const width = 1000,
-      height = 1200;
-    const canvas = createCanvas(width, height);
+    const canvas = createCanvas(1000, 1200);
     const ctx = canvas.getContext("2d");
 
+    // Load background image or fallback to a solid color
     try {
       const background = await loadImage(
         "https://your-image-link.com/background.jpg"
       );
-      ctx.drawImage(background, 0, 0, width, height);
-    } catch (err) {
-      console.error("❌ Impossible de charger l'image d'arrière-plan :", err);
+      ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+    } catch {
       ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, width, height);
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
+    // Draw overlay and title
     ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
-    ctx.fillRect(30, 30, width - 60, height - 60);
-
+    ctx.fillRect(30, 30, canvas.width - 60, canvas.height - 60);
     ctx.font = "bold 60px Arial";
     ctx.fillStyle = "#FFD700";
     ctx.shadowColor = "#FFD700";
@@ -94,6 +92,7 @@ export async function execute(interaction) {
     ctx.fillText("🛍️ Boutique des Rat", 50, 90);
     ctx.shadowBlur = 0;
 
+    // Render items
     ctx.font = "30px Arial";
     ctx.fillStyle = "#FFFFFF";
     items.forEach((item, index) => {
@@ -105,17 +104,20 @@ export async function execute(interaction) {
       ctx.font = "30px Arial";
     });
 
+    // Footer text
     ctx.font = "italic 26px Arial";
     ctx.fillStyle = "#FFD700";
     ctx.fillText(
       "Cliquez sur un bouton ci-dessous pour acheter un article.",
       50,
-      height - 50
+      canvas.height - 50
     );
 
-    const buffer = canvas.toBuffer();
-    const attachment = new AttachmentBuilder(buffer, { name: "shop.png" });
+    const attachment = new AttachmentBuilder(canvas.toBuffer(), {
+      name: "shop.png",
+    });
 
+    // Generate buttons dynamically
     const buttonRows = [];
     for (let i = 0; i < items.length; i += 3) {
       const row = new ActionRowBuilder();
@@ -160,11 +162,11 @@ export async function handleButtonInteraction(interaction) {
 
     const userId = interaction.user.id;
 
-    // Récupérer le solde de l'utilisateur
+    // Fetch user balance
     let userBalance = await economyTable.get(`${userId}.balance`);
     if (!userBalance) userBalance = 0;
 
-    // Vérifier si l'utilisateur a assez d'argent
+    // Check if user has enough money
     if (userBalance < item.price) {
       return await interaction.followUp({
         content: `❌ Vous n'avez pas assez d'argent pour acheter **${
@@ -174,10 +176,10 @@ export async function handleButtonInteraction(interaction) {
       });
     }
 
-    // Déduire le prix de l'article du solde de l'utilisateur
+    // Deduct item price from user balance
     await economyTable.set(`${userId}.balance`, userBalance - item.price);
 
-    // Confirmer l'achat à l'utilisateur
+    // Confirm purchase
     await interaction.followUp({
       content: `✅ Vous avez acheté **${
         item.name
