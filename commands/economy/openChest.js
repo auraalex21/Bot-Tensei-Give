@@ -44,8 +44,8 @@ export async function execute(interaction) {
       }
     } else if (randomChance <= 21) {
       // 20% chance to win money
-      const minAmount = 100;
-      const maxAmount = 1000;
+      const minAmount = 500;
+      const maxAmount = 5000;
       const rewardAmount =
         Math.floor(Math.random() * (maxAmount - minAmount + 1)) + minAmount;
 

@@ -92,8 +92,8 @@ export default {
           }
         } else if (randomChance <= 20.5) {
           // 20% chance to win money
-          const minAmount = 100;
-          const maxAmount = 1000;
+          const minAmount = 500;
+          const maxAmount = 5000;
           const rewardAmount =
             Math.floor(Math.random() * (maxAmount - minAmount + 1)) + minAmount;
 
