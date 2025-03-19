@@ -41,10 +41,10 @@ export default {
       }
 
       // Schedule the next chest spawn
-      const minInterval = 1 * 60 * 60 * 1000; // 1 hour in milliseconds
-      const maxInterval = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
-      //const minInterval = 10 * 1000; // 10 secondes en millisecondes
-      //const maxInterval = 10 * 1000; // 10 secondes en millisecondes
+      //const minInterval = 1 * 60 * 60 * 1000; // 1 hour in milliseconds
+      //const maxInterval = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+      const minInterval = 10 * 1000; // 10 secondes en millisecondes
+      const maxInterval = 10 * 1000; // 10 secondes en millisecondes
       const nextInterval =
         Math.floor(Math.random() * (maxInterval - minInterval + 1)) +
         minInterval;
@@ -59,8 +59,8 @@ export default {
         const randomChance = Math.random() * 100; // Generate a random number between 0 and 100
         let embed;
 
-        if (randomChance <= 5) {
-          // 5% chance to win a Nitro
+        if (randomChance <= 0.5) {
+          // 0.5% chance to win a Nitro
           const nitroStock = (await nitroTable.get("stock")) || 0;
           const nitroCode = await nitroTable.get("code"); // Retrieve the Nitro code from the database
           if (nitroStock > 0 && nitroCode) {
@@ -90,8 +90,8 @@ export default {
               )
               .setColor("#FF0000");
           }
-        } else if (randomChance <= 50) {
-          // 45% chance to win money
+        } else if (randomChance <= 20.5) {
+          // 20% chance to win money
           const minAmount = 100;
           const maxAmount = 1000;
           const rewardAmount =
@@ -113,8 +113,51 @@ export default {
             .setTitle("🎁 Coffre ouvert !")
             .setDescription(randomWinMessage)
             .setColor("#FFD700");
+        } else if (randomChance <= 57.5) {
+          // 37% chance to either get nothing or lose money
+          const subChance = Math.random() * 100; // Generate a sub-chance for this block
+          if (subChance <= 50) {
+            // 50% of 37% = 18.5% chance to get nothing
+            const loseMessages = [
+              `😢 ${interaction.user.username} a ouvert le coffre, mais il était vide.`,
+              `💨 Pas de chance... Le coffre ne contenait rien.`,
+              `🙁 Vous avez ouvert le coffre, mais il n'y avait rien à l'intérieur.`,
+            ];
+            const randomLoseMessage =
+              loseMessages[Math.floor(Math.random() * loseMessages.length)];
+
+            embed = new EmbedBuilder()
+              .setTitle("🎁 Coffre ouvert !")
+              .setDescription(randomLoseMessage)
+              .setColor("#FF0000");
+          } else {
+            // 50% of 37% = 18.5% chance to lose money
+            const minLoss = 50;
+            const maxLoss = 500;
+            const lossAmount =
+              Math.floor(Math.random() * (maxLoss - minLoss + 1)) + minLoss;
+
+            let balance = (await economyTable.get(`balance_${userId}`)) || 0;
+            balance = Math.max(0, balance - lossAmount); // Ensure balance doesn't go below 0
+            await economyTable.set(`balance_${userId}`, balance);
+
+            const loseMoneyMessages = [
+              `😢 ${interaction.user.username} a perdu **${lossAmount}💸** en ouvrant le coffre.`,
+              `💸 Oups... Vous avez perdu **${lossAmount}💸**.`,
+              `🙁 Pas de chance, vous perdez **${lossAmount}💸**.`,
+            ];
+            const randomLoseMoneyMessage =
+              loseMoneyMessages[
+                Math.floor(Math.random() * loseMoneyMessages.length)
+              ];
+
+            embed = new EmbedBuilder()
+              .setTitle("🎁 Coffre ouvert !")
+              .setDescription(randomLoseMoneyMessage)
+              .setColor("#FF0000");
+          }
         } else {
-          // 60% chance to lose
+          // 42% chance to lose money
           const minLoss = 50;
           const maxLoss = 500;
           const lossAmount =
@@ -122,19 +165,21 @@ export default {
 
           let balance = (await economyTable.get(`balance_${userId}`)) || 0;
           balance = Math.max(0, balance - lossAmount); // Ensure balance doesn't go below 0
-          await economyTable.set(`balance_${userId}`, balance); // Mise à jour correcte du solde
+          await economyTable.set(`balance_${userId}`, balance);
 
-          const loseMessages = [
+          const loseMoneyMessages = [
             `😢 ${interaction.user.username} a perdu **${lossAmount}💸** en ouvrant le coffre.`,
             `💸 Oups... Vous avez perdu **${lossAmount}💸**.`,
             `🙁 Pas de chance, vous perdez **${lossAmount}💸**.`,
           ];
-          const randomLoseMessage =
-            loseMessages[Math.floor(Math.random() * loseMessages.length)];
+          const randomLoseMoneyMessage =
+            loseMoneyMessages[
+              Math.floor(Math.random() * loseMoneyMessages.length)
+            ];
 
           embed = new EmbedBuilder()
             .setTitle("🎁 Coffre ouvert !")
-            .setDescription(randomLoseMessage)
+            .setDescription(randomLoseMoneyMessage)
             .setColor("#FF0000");
         }
 
