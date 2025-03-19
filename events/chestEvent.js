@@ -66,9 +66,16 @@ export default {
         const rewardAmount =
           Math.floor(Math.random() * (maxAmount - minAmount + 1)) + minAmount;
 
+        console.log(
+          `User ${userId} is opening the chest. Reward: ${rewardAmount}`
+        );
+
         let balance = (await db.get(`balance_${userId}`)) || 0;
+        console.log(`Current balance for user ${userId}: ${balance}`);
+
         balance += rewardAmount;
         await db.set(`balance_${userId}`, balance);
+        console.log(`New balance for user ${userId}: ${balance}`);
 
         const embed = new EmbedBuilder()
           .setTitle("🎁 Coffre ouvert !")
@@ -81,12 +88,16 @@ export default {
         const channel = interaction.channel;
 
         if (chestMessageId && channel) {
-          const message = await channel.messages.fetch(chestMessageId);
-          if (message) {
-            await message.edit({
-              embeds: [embed],
-              components: [], // Remove the button
-            });
+          try {
+            const message = await channel.messages.fetch(chestMessageId);
+            if (message) {
+              await message.edit({
+                embeds: [embed],
+                components: [], // Remove the button
+              });
+            }
+          } catch (error) {
+            console.error("Failed to edit chest message:", error);
           }
         }
       }
