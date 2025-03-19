@@ -352,6 +352,7 @@ client.once("ready", async () => {
 
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isCommand()) {
+    // Reverted to isCommand() for compatibility
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
 

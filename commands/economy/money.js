@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("Vérifier votre solde d'argent");
 
 export async function execute(interaction) {
-  if (!interaction.isChatInputCommand()) return; // Updated method for slash command check
+  if (!interaction.isCommand()) return; // Reverted to isCommand() for compatibility
 
   const userId = interaction.user.id;
   const balance = Number(await economyTable.get(`balance_${userId}`)) || 0;
