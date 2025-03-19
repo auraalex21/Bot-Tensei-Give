@@ -91,7 +91,7 @@ export async function execute(interaction) {
 
         let balance = (await economyTable.get(`balance_${userId}`)) || 0;
         balance = Math.max(0, balance - lossAmount); // Ensure balance doesn't go below 0
-        await economyTable.set(`balance_${userId}`, balance);
+        await economyTable.set(`balance_${userId}`, balance); // Mise à jour correcte du solde
 
         const loseMoneyMessages = [
           `😢 ${interaction.user.username} a perdu **${lossAmount}💸** en ouvrant le coffre.`,
@@ -117,7 +117,7 @@ export async function execute(interaction) {
 
       let balance = (await economyTable.get(`balance_${userId}`)) || 0;
       balance = Math.max(0, balance - lossAmount); // Ensure balance doesn't go below 0
-      await economyTable.set(`balance_${userId}`, balance);
+      await economyTable.set(`balance_${userId}`, balance); // Mise à jour correcte du solde
 
       const loseMoneyMessages = [
         `😢 ${interaction.user.username} a perdu **${lossAmount}💸** en ouvrant le coffre.`,

@@ -115,10 +115,19 @@ export default {
             .setColor("#FFD700");
         } else {
           // 60% chance to lose
+          const minLoss = 50;
+          const maxLoss = 500;
+          const lossAmount =
+            Math.floor(Math.random() * (maxLoss - minLoss + 1)) + minLoss;
+
+          let balance = (await economyTable.get(`balance_${userId}`)) || 0;
+          balance = Math.max(0, balance - lossAmount); // Ensure balance doesn't go below 0
+          await economyTable.set(`balance_${userId}`, balance); // Mise à jour correcte du solde
+
           const loseMessages = [
-            `😢 ${interaction.user.username} a ouvert le coffre, mais il était vide.`,
-            `💨 Pas de chance... Le coffre ne contenait rien.`,
-            `🙁 Vous avez ouvert le coffre, mais il n'y avait rien à l'intérieur.`,
+            `😢 ${interaction.user.username} a perdu **${lossAmount}💸** en ouvrant le coffre.`,
+            `💸 Oups... Vous avez perdu **${lossAmount}💸**.`,
+            `🙁 Pas de chance, vous perdez **${lossAmount}💸**.`,
           ];
           const randomLoseMessage =
             loseMessages[Math.floor(Math.random() * loseMessages.length)];
