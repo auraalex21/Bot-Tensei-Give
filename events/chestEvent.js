@@ -41,10 +41,10 @@ export default {
       }
 
       // Schedule the next chest spawn
-      //const minInterval = 1 * 60 * 60 * 1000; // 1 hour in milliseconds
-      //const maxInterval = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
-      const minInterval = 10 * 1000; // 10 secondes en millisecondes
-      const maxInterval = 10 * 1000; // 10 secondes en millisecondes
+      const minInterval = 1 * 60 * 60 * 1000; // 1 hour in milliseconds
+      const maxInterval = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+      //const minInterval = 10 * 1000; // 10 secondes en millisecondes
+      //const maxInterval = 10 * 1000; // 10 secondes en millisecondes
       const nextInterval =
         Math.floor(Math.random() * (maxInterval - minInterval + 1)) +
         minInterval;
