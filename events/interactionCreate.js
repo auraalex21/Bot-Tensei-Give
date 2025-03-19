@@ -10,7 +10,7 @@ import {
 export default {
   name: Events.InteractionCreate,
   async execute(interaction) {
-    if (!interaction.isCommand()) return;
+    if (!interaction.isChatInputCommand()) return; // Updated method for slash command check
 
     const command = interaction.client.commands.get(interaction.commandName);
     if (!command) return;
