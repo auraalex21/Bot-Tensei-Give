@@ -132,8 +132,8 @@ export default {
               .setColor("#FF0000");
           } else {
             // 50% of 37% = 18.5% chance to lose money
-            const minLoss = 50;
-            const maxLoss = 500;
+            const minLoss = 500;
+            const maxLoss = 5000;
             const lossAmount =
               Math.floor(Math.random() * (maxLoss - minLoss + 1)) + minLoss;
 
