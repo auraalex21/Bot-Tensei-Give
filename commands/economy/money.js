@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("Vérifier votre solde d'argent");
 
 export async function execute(interaction) {
-  if (!interaction.isCommand()) return;
+  if (!interaction.isChatInputCommand()) return; // Updated method for slash command check
 
   const userId = interaction.user.id;
   const balance = Number(await economyTable.get(`balance_${userId}`)) || 0;
@@ -20,14 +20,10 @@ export async function execute(interaction) {
     .setDescription(
       `💸 **${interaction.user.username}**, votre solde actuel est de **${balance}💸**.`
     );
+
   if (interaction.replied || interaction.deferred) {
     try {
       await interaction.followUp({ embeds: [embed] });
-      try {
-        await interaction.reply({ embeds: [embed] });
-      } catch (error) {
-        console.error("Error replying to interaction:", error);
-      }
     } catch (error) {
       console.error("Error following up interaction:", error);
     }
