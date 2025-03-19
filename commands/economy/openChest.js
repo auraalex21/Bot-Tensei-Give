@@ -42,8 +42,8 @@ export async function execute(interaction) {
           )
           .setColor("#FF0000");
       }
-    } else if (randomChance <= 35) {
-      // 34% chance to win money
+    } else if (randomChance <= 26) {
+      // 25% chance to win money
       const minAmount = 100;
       const maxAmount = 1000;
       const rewardAmount =
@@ -65,8 +65,8 @@ export async function execute(interaction) {
         .setTitle("🎁 Coffre ouvert !")
         .setDescription(randomWinMessage)
         .setColor("#FFD700");
-    } else {
-      // 65% chance to lose
+    } else if (randomChance <= 63) {
+      // 37% chance to lose
       const loseMessages = [
         `😢 ${interaction.user.username} a ouvert le coffre, mais il était vide.`,
         `💨 Pas de chance... Le coffre ne contenait rien.`,
@@ -78,6 +78,29 @@ export async function execute(interaction) {
       embed = new EmbedBuilder()
         .setTitle("🎁 Coffre ouvert !")
         .setDescription(randomLoseMessage)
+        .setColor("#FF0000");
+    } else {
+      // 37% chance to lose money
+      const minLoss = 50;
+      const maxLoss = 500;
+      const lossAmount =
+        Math.floor(Math.random() * (maxLoss - minLoss + 1)) + minLoss;
+
+      let balance = (await economyTable.get(`balance_${userId}`)) || 0;
+      balance = Math.max(0, balance - lossAmount); // Ensure balance doesn't go below 0
+      await economyTable.set(`balance_${userId}`, balance);
+
+      const loseMoneyMessages = [
+        `😢 ${interaction.user.username} a perdu **${lossAmount}💸** en ouvrant le coffre.`,
+        `💸 Oups... Vous avez perdu **${lossAmount}💸**.`,
+        `🙁 Pas de chance, vous perdez **${lossAmount}💸**.`,
+      ];
+      const randomLoseMoneyMessage =
+        loseMoneyMessages[Math.floor(Math.random() * loseMoneyMessages.length)];
+
+      embed = new EmbedBuilder()
+        .setTitle("🎁 Coffre ouvert !")
+        .setDescription(randomLoseMoneyMessage)
         .setColor("#FF0000");
     }
 
