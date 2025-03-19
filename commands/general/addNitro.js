@@ -6,7 +6,7 @@ const nitroTable = db.table("nitro");
 
 export default {
   data: new SlashCommandBuilder()
-    .setName("addnitro")
+    .setName("add-nitro")
     .setDescription("Ajoute un code Nitro dans la base de données.")
     .addStringOption((option) =>
       option
