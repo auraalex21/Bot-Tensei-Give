@@ -42,8 +42,8 @@ export async function execute(interaction) {
           )
           .setColor("#FF0000");
       }
-    } else if (randomChance <= 26) {
-      // 25% chance to win money
+    } else if (randomChance <= 21) {
+      // 20% chance to win money
       const minAmount = 100;
       const maxAmount = 1000;
       const rewardAmount =
@@ -65,8 +65,8 @@ export async function execute(interaction) {
         .setTitle("🎁 Coffre ouvert !")
         .setDescription(randomWinMessage)
         .setColor("#FFD700");
-    } else if (randomChance <= 63) {
-      // 37% chance to lose
+    } else if (randomChance <= 58) {
+      // 37% chance to get nothing
       const loseMessages = [
         `😢 ${interaction.user.username} a ouvert le coffre, mais il était vide.`,
         `💨 Pas de chance... Le coffre ne contenait rien.`,
@@ -79,8 +79,8 @@ export async function execute(interaction) {
         .setTitle("🎁 Coffre ouvert !")
         .setDescription(randomLoseMessage)
         .setColor("#FF0000");
-    } else if (randomChance <= 100) {
-      // 37% chance to lose money
+    } else {
+      // 42% chance to lose money
       const minLoss = 50;
       const maxLoss = 500;
       const lossAmount =
