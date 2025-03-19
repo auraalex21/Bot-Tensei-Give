@@ -163,7 +163,7 @@ export async function handleButtonInteraction(interaction) {
     const userId = interaction.user.id;
 
     // Fetch user balance
-    let userBalance = await economyTable.get(`${userId}.balance`);
+    let userBalance = await economyTable.get(`balance_${userId}`);
     if (!userBalance) userBalance = 0;
 
     // Check if user has enough money
@@ -177,7 +177,7 @@ export async function handleButtonInteraction(interaction) {
     }
 
     // Deduct item price from user balance
-    await economyTable.set(`${userId}.balance`, userBalance - item.price);
+    await economyTable.set(`balance_${userId}`, userBalance - item.price);
 
     // Confirm purchase
     await interaction.followUp({
