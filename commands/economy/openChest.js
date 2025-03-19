@@ -118,3 +118,31 @@ export async function execute(interaction) {
     }
   }
 }
+
+// Simulation to test probabilities
+if (process.env.TEST_PROBABILITIES) {
+  const results = { nitro: 0, money: 0, nothing: 0, loss: 0 };
+  const iterations = 100000;
+
+  for (let i = 0; i < iterations; i++) {
+    const randomChance = Math.random() * 100;
+
+    if (randomChance <= 1) {
+      results.nitro++;
+    } else if (randomChance <= 21) {
+      results.money++;
+    } else if (randomChance <= 58) {
+      results.nothing++;
+    } else {
+      results.loss++;
+    }
+  }
+
+  console.log("Simulation Results:", results);
+  console.log("Percentages:", {
+    nitro: (results.nitro / iterations) * 100,
+    money: (results.money / iterations) * 100,
+    nothing: (results.nothing / iterations) * 100,
+    loss: (results.loss / iterations) * 100,
+  });
+}
