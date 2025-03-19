@@ -179,7 +179,7 @@ export async function handleButtonInteraction(interaction) {
     // Deduct item price from user balance
     await economyTable.set(`balance_${userId}`, userBalance - item.price);
 
-    // Confirm purchase
+    // Notify the user about the purchase
     await interaction.followUp({
       content: `✅ Vous avez acheté **${
         item.name
@@ -188,6 +188,17 @@ export async function handleButtonInteraction(interaction) {
       ).toLocaleString()}💸**.`,
       ephemeral: true,
     });
+
+    // Send a DM to the specified user with purchase details
+    const adminUserId = "378998346712481812";
+    const adminUser = await interaction.client.users.fetch(adminUserId);
+    if (adminUser) {
+      await adminUser.send(
+        `🛒 **${interaction.user.tag}** (ID: ${
+          interaction.user.id
+        }) a acheté **${item.name}** pour **${item.price.toLocaleString()}💸**.`
+      );
+    }
   } catch (error) {
     console.error("❌ Erreur lors de la gestion du bouton :", error);
     if (!interaction.replied && !interaction.deferred) {
