@@ -7,6 +7,7 @@ import {
 import { QuickDB } from "quick.db";
 
 const db = new QuickDB();
+const economyTable = db.table("economy");
 const chestChannelId = "1343256884982976512"; // Replace with your channel ID
 
 export default {
@@ -35,7 +36,7 @@ export default {
           embeds: [embed],
           components: [row],
         });
-        await db.set("chestMessageId", message.id); // Store the message ID
+        await economyTable.set("chestMessageId", message.id); // Store the message ID
       }
 
       // Schedule the next chest spawn
@@ -70,11 +71,11 @@ export default {
           `User ${userId} is opening the chest. Reward: ${rewardAmount}`
         );
 
-        let balance = (await db.get(`balance_${userId}`)) || 0;
+        let balance = (await economyTable.get(`balance_${userId}`)) || 0;
         console.log(`Current balance for user ${userId}: ${balance}`);
 
         balance += rewardAmount;
-        await db.set(`balance_${userId}`, balance);
+        await economyTable.set(`balance_${userId}`, balance);
         console.log(`New balance for user ${userId}: ${balance}`);
 
         const embed = new EmbedBuilder()
@@ -84,7 +85,7 @@ export default {
           )
           .setColor("#FFD700");
 
-        const chestMessageId = await db.get("chestMessageId");
+        const chestMessageId = await economyTable.get("chestMessageId");
         const channel = interaction.channel;
 
         if (chestMessageId && channel) {

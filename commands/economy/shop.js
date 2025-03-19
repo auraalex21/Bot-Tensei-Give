@@ -158,10 +158,32 @@ export async function handleButtonInteraction(interaction) {
     const item = items[itemIndex];
     if (!item) return;
 
+    const userId = interaction.user.id;
+
+    // Récupérer le solde de l'utilisateur
+    let userBalance = await economyTable.get(`${userId}.balance`);
+    if (!userBalance) userBalance = 0;
+
+    // Vérifier si l'utilisateur a assez d'argent
+    if (userBalance < item.price) {
+      return await interaction.followUp({
+        content: `❌ Vous n'avez pas assez d'argent pour acheter **${
+          item.name
+        }**. Votre solde actuel est de **${userBalance.toLocaleString()}💸**.`,
+        ephemeral: true,
+      });
+    }
+
+    // Déduire le prix de l'article du solde de l'utilisateur
+    await economyTable.set(`${userId}.balance`, userBalance - item.price);
+
+    // Confirmer l'achat à l'utilisateur
     await interaction.followUp({
-      content: `Vous avez sélectionné **${
+      content: `✅ Vous avez acheté **${
         item.name
-      }** pour **${item.price.toLocaleString()}💸**.`,
+      }** pour **${item.price.toLocaleString()}💸**. Votre nouveau solde est de **${(
+        userBalance - item.price
+      ).toLocaleString()}💸**.`,
       ephemeral: true,
     });
   } catch (error) {
