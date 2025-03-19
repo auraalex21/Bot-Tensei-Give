@@ -66,19 +66,48 @@ export async function execute(interaction) {
         .setDescription(randomWinMessage)
         .setColor("#FFD700");
     } else if (randomChance <= 58) {
-      // 37% chance to get nothing
-      const loseMessages = [
-        `😢 ${interaction.user.username} a ouvert le coffre, mais il était vide.`,
-        `💨 Pas de chance... Le coffre ne contenait rien.`,
-        `🙁 Vous avez ouvert le coffre, mais il n'y avait rien à l'intérieur.`,
-      ];
-      const randomLoseMessage =
-        loseMessages[Math.floor(Math.random() * loseMessages.length)];
+      // 37% chance to either get nothing or lose money
+      const subChance = Math.random() * 100; // Generate a sub-chance for this block
+      if (subChance <= 50) {
+        // 50% of 37% = 18.5% chance to get nothing
+        const loseMessages = [
+          `😢 ${interaction.user.username} a ouvert le coffre, mais il était vide.`,
+          `💨 Pas de chance... Le coffre ne contenait rien.`,
+          `🙁 Vous avez ouvert le coffre, mais il n'y avait rien à l'intérieur.`,
+        ];
+        const randomLoseMessage =
+          loseMessages[Math.floor(Math.random() * loseMessages.length)];
 
-      embed = new EmbedBuilder()
-        .setTitle("🎁 Coffre ouvert !")
-        .setDescription(randomLoseMessage)
-        .setColor("#FF0000");
+        embed = new EmbedBuilder()
+          .setTitle("🎁 Coffre ouvert !")
+          .setDescription(randomLoseMessage)
+          .setColor("#FF0000");
+      } else {
+        // 50% of 37% = 18.5% chance to lose money
+        const minLoss = 50;
+        const maxLoss = 500;
+        const lossAmount =
+          Math.floor(Math.random() * (maxLoss - minLoss + 1)) + minLoss;
+
+        let balance = (await economyTable.get(`balance_${userId}`)) || 0;
+        balance = Math.max(0, balance - lossAmount); // Ensure balance doesn't go below 0
+        await economyTable.set(`balance_${userId}`, balance);
+
+        const loseMoneyMessages = [
+          `😢 ${interaction.user.username} a perdu **${lossAmount}💸** en ouvrant le coffre.`,
+          `💸 Oups... Vous avez perdu **${lossAmount}💸**.`,
+          `🙁 Pas de chance, vous perdez **${lossAmount}💸**.`,
+        ];
+        const randomLoseMoneyMessage =
+          loseMoneyMessages[
+            Math.floor(Math.random() * loseMoneyMessages.length)
+          ];
+
+        embed = new EmbedBuilder()
+          .setTitle("🎁 Coffre ouvert !")
+          .setDescription(randomLoseMoneyMessage)
+          .setColor("#FF0000");
+      }
     } else {
       // 42% chance to lose money
       const minLoss = 50;
